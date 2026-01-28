@@ -29,16 +29,16 @@ class ModeProvider extends ChangeNotifier {
 
   List<Map<String, dynamic>> get chipList => current == AppMode.food
       ? [
-    {"text": "Search By Pantry", "icon": Icons.kitchen_sharp},
-    {"text": "Morning To Night", "icon": Icons.wb_sunny_outlined},
-    {"text": "Healthy & Happy", "icon": Icons.health_and_safety_outlined},
-    {"text": "Dicover New Flavors", "icon": Icons.explore_off_outlined},
-    {"text": "Price & Prep", "icon": Icons.price_change_outlined},
+    {"text": "Search By Pantry"},
+    {"text": "Morning To Night"},
+    {"text": "Healthy & Happy"},
+    {"text": "Dicover New Flavors"},
+    {"text": "Price & Prep"},
 
   ]
       : [
-    {"text": "Alcoholic", "icon": Icons.wine_bar_outlined},
-    {"text": "Non-Alcoholic", "icon": Icons.no_drinks_outlined},
-    {"text": "Alcohol Optional", "icon": Icons.local_drink_outlined},
+    {"text": "Alcoholic"},
+    {"text": "Non-Alcoholic"},
+    {"text": "Alcohol Optional"},
   ];
 }

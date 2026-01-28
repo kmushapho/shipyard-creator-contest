@@ -98,31 +98,12 @@ class HomePage extends StatelessWidget {
                     return Padding(
                       padding: const EdgeInsets.only(right: 8),
                       child: Chip(
-                        avatar: Icon(item["icon"], size: 18, color: mode.mainColor),
                         label: Text(item["text"]),
                         backgroundColor: mode.lightColor,
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
                       ),
                     );
                   },
-                ),
-              ),
-
-              const SizedBox(height: 24),
-
-              // Search Pantry button
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20),
-                child: OutlinedButton.icon(
-                  onPressed: () {},
-                  icon: const Icon(Icons.search),
-                  label: const Text("Search by Pantry"),
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: mode.mainColor,
-                    side: BorderSide(color: mode.mainColor),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
-                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                  ),
                 ),
               ),
 
