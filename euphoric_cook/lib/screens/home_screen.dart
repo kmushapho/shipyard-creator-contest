@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/mode_provider.dart';
-import '../constants/colors.dart';
+import '../widgets/featured_recipes_grid.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -15,6 +15,30 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     final mode = Provider.of<ModeProvider>(context);
     final accent = mode.accentColor;
+
+    final featuredRecipes = List.generate(
+      6,
+          (index) {
+        if (mode.isFood) {
+          return {
+            'name': 'Creamy Avocado Toast ${index + 1}',
+            'imageUrl': null as String?,
+            'servings': 2 + index % 3,
+            'totalTimeMinutes': 10 + index * 5,
+            // no alcoholType needed for food
+          };
+        } else {
+          // Drink mode – add alcoholType
+          final alcoholTypes = ['alcoholic', 'non-alcoholic', 'optional'];
+          return {
+            'name': 'Refreshing Mojito ${index + 1}',
+            'imageUrl': null as String?,
+            'alcoholType': alcoholTypes[index % 3], // cycles through the 3 options
+            // servings & totalTimeMinutes can stay if you want fallback, but we won't use them
+          };
+        }
+      },
+    );
 
     return Scaffold(
       backgroundColor: mode.bgColor,
@@ -43,7 +67,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     ],
                   ),
 
-                  const SizedBox(height: 8), // small vertical space
+                  const SizedBox(height: 5), // small vertical space
 
                   // Centered Food ↔ Drink toggle (takes center automatically)
                   Center(
@@ -53,30 +77,55 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             ),
 
+            const SizedBox(height: 8), // small vertical space
+
             // ── Search bar ─────────────────────────────────────────────
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 1),
               child: AnimatedSwitcher(
                 duration: const Duration(milliseconds: 400),
-                child: TextField(
-                  key: ValueKey(mode.currentMode),
-                  decoration: InputDecoration(
-                    hintText: mode.searchHint,
-                    hintStyle: TextStyle(color: mode.textColor.withOpacity(0.6)),
-                    prefixIcon: Icon(Icons.search_rounded, color: accent),
-                    filled: true,
-                    fillColor: mode.cardColor,
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(30),
-                      borderSide: BorderSide.none,
+                child: Material(
+                  key: ValueKey(mode.currentMode), // keep the key for smooth switch
+                  elevation: 2,                     // subtle shadow (1–3 is gentle; 4+ feels heavier)
+                  shadowColor: Colors.black.withOpacity(0.12), // soft, not dark
+                  borderRadius: BorderRadius.circular(30),
+                  color: mode.cardColor,            // your existing fill color
+                  child: TextField(
+                    decoration: InputDecoration(
+                      hintText: mode.searchHint,
+                      hintStyle: TextStyle(color: mode.textColor.withOpacity(0.6)),
+                      prefixIcon: Icon(Icons.search_rounded, color: accent),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(30),
+                        borderSide: BorderSide(
+                          color: accent.withOpacity(0.4), // semi-visible, subtle accent tint
+                          width: 1.2,                     // thin but noticeable
+                        ),
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(30),
+                        borderSide: BorderSide(
+                          color: accent.withOpacity(0.35),
+                          width: 1.0,
+                        ),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(30),
+                        borderSide: BorderSide(
+                          color: accent,                  // full accent when focused
+                          width: 1.8,                     // slightly thicker on focus for feedback
+                        ),
+                      ),
+                      filled: true,
+                      fillColor: mode.cardColor,
+                      contentPadding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
                     ),
-                    contentPadding: const EdgeInsets.symmetric(vertical: 4, horizontal: 16),
                   ),
                 ),
               ),
             ),
 
-            const SizedBox(height: 20),
+            const SizedBox(height: 5),
 
             // ── Horizontal category chips ──────────────────────────────
             SizedBox(
@@ -102,86 +151,20 @@ class _HomeScreenState extends State<HomeScreen> {
 
             const SizedBox(height: 24),
 
-            // ── Featured title + grid ──────────────────────────────────
+            const SizedBox(height: 16),
+
+            // ── Featured content ───────────────────────────────────────
             Expanded(
-              child: ListView(
+              child: SingleChildScrollView(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.only(left: 4, bottom: 12),
-                    child: Text(
-                      mode.featuredTitle,
-                      style: TextStyle(
-                        fontSize: 22,
-                        fontWeight: FontWeight.bold,
-                        color: mode.textColor,
-                      ),
-                    ),
-                  ),
-
-                  GridView.builder(
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 2,
-                      crossAxisSpacing: 12,
-                      mainAxisSpacing: 12,
-                      childAspectRatio: 0.82,
-                    ),
-                    itemCount: 8,
-                    itemBuilder: (context, index) {
-                      return Card(
-                        elevation: mode.isDark ? 2 : 1,
-                        color: mode.cardColor,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                        child: Column(
-                          children: [
-                            Expanded(
-                              child: Container(
-                                decoration: BoxDecoration(
-                                  color: accent.withOpacity(0.08),
-                                  borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
-                                ),
-                                child: const Center(
-                                  child: Icon(Icons.image_rounded, size: 60, color: Colors.grey),
-                                ),
-                              ),
-                            ),
-                            Padding(
-                              padding: const EdgeInsets.all(10),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    'Recipe ${index + 1}',
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.w600,
-                                      color: mode.textColor,
-                                    ),
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                  const SizedBox(height: 4),
-                                  Text(
-                                    '12 min • 2 servings',
-                                    style: TextStyle(
-                                      fontSize: 12,
-                                      color: mode.textColor.withOpacity(0.7),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
-                      );
-                    },
-                  ),
-
-                  const SizedBox(height: 100), // space for bottom nav
-                ],
+                child: FeaturedRecipesGrid(
+                  title: mode.featuredTitle,
+                  recipes: featuredRecipes,
+                  crossAxisCount: 2,
+                ),
               ),
             ),
+
           ],
         ),
       ),

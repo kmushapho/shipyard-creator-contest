@@ -1,0 +1,64 @@
+import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '/providers/mode_provider.dart';
+import 'recipe_card.dart';
+
+class FeaturedRecipesGrid extends StatelessWidget {
+  final String title;
+  final List<Map<String, dynamic>> recipes;
+  final int crossAxisCount;
+
+  const FeaturedRecipesGrid({
+    super.key,
+    required this.title,
+    required this.recipes,
+    this.crossAxisCount = 2,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final mode = Provider.of<ModeProvider>(context);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.only(left: 4, bottom: 12),
+          child: Text(
+            title,
+            style: TextStyle(
+              fontSize: 22,
+              fontWeight: FontWeight.bold,
+              color: mode.textColor,
+            ),
+          ),
+        ),
+
+        GridView.builder(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: 2,
+            crossAxisSpacing: 12,
+            mainAxisSpacing: 12,
+            childAspectRatio: 0.72, // ← slightly adjusted to give more vertical space to text
+          ),
+          itemCount: recipes.length,
+          itemBuilder: (context, index) {
+            final recipe = recipes[index];
+
+            return RecipeCard(
+              name: recipe['name'] as String? ?? 'Unnamed ${mode.isFood ? 'Recipe' : 'Drink'}',
+              imageUrl: recipe['imageUrl'] as String?,
+              servings: recipe['servings'] as int?,           // ← safe nullable
+              totalTimeMinutes: recipe['totalTimeMinutes'] as int?, // ← safe nullable
+              alcoholType: recipe['alcoholType'] as String?,  // ← already safe
+            );
+          },
+        ),
+
+        const SizedBox(height: 100), // increased slightly to avoid bottom nav overlap
+      ],
+    );
+  }
+}

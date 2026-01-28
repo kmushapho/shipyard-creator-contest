@@ -12,6 +12,10 @@ class ModeProvider extends ChangeNotifier {
 
   ThemeMode get themeMode => _isDark ? ThemeMode.dark : ThemeMode.light;
 
+  bool get isFood => _mode == AppMode.food;
+
+  bool get isDrink => _mode == AppMode.drink;
+
   void toggleTheme() {
     _isDark = !_isDark;
     notifyListeners();
