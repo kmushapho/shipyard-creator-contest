@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'providers/mode_provider.dart';
 import 'screens/home_screen.dart';
-import '/constants/colors.dart';
 
 void main() {
   runApp(
@@ -18,34 +17,23 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final mode = Provider.of<ModeProvider>(context);
+    final mode = context.watch<ModeProvider>();
 
     return MaterialApp(
-      title: 'Euphoric Cook',
+      title: 'SpryCook',
       debugShowCheckedModeBanner: false,
-      theme: ThemeData.light().copyWith(
-        primaryColor: AppColors.vibrantOrange,
-        scaffoldBackgroundColor: mode.bgColor,
-        colorScheme: ColorScheme.light(
-          primary: AppColors.vibrantOrange,
-          secondary: AppColors.vibrantGreen,
-        ),
-        textTheme: const TextTheme(
-          bodyLarge: TextStyle(color: AppColors.darkText),
-        ),
-      ),
-      darkTheme: ThemeData.dark().copyWith(
-        primaryColor: AppColors.vibrantOrange,
-        scaffoldBackgroundColor: mode.bgColor,
-        colorScheme: ColorScheme.dark(
-          primary: AppColors.vibrantOrange,
-          secondary: AppColors.vibrantGreen,
-        ),
-        textTheme: const TextTheme(
-          bodyLarge: TextStyle(color: AppColors.lightText),
-        ),
-      ),
       themeMode: mode.themeMode,
+      theme: ThemeData.light(useMaterial3: true).copyWith(
+        colorScheme: ColorScheme.fromSeed(seedColor: mode.accentColor),
+        scaffoldBackgroundColor: mode.bgColor,
+      ),
+      darkTheme: ThemeData.dark(useMaterial3: true).copyWith(
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: mode.accentColor,
+          brightness: Brightness.dark,
+        ),
+        scaffoldBackgroundColor: mode.bgColor,
+      ),
       home: const HomeScreen(),
     );
   }
