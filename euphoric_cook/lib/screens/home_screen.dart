@@ -25,16 +25,13 @@ class _HomeScreenState extends State<HomeScreen> {
             'imageUrl': null as String?,
             'servings': 2 + index % 3,
             'totalTimeMinutes': 10 + index * 5,
-            // no alcoholType needed for food
           };
         } else {
-          // Drink mode – add alcoholType
           final alcoholTypes = ['alcoholic', 'non-alcoholic', 'optional'];
           return {
             'name': 'Refreshing Mojito ${index + 1}',
             'imageUrl': null as String?,
-            'alcoholType': alcoholTypes[index % 3], // cycles through the 3 options
-            // servings & totalTimeMinutes can stay if you want fallback, but we won't use them
+            'alcoholType': alcoholTypes[index % 3],
           };
         }
       },
@@ -45,15 +42,15 @@ class _HomeScreenState extends State<HomeScreen> {
       body: SafeArea(
         child: Column(
           children: [
-            // ── Top bar ────────────────────────────────────────────────
+            // ── Header with theme + mode toggle ─────────────────────────
             Padding(
-              padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+              padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch, // makes children take full width
+                crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  // Row just for the theme toggle aligned to the right
+                  // 1. Theme toggle row (aligned right)
                   Row(
-                    mainAxisAlignment: MainAxisAlignment.end, // pushes icon to right
+                    mainAxisAlignment: MainAxisAlignment.end,
                     children: [
                       IconButton(
                         icon: Icon(
@@ -67,29 +64,29 @@ class _HomeScreenState extends State<HomeScreen> {
                     ],
                   ),
 
-                  const SizedBox(height: 5), // small vertical space
+                  const SizedBox(height: 14),  // ← tweak this value (4–16)
 
-                  // Centered Food ↔ Drink toggle (takes center automatically)
-                  Center(
-                    child: _buildFoodDrinkToggle(mode),
-                  ),
+                  // 3. Food/Drink toggle (centered)
+                  _buildFoodDrinkToggle(mode),
+
+                  // Optional: tiny space before search bar
+                  const SizedBox(height: 16),
                 ],
               ),
             ),
 
-            const SizedBox(height: 8), // small vertical space
 
-            // ── Search bar ─────────────────────────────────────────────
+            // Search bar
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 1),
+              padding: const EdgeInsets.symmetric(horizontal: 16),
               child: AnimatedSwitcher(
                 duration: const Duration(milliseconds: 400),
                 child: Material(
-                  key: ValueKey(mode.currentMode), // keep the key for smooth switch
-                  elevation: 2,                     // subtle shadow (1–3 is gentle; 4+ feels heavier)
-                  shadowColor: Colors.black.withOpacity(0.12), // soft, not dark
+                  key: ValueKey(mode.currentMode),
+                  elevation: 2,
+                  shadowColor: Colors.black.withOpacity(0.12),
                   borderRadius: BorderRadius.circular(30),
-                  color: mode.cardColor,            // your existing fill color
+                  color: mode.cardColor,
                   child: TextField(
                     decoration: InputDecoration(
                       hintText: mode.searchHint,
@@ -98,8 +95,8 @@ class _HomeScreenState extends State<HomeScreen> {
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(30),
                         borderSide: BorderSide(
-                          color: accent.withOpacity(0.4), // semi-visible, subtle accent tint
-                          width: 1.2,                     // thin but noticeable
+                          color: accent.withOpacity(0.4),
+                          width: 1.2,
                         ),
                       ),
                       enabledBorder: OutlineInputBorder(
@@ -112,8 +109,8 @@ class _HomeScreenState extends State<HomeScreen> {
                       focusedBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(30),
                         borderSide: BorderSide(
-                          color: accent,                  // full accent when focused
-                          width: 1.8,                     // slightly thicker on focus for feedback
+                          color: accent,
+                          width: 1.8,
                         ),
                       ),
                       filled: true,
@@ -125,11 +122,11 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             ),
 
-            const SizedBox(height: 5),
+            const SizedBox(height: 16),
 
-            // ── Horizontal category chips ──────────────────────────────
+            // Horizontal chips
             SizedBox(
-              height: 48,
+              height: 44, // slightly reduced for tighter feel
               child: ListView.builder(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 scrollDirection: Axis.horizontal,
@@ -143,17 +140,16 @@ class _HomeScreenState extends State<HomeScreen> {
                       backgroundColor: mode.cardColor,
                       side: BorderSide(color: accent.withOpacity(0.3)),
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                      visualDensity: VisualDensity.compact,
                     ),
                   );
                 },
               ),
             ),
 
-            const SizedBox(height: 24),
+            const SizedBox(height: 20),
 
-            const SizedBox(height: 16),
-
-            // ── Featured content ───────────────────────────────────────
+            // Scrollable featured section
             Expanded(
               child: SingleChildScrollView(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -164,12 +160,10 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
               ),
             ),
-
           ],
         ),
       ),
 
-      // ── Fixed bottom navigation ────────────────────────────────
       bottomNavigationBar: BottomNavigationBar(
         type: BottomNavigationBarType.fixed,
         selectedItemColor: accent,
@@ -184,14 +178,13 @@ class _HomeScreenState extends State<HomeScreen> {
           BottomNavigationBarItem(icon: Icon(Icons.person_rounded), label: 'You'),
         ],
         currentIndex: 0,
-        onTap: (index) {}, // add navigation later
+        onTap: (index) {},
       ),
     );
   }
 
-  // ── Helper: Food / Drink centered toggle ───────────────────────
   Widget _buildFoodDrinkToggle(ModeProvider mode) {
-    final isFood = mode.currentMode == AppMode.food;
+    final isFood = mode.isFood;
     final accent = mode.accentColor;
 
     return Container(
