@@ -146,8 +146,8 @@ class _HomeScreenState extends State<HomeScreen> {
                         style: TextStyle(
                           fontSize: 13,
                           color: _selectedChipIndex == i
-                              ? Colors.orange.shade700
-                              : Colors.grey[800],
+                              ? mode.accentColor // selected text = accent
+                              : mode.textColor,  // default = same as search text
                         ),
                       ),
                       selected: _selectedChipIndex == i,
@@ -156,17 +156,23 @@ class _HomeScreenState extends State<HomeScreen> {
                           _selectedChipIndex = selected ? i : -1;
                         });
                       },
-                      selectedColor: Colors.orange.withOpacity(0.2),
-                      backgroundColor: Colors.grey[50], // off-white fill
+                      selectedColor: mode.accentColor.withOpacity(0.2), // light orange highlight
+                      backgroundColor: mode.cardColor, // same as search bar
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(18),
-                        side: BorderSide(color: Colors.grey[300]!),
+                        side: BorderSide(
+                          color: mode.cardColor == Colors.white
+                              ? Colors.grey[300]! // light mode border
+                              : Colors.grey[700]!, // dark mode border
+                          width: 1,
+                        ),
                       ),
                     ),
                   );
                 },
               ),
             ),
+
             const SizedBox(height: 12),
 
             // Scrollable featured section
