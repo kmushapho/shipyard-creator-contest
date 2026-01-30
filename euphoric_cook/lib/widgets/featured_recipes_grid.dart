@@ -27,7 +27,7 @@ class FeaturedRecipesGrid extends StatelessWidget {
           child: Text(
             title,
             style: TextStyle(
-              fontSize: 22,
+              fontSize: 20,
               fontWeight: FontWeight.bold,
               color: mode.textColor,
             ),

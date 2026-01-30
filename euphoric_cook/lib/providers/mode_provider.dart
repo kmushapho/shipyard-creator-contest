@@ -50,6 +50,11 @@ class ModeProvider extends ChangeNotifier {
     color: isDark ? Colors.white : Colors.black87,
   );
 
+  TextStyle get featuredTitleTextStyle => TextStyle(
+    fontSize: 1,
+    color: isDark ? Colors.white : Colors.black87,
+  );
+
 
   String get searchHint => _mode == AppMode.food
       ? 'Search food recipes by name'
