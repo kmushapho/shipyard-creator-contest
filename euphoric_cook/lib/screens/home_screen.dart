@@ -81,7 +81,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 child: Material(
                   key: ValueKey(mode.currentMode),
                   elevation: 2,
-                  shadowColor: Colors.black.withOpacity(0.08),
+                  shadowColor: Colors.black.withOpacity(0.08), // soft shadow
                   borderRadius: BorderRadius.circular(24),
                   color: mode.cardColor,
                   child: TextField(
@@ -95,7 +95,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         color: mode.isDark ? Colors.white54 : Colors.grey[600],
                       ),
                       filled: true,
-                      fillColor: mode.cardColor,
+                      fillColor: mode.cardColor, // dark gray in dark mode
                       contentPadding: const EdgeInsets.symmetric(vertical: 10, horizontal: 16),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(24),
@@ -107,11 +107,13 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                       focusedBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(24),
-                        borderSide: BorderSide(color: Colors.grey[400]!, width: 1.2),
+                        borderSide: BorderSide(color: Colors.grey[300]!, width: 1.2),
                       ),
                     ),
                   ),
+
                 ),
+
               ),
             ),
 
@@ -126,6 +128,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 itemCount: mode.categoryChips.length,
                 itemBuilder: (context, i) {
                   final chip = mode.categoryChips[i];
+
                   return Padding(
                     padding: const EdgeInsets.only(right: 8),
                     child: ChoiceChip(
@@ -134,8 +137,8 @@ class _HomeScreenState extends State<HomeScreen> {
                         style: TextStyle(
                           fontSize: 13,
                           color: _selectedChipIndex == i
-                              ? mode.accentColor
-                              : mode.textColor,
+                              ? mode.accentColor // selected text = accent
+                              : mode.textColor,  // default = same as search text
                         ),
                       ),
                       selected: _selectedChipIndex == i,
@@ -144,14 +147,14 @@ class _HomeScreenState extends State<HomeScreen> {
                           _selectedChipIndex = selected ? i : -1;
                         });
                       },
-                      selectedColor: mode.accentColor.withOpacity(0.2),
-                      backgroundColor: mode.cardColor,
+                      selectedColor: mode.accentColor.withOpacity(0.2), // light orange highlight
+                      backgroundColor: mode.cardColor, // same as search bar
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(18),
                         side: BorderSide(
                           color: mode.cardColor == Colors.white
-                              ? Colors.grey[300]!
-                              : Colors.grey[700]!,
+                              ? Colors.grey[300]! // light mode border
+                              : Colors.grey[700]!, // dark mode border
                           width: 1,
                         ),
                       ),
