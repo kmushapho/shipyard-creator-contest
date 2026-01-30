@@ -16,45 +16,43 @@ class _HomeScreenState extends State<HomeScreen> {
     final mode = Provider.of<ModeProvider>(context);
     final accent = mode.accentColor;
     int _selectedChipIndex = -1;
-    final featuredRecipes = List.generate(
-      6,
-          (index) {
-        if (mode.isFood) {
-          return {
-            'name': 'Creamy Avocado Toast ${index + 1}',
-            'imageUrl': null as String?,
-            'servings': 2 + index % 3,
-            'totalTimeMinutes': 10 + index * 5,
-          };
-        } else {
-          final alcoholTypes = ['alcoholic', 'non-alcoholic', 'optional'];
-          return {
-            'name': 'Refreshing Mojito ${index + 1}',
-            'imageUrl': null as String?,
-            'alcoholType': alcoholTypes[index % 3],
-          };
-        }
-      },
-    );
+
+    // Dummy data for featured grid (changes based on food/drink mode)
+    final featuredRecipes = List.generate(6, (index) {
+      if (mode.isFood) {
+        return {
+          'name': 'Creamy Avocado Toast ${index + 1}',
+          'imageUrl': null as String?,
+          'servings': 2 + index % 3,
+          'totalTimeMinutes': 10 + index * 5,
+        };
+      } else {
+        final alcoholTypes = ['alcoholic', 'non-alcoholic', 'optional'];
+        return {
+          'name': 'Refreshing Mojito ${index + 1}',
+          'imageUrl': null as String?,
+          'alcoholType': alcoholTypes[index % 3],
+        };
+      }
+    });
 
     return Scaffold(
       backgroundColor: mode.bgColor,
       body: SafeArea(
         child: Column(
           children: [
-            // ── Header with theme + mode toggle ─────────────────────────
-
+            // ── Top header: theme toggle + food/drink switch ──
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 1),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  // Mode toggle (top-right)
+                  // Theme toggle (sun/moon icon, top-right)
                   Row(
                     mainAxisAlignment: MainAxisAlignment.end,
                     children: [
                       IconButton(
-                        padding: EdgeInsets.zero,       // remove default padding
+                        padding: EdgeInsets.zero,
                         constraints: const BoxConstraints(),
                         icon: Icon(
                           mode.isDark ? Icons.wb_sunny_rounded : Icons.nights_stay_rounded,
@@ -65,21 +63,15 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                     ],
                   ),
+                  const SizedBox(height: 1), // small gap between theme icon and toggle
 
-                  const SizedBox(height: 1), // spacing between mode and Food/Drink toggle
-
-                  // Food/Drink toggle
+                  // Food / Drink mode switch
                   _buildFoodDrinkToggle(mode),
 
-                  const SizedBox(height: 10), // spacing before search bar
+                  const SizedBox(height: 10), // gap before search field
                 ],
               ),
             ),
-
-
-
-
-
 
             // Search bar
             Padding(
@@ -89,7 +81,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 child: Material(
                   key: ValueKey(mode.currentMode),
                   elevation: 2,
-                  shadowColor: Colors.black.withOpacity(0.08), // soft shadow
+                  shadowColor: Colors.black.withOpacity(0.08),
                   borderRadius: BorderRadius.circular(24),
                   color: mode.cardColor,
                   child: TextField(
@@ -103,7 +95,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         color: mode.isDark ? Colors.white54 : Colors.grey[600],
                       ),
                       filled: true,
-                      fillColor: mode.cardColor, // dark gray in dark mode
+                      fillColor: mode.cardColor,
                       contentPadding: const EdgeInsets.symmetric(vertical: 10, horizontal: 16),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(24),
@@ -119,16 +111,13 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                     ),
                   ),
-
                 ),
-
               ),
             ),
 
-
             const SizedBox(height: 12),
 
-            // Horizontal chips
+            // Horizontal category chips
             SizedBox(
               height: 36,
               child: ListView.builder(
@@ -137,7 +126,6 @@ class _HomeScreenState extends State<HomeScreen> {
                 itemCount: mode.categoryChips.length,
                 itemBuilder: (context, i) {
                   final chip = mode.categoryChips[i];
-
                   return Padding(
                     padding: const EdgeInsets.only(right: 8),
                     child: ChoiceChip(
@@ -146,8 +134,8 @@ class _HomeScreenState extends State<HomeScreen> {
                         style: TextStyle(
                           fontSize: 13,
                           color: _selectedChipIndex == i
-                              ? mode.accentColor // selected text = accent
-                              : mode.textColor,  // default = same as search text
+                              ? mode.accentColor
+                              : mode.textColor,
                         ),
                       ),
                       selected: _selectedChipIndex == i,
@@ -156,14 +144,14 @@ class _HomeScreenState extends State<HomeScreen> {
                           _selectedChipIndex = selected ? i : -1;
                         });
                       },
-                      selectedColor: mode.accentColor.withOpacity(0.2), // light orange highlight
-                      backgroundColor: mode.cardColor, // same as search bar
+                      selectedColor: mode.accentColor.withOpacity(0.2),
+                      backgroundColor: mode.cardColor,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(18),
                         side: BorderSide(
                           color: mode.cardColor == Colors.white
-                              ? Colors.grey[300]! // light mode border
-                              : Colors.grey[700]!, // dark mode border
+                              ? Colors.grey[300]!
+                              : Colors.grey[700]!,
                           width: 1,
                         ),
                       ),
@@ -175,7 +163,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
             const SizedBox(height: 12),
 
-            // Scrollable featured section
+            // Featured recipes grid (scrollable)
             Expanded(
               child: SingleChildScrollView(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -190,6 +178,7 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
       ),
 
+      // Bottom navigation bar
       bottomNavigationBar: BottomNavigationBar(
         type: BottomNavigationBarType.fixed,
         selectedItemColor: accent,
@@ -197,16 +186,11 @@ class _HomeScreenState extends State<HomeScreen> {
         backgroundColor: mode.cardColor,
         showUnselectedLabels: true,
         items: const [
-          BottomNavigationBarItem(
-              icon: Icon(Icons.home_rounded), label: 'Home'),
-          BottomNavigationBarItem(
-              icon: Icon(Icons.book_rounded), label: 'Cookbook'),
-          BottomNavigationBarItem(
-              icon: Icon(Icons.list_alt_rounded), label: 'Plan'),
-          BottomNavigationBarItem(
-              icon: Icon(Icons.shopping_cart_rounded), label: 'Shop'),
-          BottomNavigationBarItem(
-              icon: Icon(Icons.person_rounded), label: 'You'),
+          BottomNavigationBarItem(icon: Icon(Icons.home_rounded), label: 'Home'),
+          BottomNavigationBarItem(icon: Icon(Icons.book_rounded), label: 'Cookbook'),
+          BottomNavigationBarItem(icon: Icon(Icons.list_alt_rounded), label: 'Plan'),
+          BottomNavigationBarItem(icon: Icon(Icons.shopping_cart_rounded), label: 'Shop'),
+          BottomNavigationBarItem(icon: Icon(Icons.person_rounded), label: 'You'),
         ],
         currentIndex: 0,
         onTap: (index) {},
@@ -231,7 +215,7 @@ class _HomeScreenState extends State<HomeScreen> {
             if (!isFood) mode.toggleFoodDrink();
           },
         ),
-        const SizedBox(width: 24), // space between Food and Drink
+        const SizedBox(width: 24), // gap between Food and Drink labels
         _buildUnderlineTab(
           label: 'Drink',
           isActive: !isFood,
@@ -245,7 +229,6 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-
   Widget _buildUnderlineTab({
     required String label,
     required bool isActive,
@@ -255,11 +238,10 @@ class _HomeScreenState extends State<HomeScreen> {
   }) {
     return GestureDetector(
       onTap: onTap,
-      child: IntrinsicWidth( // ← this is the magic
+      child: IntrinsicWidth(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
-          // makes underline stretch to text
           children: [
             Padding(
               padding: const EdgeInsets.fromLTRB(10, 0, 10, 6),
@@ -278,8 +260,7 @@ class _HomeScreenState extends State<HomeScreen> {
               height: isActive ? 3.5 : 0,
               decoration: BoxDecoration(
                 color: accent,
-                borderRadius: const BorderRadius.vertical(
-                    top: Radius.circular(2)),
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(2)),
               ),
             ),
           ],

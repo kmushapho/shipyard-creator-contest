@@ -28,7 +28,6 @@ class RecipeCard extends StatelessWidget {
       onTap: onTap,
       child: AspectRatio(
         aspectRatio: 0.78,
-        // ← tweak this: 0.75 = taller, 0.85 = shorter/wider, 1.0 = square
         child: Card(
           elevation: mode.isDark ? 3 : 2,
           color: mode.cardColor,
