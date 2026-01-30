@@ -54,7 +54,8 @@ class _HomeScreenState extends State<HomeScreen> {
                     children: [
                       IconButton(
                         icon: Icon(
-                          mode.isDark ? Icons.wb_sunny_rounded : Icons.nights_stay_rounded,
+                          mode.isDark ? Icons.wb_sunny_rounded : Icons
+                              .nights_stay_rounded,
                           color: accent,
                           size: 28,
                         ),
@@ -64,7 +65,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     ],
                   ),
 
-                  const SizedBox(height: 14),  // ← tweak this value (4–16)
+                  const SizedBox(height: 14), // ← tweak this value (4–16)
 
                   // 3. Food/Drink toggle (centered)
                   _buildFoodDrinkToggle(mode),
@@ -90,7 +91,8 @@ class _HomeScreenState extends State<HomeScreen> {
                   child: TextField(
                     decoration: InputDecoration(
                       hintText: mode.searchHint,
-                      hintStyle: TextStyle(color: mode.textColor.withOpacity(0.6)),
+                      hintStyle: TextStyle(
+                          color: mode.textColor.withOpacity(0.6)),
                       prefixIcon: Icon(Icons.search_rounded, color: accent),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(30),
@@ -115,7 +117,8 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                       filled: true,
                       fillColor: mode.cardColor,
-                      contentPadding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
+                      contentPadding: const EdgeInsets.symmetric(
+                          vertical: 14, horizontal: 16),
                     ),
                   ),
                 ),
@@ -139,7 +142,8 @@ class _HomeScreenState extends State<HomeScreen> {
                       label: Text(chip['label']!),
                       backgroundColor: mode.cardColor,
                       side: BorderSide(color: accent.withOpacity(0.3)),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(20)),
                       visualDensity: VisualDensity.compact,
                     ),
                   );
@@ -171,11 +175,16 @@ class _HomeScreenState extends State<HomeScreen> {
         backgroundColor: mode.cardColor,
         showUnselectedLabels: true,
         items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.home_rounded), label: 'Home'),
-          BottomNavigationBarItem(icon: Icon(Icons.book_rounded), label: 'Cookbook'),
-          BottomNavigationBarItem(icon: Icon(Icons.list_alt_rounded), label: 'Plan'),
-          BottomNavigationBarItem(icon: Icon(Icons.shopping_cart_rounded), label: 'Shop'),
-          BottomNavigationBarItem(icon: Icon(Icons.person_rounded), label: 'You'),
+          BottomNavigationBarItem(
+              icon: Icon(Icons.home_rounded), label: 'Home'),
+          BottomNavigationBarItem(
+              icon: Icon(Icons.book_rounded), label: 'Cookbook'),
+          BottomNavigationBarItem(
+              icon: Icon(Icons.list_alt_rounded), label: 'Plan'),
+          BottomNavigationBarItem(
+              icon: Icon(Icons.shopping_cart_rounded), label: 'Shop'),
+          BottomNavigationBarItem(
+              icon: Icon(Icons.person_rounded), label: 'You'),
         ],
         currentIndex: 0,
         onTap: (index) {},
@@ -186,66 +195,72 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget _buildFoodDrinkToggle(ModeProvider mode) {
     final isFood = mode.isFood;
     final accent = mode.accentColor;
+    final inactiveColor = mode.textColor.withOpacity(0.65);
 
-    return Container(
-      decoration: BoxDecoration(
-        color: mode.cardColor,
-        borderRadius: BorderRadius.circular(40),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.08),
-            blurRadius: 12,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          _buildModePill(
-            label: 'Food',
-            isActive: isFood,
-            accent: accent,
-            onTap: () {
-              if (!isFood) mode.toggleFoodDrink();
-            },
-          ),
-          _buildModePill(
-            label: 'Drink',
-            isActive: !isFood,
-            accent: accent,
-            onTap: () {
-              if (isFood) mode.toggleFoodDrink();
-            },
-          ),
-        ],
-      ),
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        _buildUnderlineTab(
+          label: 'Food',
+          isActive: isFood,
+          accent: accent,
+          inactiveColor: inactiveColor,
+          onTap: () {
+            if (!isFood) mode.toggleFoodDrink();
+          },
+        ),
+        const SizedBox(width: 24), // space between Food and Drink
+        _buildUnderlineTab(
+          label: 'Drink',
+          isActive: !isFood,
+          accent: accent,
+          inactiveColor: inactiveColor,
+          onTap: () {
+            if (isFood) mode.toggleFoodDrink();
+          },
+        ),
+      ],
     );
   }
 
-  Widget _buildModePill({
+
+  Widget _buildUnderlineTab({
     required String label,
     required bool isActive,
     required Color accent,
+    required Color inactiveColor,
     required VoidCallback onTap,
   }) {
     return GestureDetector(
       onTap: onTap,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 350),
-        curve: Curves.easeInOut,
-        padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 12),
-        decoration: BoxDecoration(
-          color: isActive ? accent : Colors.transparent,
-          borderRadius: BorderRadius.circular(40),
-        ),
-        child: Text(
-          label,
-          style: TextStyle(
-            color: isActive ? Colors.white : accent,
-            fontWeight: FontWeight.w600,
-            fontSize: 16,
-          ),
+      child: IntrinsicWidth( // ← this is the magic
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          // makes underline stretch to text
+          children: [
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
+              child: Text(
+                label,
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  color: isActive ? accent : inactiveColor,
+                  fontWeight: isActive ? FontWeight.w700 : FontWeight.w600,
+                  fontSize: 16.5,
+                ),
+              ),
+            ),
+            AnimatedContainer(
+              duration: const Duration(milliseconds: 300),
+              height: isActive ? 3.5 : 0,
+              decoration: BoxDecoration(
+                color: accent,
+                borderRadius: const BorderRadius.vertical(
+                    top: Radius.circular(2)),
+              ),
+            ),
+          ],
         ),
       ),
     );

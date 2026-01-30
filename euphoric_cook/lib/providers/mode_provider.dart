@@ -43,10 +43,9 @@ class ModeProvider extends ChangeNotifier {
   List<Map<String, String>> get categoryChips => _mode == AppMode.food
       ? [
     {'label': 'Search By Pantry'},
-    {'label': 'Morning To Night'},
-    {'label': 'Healthy & Happy'},
+    {'label': 'All Day Meals'},
+    {'label': 'Recently viewed'},
     {'label': 'Discover New Flavors'},
-    {'label': 'Price & Prep'},
   ]
       : [
     {'label': 'Search By Pantry'},
