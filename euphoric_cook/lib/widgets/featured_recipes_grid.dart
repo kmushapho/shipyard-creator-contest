@@ -41,7 +41,7 @@ class FeaturedRecipesGrid extends StatelessWidget {
             crossAxisCount: 2,
             crossAxisSpacing: 12,
             mainAxisSpacing: 12,
-            childAspectRatio: 0.72, // ← slightly adjusted to give more vertical space to text
+            childAspectRatio: 0.72,
           ),
           itemCount: recipes.length,
           itemBuilder: (context, index) {
@@ -50,14 +50,14 @@ class FeaturedRecipesGrid extends StatelessWidget {
             return RecipeCard(
               name: recipe['name'] as String? ?? 'Unnamed ${mode.isFood ? 'Recipe' : 'Drink'}',
               imageUrl: recipe['imageUrl'] as String?,
-              servings: recipe['servings'] as int?,           // ← safe nullable
-              totalTimeMinutes: recipe['totalTimeMinutes'] as int?, // ← safe nullable
-              alcoholType: recipe['alcoholType'] as String?,  // ← already safe
+              servings: recipe['servings'] as int?,
+              totalTimeMinutes: recipe['totalTimeMinutes'] as int?,
+              alcoholType: recipe['alcoholType'] as String?,
             );
           },
         ),
 
-        const SizedBox(height: 100), // increased slightly to avoid bottom nav overlap
+        const SizedBox(height: 100),
       ],
     );
   }
