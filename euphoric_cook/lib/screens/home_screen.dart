@@ -188,6 +188,7 @@ class _HomeScreenState extends State<HomeScreen> {
         unselectedItemColor: mode.textColor.withOpacity(0.6),
         backgroundColor: mode.cardColor,
         showUnselectedLabels: true,
+        iconSize: 20,
         items: const [
           BottomNavigationBarItem(icon: Icon(Icons.home_rounded), label: 'Home'),
           BottomNavigationBarItem(icon: Icon(Icons.book_rounded), label: 'Cookbook'),
