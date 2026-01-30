@@ -34,6 +34,18 @@ class ModeProvider extends ChangeNotifier {
 
   Color get cardColor => _isDark ? AppColors.cardBgDark : AppColors.cardBgLight;
 
+  TextStyle get featuredTitleStyle => TextStyle(
+    fontSize: 16,
+    fontWeight: FontWeight.w600,
+    color: textColor,
+  );
+
+  TextStyle get searchHintStyle => TextStyle(
+    fontSize: 14,
+    color: textColor.withOpacity(0.6),
+  );
+
+
   String get searchHint => _mode == AppMode.food
       ? 'Search food recipes by name'
       : 'Search drink recipes by name';
