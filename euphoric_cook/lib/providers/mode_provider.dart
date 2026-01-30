@@ -40,9 +40,14 @@ class ModeProvider extends ChangeNotifier {
     color: textColor,
   );
 
+  TextStyle get searchTextStyle => TextStyle(
+    fontSize: 14,
+    color: isDark ? Colors.white : Colors.black87, // contrast text
+  );
+
   TextStyle get searchHintStyle => TextStyle(
     fontSize: 14,
-    color: textColor.withOpacity(0.6),
+    color: isDark ? Colors.white : Colors.black87,
   );
 
 

@@ -93,17 +93,18 @@ class _HomeScreenState extends State<HomeScreen> {
                   borderRadius: BorderRadius.circular(24),
                   color: mode.cardColor,
                   child: TextField(
-                    style: TextStyle(fontSize: 14, color: mode.textColor),
+                    style: mode.searchTextStyle,
                     decoration: InputDecoration(
                       hintText: mode.searchHint,
-                      hintStyle: TextStyle(
-                        fontSize: 14,
-                        color: mode.textColor.withOpacity(0.6),
+                      hintStyle: mode.searchHintStyle,
+                      prefixIcon: Icon(
+                        Icons.search_rounded,
+                        size: 20,
+                        color: mode.isDark ? Colors.white54 : Colors.grey[600],
                       ),
-                      prefixIcon: Padding(
-                        padding: const EdgeInsets.all(8.0),
-                        child: Icon(Icons.search_rounded, color: accent, size: 20),
-                      ),
+                      filled: true,
+                      fillColor: mode.cardColor, // dark gray in dark mode
+                      contentPadding: const EdgeInsets.symmetric(vertical: 10, horizontal: 16),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(24),
                         borderSide: BorderSide(color: Colors.grey[300]!, width: 1),
@@ -114,13 +115,11 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                       focusedBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(24),
-                        borderSide: BorderSide(color: Colors.grey[200]!, width: 1),
+                        borderSide: BorderSide(color: Colors.grey[400]!, width: 1.2),
                       ),
-                      filled: true,
-                      fillColor: Colors.grey[50],
-                      contentPadding: const EdgeInsets.symmetric(vertical: 10, horizontal: 16),
                     ),
                   ),
+
                 ),
 
               ),
