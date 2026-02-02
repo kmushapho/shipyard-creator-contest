@@ -38,7 +38,7 @@ class RecipeCard extends StatelessWidget {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              // Image section
+              // Image section - takes remaining space
               Expanded(
                 child: Container(
                   width: double.infinity,
@@ -63,27 +63,28 @@ class RecipeCard extends StatelessWidget {
                 ),
               ),
 
-              // Details section
+              // Details section - fixed layout
               Padding(
                 padding: const EdgeInsets.fromLTRB(12, 8, 12, 12),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    // Recipe / Drink name
+                    // Fixed-height single-line title with ellipsis (...)
                     SizedBox(
+                      height: 22,  // fixed height - tune between 20-24 if needed
                       width: double.infinity,
                       child: Text(
                         name,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        softWrap: false,
                         style: TextStyle(
-                          fontSize: 14,              // slightly smaller → better overflow prevention
+                          fontSize: 14.5,
                           fontWeight: FontWeight.w600,
                           color: mode.textColor,
-                          height: 1.2,
+                          height: 1.25,
                         ),
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                        softWrap: true,
                       ),
                     ),
                     const SizedBox(height: 8),
@@ -134,7 +135,7 @@ class RecipeCard extends StatelessWidget {
                         ),
                     ]
 
-                    // Drink mode: alcohol type (single line)
+                    // Drink mode: alcohol type indicator
                     else ...[
                       Builder(
                         builder: (context) {
