@@ -21,61 +21,75 @@ class _HomeScreenState extends State<HomeScreen> {
     int _selectedChipIndex = -1;
 
     Future<List<Map<String, dynamic>>> _fetchFeaturedRecipes(bool isFood) async {
-      if (isFood) {
-        final url = Uri.parse(
-          'https://api.spoonacular.com/recipes/random?apiKey=9333c1e5442a422ea040f38a3f453614&number=10',
-        );
+      final int desiredCount = 10;
+      List<Map<String, dynamic>> results = [];
 
-        final response = await http.get(url);
+      // Correct Spoonacular endpoint
+      final tags = isFood ? '' : 'beverage';
+      final url = Uri.parse(
+        'https://api.spoonacular.com/recipes/random'
+            '?apiKey=9333c1e5442a422ea040f38a3f453614'
+            '&number=$desiredCount'
+            '${tags.isNotEmpty ? '&tags=$tags' : ''}',
+      );
 
-        if (response.statusCode == 200) {
-          final data = json.decode(response.body);
-          final List recipes = data['recipes'] as List;
+      final response = await http.get(url);
+      if (response.statusCode != 200) {
+        throw Exception('Failed to load ${isFood ? "recipes" : "drinks"}: ${response.statusCode}');
+      }
 
-          // Map and filter out recipes without valid image URL
-          return recipes.map((r) {
-            final imageUrl = (r['image'] as String?)?.replaceAll(RegExp(r'\.$'), '');
-            if (imageUrl == null || imageUrl.isEmpty) return null; // skip invalid
-            return {
-              'name': r['title'] as String? ?? 'Unnamed Recipe',
-              'imageUrl': imageUrl,
-              'servings': r['servings'] as int?,
-              'totalTimeMinutes': r['readyInMinutes'] as int?,
-            };
-          }).whereType<Map<String, dynamic>>().toList(); // remove nulls
-        } else {
-          throw Exception('Failed to load recipes: ${response.statusCode}');
-        }
-      } else {
-        // TheCocktailDB version stays the same, optionally filter drinks without image
-        List<Map<String, dynamic>> drinks = [];
+      final data = json.decode(response.body);
+      final List recipes = data['recipes'] as List;
 
-        for (int i = 0; i < 20; i++) {
-          final url = Uri.parse('https://www.thecocktaildb.com/api/json/v1/1/random.php');
-          final response = await http.get(url);
+      for (var r in recipes) {
+        final imageUrl = r['image'] as String?;
+        if (imageUrl == null || imageUrl.isEmpty) continue;
 
-          if (response.statusCode == 200) {
-            final data = json.decode(response.body);
-            final drink = (data['drinks'] as List?)?.first;
+        String? alcoholType;
 
-            if (drink != null) {
-              final imageUrl = (drink['strDrinkThumb'] as String?)?.trim();
-              if (imageUrl == null || imageUrl.isEmpty) continue; // skip invalid
+        if (!isFood) {
+          // Determine alcohol type from title or tags
+          final title = (r['title'] as String?)?.toLowerCase() ?? '';
+          final dishTypes = (r['dishTypes'] as List?)
+              ?.map((t) => t.toString().toLowerCase())
+              .toList() ??
+              [];
 
-              drinks.add({
-                'name': drink['strDrink'] as String? ?? 'Unnamed Drink',
-                'imageUrl': imageUrl,
-                'alcoholType': drink['strAlcoholic'] as String?,
-                'servings': null,
-                'totalTimeMinutes': null,
-              });
-            }
+          if (title.contains('beer') ||
+              title.contains('wine') ||
+              title.contains('vodka') ||
+              title.contains('rum') ||
+              title.contains('cocktail') ||
+              title.contains('whiskey') ||
+              title.contains('tequila')) {
+            alcoholType = 'alcoholic';
+          } else if (title.contains('mocktail') ||
+              title.contains('smoothie') ||
+              title.contains('juice') ||
+              title.contains('tea') ||
+              title.contains('coffee') ||
+              title.contains('lemonade') ||
+              title.contains('milk') ||
+              title.contains('water') ||
+              dishTypes.contains('beverage')) {
+            alcoholType = 'non-alcoholic';
+          } else {
+            alcoholType = 'optional';
           }
         }
 
-        return drinks;
+        results.add({
+          'name': r['title'] ?? 'Unnamed ${isFood ? "Recipe" : "Drink"}',
+          'imageUrl': imageUrl,
+          'servings': r['servings'],
+          'totalTimeMinutes': r['readyInMinutes'],
+          'alcoholType': alcoholType,
+        });
       }
+
+      return results;
     }
+
 
 
     return Scaffold(

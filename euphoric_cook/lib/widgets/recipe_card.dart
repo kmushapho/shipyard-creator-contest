@@ -150,12 +150,11 @@ class RecipeCard extends StatelessWidget {
                               label = 'Alcoholic';
                               color = Colors.red.withOpacity(0.85);
                               break;
-                            case 'non alcoholic':
+                            case 'non-alcoholic':
                               icon = Icons.no_drinks_rounded;
                               label = 'Non-alcoholic';
                               color = Colors.green.withOpacity(0.85);
-                              break;
-                            default:
+                              break;default:
                               icon = Icons.wine_bar_outlined;
                               label = 'Alcohol optional';
                               color = mode.textColor.withOpacity(0.7);

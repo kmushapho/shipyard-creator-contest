@@ -73,6 +73,5 @@ class ModeProvider extends ChangeNotifier {
     {'label': 'Search By Pantry'},
     {'label': 'Alcoholic'},
     {'label': 'Non-Alcoholic'},
-    {'label': 'Alcohol Optional'},
   ];
 }
