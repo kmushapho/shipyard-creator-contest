@@ -22,11 +22,8 @@ class _HomeScreenState extends State<HomeScreen> {
 
     Future<List<Map<String, dynamic>>> _fetchFeaturedRecipes(bool isFood) async {
       if (isFood) {
-        // Spoonacular - get random recipes
         final url = Uri.parse(
-          'https://api.spoonacular.com/recipes/random'
-              '?apiKey=9333c1e5442a422ea040f38a3f453614'
-              '&number=6',
+          'https://api.spoonacular.com/recipes/random?apiKey=9333c1e5442a422ea040f38a3f453614&number=10',
         );
 
         final response = await http.get(url);
@@ -35,22 +32,25 @@ class _HomeScreenState extends State<HomeScreen> {
           final data = json.decode(response.body);
           final List recipes = data['recipes'] as List;
 
+          // Map and filter out recipes without valid image URL
           return recipes.map((r) {
+            final imageUrl = (r['image'] as String?)?.replaceAll(RegExp(r'\.$'), '');
+            if (imageUrl == null || imageUrl.isEmpty) return null; // skip invalid
             return {
               'name': r['title'] as String? ?? 'Unnamed Recipe',
-              'imageUrl': r['image'] as String?,
+              'imageUrl': imageUrl,
               'servings': r['servings'] as int?,
               'totalTimeMinutes': r['readyInMinutes'] as int?,
             };
-          }).toList();
+          }).whereType<Map<String, dynamic>>().toList(); // remove nulls
         } else {
           throw Exception('Failed to load recipes: ${response.statusCode}');
         }
       } else {
-        // TheCocktailDB - fetch 6 random drinks
+        // TheCocktailDB version stays the same, optionally filter drinks without image
         List<Map<String, dynamic>> drinks = [];
 
-        for (int i = 0; i < 6; i++) {
+        for (int i = 0; i < 20; i++) {
           final url = Uri.parse('https://www.thecocktaildb.com/api/json/v1/1/random.php');
           final response = await http.get(url);
 
@@ -59,9 +59,12 @@ class _HomeScreenState extends State<HomeScreen> {
             final drink = (data['drinks'] as List?)?.first;
 
             if (drink != null) {
+              final imageUrl = (drink['strDrinkThumb'] as String?)?.trim();
+              if (imageUrl == null || imageUrl.isEmpty) continue; // skip invalid
+
               drinks.add({
                 'name': drink['strDrink'] as String? ?? 'Unnamed Drink',
-                'imageUrl': drink['strDrinkThumb'] as String?,
+                'imageUrl': imageUrl,
                 'alcoholType': drink['strAlcoholic'] as String?,
                 'servings': null,
                 'totalTimeMinutes': null,
@@ -73,6 +76,7 @@ class _HomeScreenState extends State<HomeScreen> {
         return drinks;
       }
     }
+
 
     return Scaffold(
       backgroundColor: mode.bgColor,
