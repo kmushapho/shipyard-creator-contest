@@ -32,13 +32,14 @@ class RecipeCard extends StatelessWidget {
           elevation: mode.isDark ? 3 : 2,
           color: mode.cardColor,
           shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16)),
+            borderRadius: BorderRadius.circular(16),
+          ),
           clipBehavior: Clip.antiAlias,
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              // Image – now takes fixed proportion
-              Expanded( // ← Expanded here is safe because AspectRatio constrains total height
+              // Image section
+              Expanded(
                 child: Container(
                   width: double.infinity,
                   decoration: BoxDecoration(
@@ -62,109 +63,120 @@ class RecipeCard extends StatelessWidget {
                 ),
               ),
 
-              // Details – fixed small height, no flex needed
+              // Details section
               Padding(
                 padding: const EdgeInsets.fromLTRB(12, 8, 12, 12),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    // Recipe name – safe from overflow
-                    Text(
-                      name,
-                      style: TextStyle(
-                        fontSize: 15, // slightly smaller helps prevent overflow
-                        fontWeight: FontWeight.w600,
-                        color: mode.textColor,
-                        height: 1.15,
-                      ),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      softWrap: true,
-                    ),
-                    const SizedBox(height: 6),
-
-                    // Conditional info row – make it compact
-                    if (mode.isFood) ...[
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          if (totalTimeMinutes != null)
-                            Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Icon(Icons.timer_outlined,
-                                    size: 14,
-                                    color: mode.textColor.withOpacity(0.7)),
-                                const SizedBox(width: 4),
-                                Text(
-                                  '$totalTimeMinutes min',
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    color: mode.textColor.withOpacity(0.75),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          if (servings != null)
-                            Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Icon(Icons.people_outline,
-                                    size: 14,
-                                    color: mode.textColor.withOpacity(0.7)),
-                                const SizedBox(width: 4),
-                                Text(
-                                  '$servings servings',
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    color: mode.textColor.withOpacity(0.75),
-                                  ),
-                                ),
-                              ],
-                            ),
-                        ],
-                      ),
-                    ] else
-                      ...[
-                        // Drink mode – already compact
-                        Builder(
-                          builder: (context) {
-                            final type = (alcoholType ?? 'optional')
-                                .toLowerCase();
-                            IconData icon;
-                            String label;
-                            Color? color;
-                            switch (type) {
-                              case 'alcoholic':
-                                icon = Icons.local_bar_rounded;
-                                label = 'Alcoholic';
-                                color = Colors.red.withOpacity(0.85);
-                                break;
-                              case 'non-alcoholic':
-                                icon = Icons.no_drinks_rounded;
-                                label = 'Non-alcoholic';
-                                color = Colors.green.withOpacity(0.85);
-                                break;
-                              default:
-                                icon = Icons.wine_bar_outlined;
-                                label = 'Alcohol optional';
-                                color = mode.textColor.withOpacity(0.7);
-                            }
-                            return Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Icon(icon, size: 14, color: color),
-                                const SizedBox(width: 4),
-                                Text(
-                                  label,
-                                  style: TextStyle(fontSize: 12, color: color),
-                                ),
-                              ],
-                            );
-                          },
+                    // Recipe / Drink name
+                    SizedBox(
+                      width: double.infinity,
+                      child: Text(
+                        name,
+                        style: TextStyle(
+                          fontSize: 14,              // slightly smaller → better overflow prevention
+                          fontWeight: FontWeight.w600,
+                          color: mode.textColor,
+                          height: 1.2,
                         ),
-                      ],
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        softWrap: true,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+
+                    // Food mode: time and servings on separate lines
+                    if (mode.isFood) ...[
+                      if (totalTimeMinutes != null)
+                        Padding(
+                          padding: const EdgeInsets.only(bottom: 4),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                Icons.timer_outlined,
+                                size: 14,
+                                color: mode.textColor.withOpacity(0.7),
+                              ),
+                              const SizedBox(width: 5),
+                              Text(
+                                '$totalTimeMinutes min',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: mode.textColor.withOpacity(0.75),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+
+                      if (servings != null)
+                        Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              Icons.people_outline,
+                              size: 14,
+                              color: mode.textColor.withOpacity(0.7),
+                            ),
+                            const SizedBox(width: 5),
+                            Text(
+                              '$servings servings',
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: mode.textColor.withOpacity(0.75),
+                              ),
+                            ),
+                          ],
+                        ),
+                    ]
+
+                    // Drink mode: alcohol type (single line)
+                    else ...[
+                      Builder(
+                        builder: (context) {
+                          final type = (alcoholType ?? 'optional').toLowerCase();
+                          IconData icon;
+                          String label;
+                          Color? color;
+
+                          switch (type) {
+                            case 'alcoholic':
+                              icon = Icons.local_bar_rounded;
+                              label = 'Alcoholic';
+                              color = Colors.red.withOpacity(0.85);
+                              break;
+                            case 'non-alcoholic':
+                              icon = Icons.no_drinks_rounded;
+                              label = 'Non-alcoholic';
+                              color = Colors.green.withOpacity(0.85);
+                              break;
+                            default:
+                              icon = Icons.wine_bar_outlined;
+                              label = 'Alcohol optional';
+                              color = mode.textColor.withOpacity(0.7);
+                          }
+
+                          return Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(icon, size: 14, color: color),
+                              const SizedBox(width: 5),
+                              Text(
+                                label,
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: color,
+                                ),
+                              ),
+                            ],
+                          );
+                        },
+                      ),
+                    ],
                   ],
                 ),
               ),
@@ -174,4 +186,4 @@ class RecipeCard extends StatelessWidget {
       ),
     );
   }
-  }
+}
