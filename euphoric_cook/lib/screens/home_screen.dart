@@ -7,90 +7,87 @@ import '../providers/mode_provider.dart';
 import '../widgets/featured_recipes_grid.dart';
 
 class HomeScreen extends StatefulWidget {
-  const HomeScreen({super.key});
+  HomeScreen({super.key});
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
 }
 
 class _HomeScreenState extends State<HomeScreen> {
+  int _selectedChipIndex = -1;
+
+  Future<List<Map<String, dynamic>>> _fetchFeaturedRecipes(bool isFood) async {
+    final int desiredCount = 10;
+    List<Map<String, dynamic>> results = [];
+
+    final tags = isFood ? '' : 'beverage';
+    final url = Uri.parse(
+      'https://api.spoonacular.com/recipes/random'
+          '?apiKey=9333c1e5442a422ea040f38a3f453614'
+          '&number=$desiredCount'
+          '${tags.isNotEmpty ? '&tags=$tags' : ''}',
+    );
+
+    final response = await http.get(url);
+    if (response.statusCode != 200) {
+      throw Exception('Failed to load ${isFood ? "recipes" : "drinks"}: ${response.statusCode}');
+    }
+
+    final data = json.decode(response.body);
+    final List recipes = data['recipes'] as List;
+
+    for (var r in recipes) {
+      final imageUrl = r['image'] as String?;
+      if (imageUrl == null || imageUrl.isEmpty) continue;
+
+      String? alcoholType;
+
+      if (!isFood) {
+        final title = (r['title'] as String?)?.toLowerCase() ?? '';
+        final dishTypes = (r['dishTypes'] as List?)
+                ?.map((t) => t.toString().toLowerCase())
+                .toList() ??
+            [];
+
+        if (title.contains('beer') ||
+            title.contains('wine') ||
+            title.contains('vodka') ||
+            title.contains('rum') ||
+            title.contains('cocktail') ||
+            title.contains('whiskey') ||
+            title.contains('tequila')) {
+          alcoholType = 'alcoholic';
+        } else if (title.contains('mocktail') ||
+            title.contains('smoothie') ||
+            title.contains('juice') ||
+            title.contains('tea') ||
+            title.contains('coffee') ||
+            title.contains('lemonade') ||
+            title.contains('milk') ||
+            title.contains('water') ||
+            dishTypes.contains('beverage')) {
+          alcoholType = 'non-alcoholic';
+        } else {
+          alcoholType = 'optional';
+        }
+      }
+
+      results.add({
+        'name': r['title'] ?? 'Unnamed ${isFood ? "Recipe" : "Drink"}',
+        'imageUrl': imageUrl,
+        'servings': r['servings'],
+        'totalTimeMinutes': r['readyInMinutes'],
+        'alcoholType': alcoholType,
+      });
+    }
+
+    return results;
+  }
+
   @override
   Widget build(BuildContext context) {
     final mode = Provider.of<ModeProvider>(context);
     final accent = mode.accentColor;
-    int _selectedChipIndex = -1;
-
-    Future<List<Map<String, dynamic>>> _fetchFeaturedRecipes(bool isFood) async {
-      final int desiredCount = 10;
-      List<Map<String, dynamic>> results = [];
-
-      // Correct Spoonacular endpoint
-      final tags = isFood ? '' : 'beverage';
-      final url = Uri.parse(
-        'https://api.spoonacular.com/recipes/random'
-            '?apiKey=9333c1e5442a422ea040f38a3f453614'
-            '&number=$desiredCount'
-            '${tags.isNotEmpty ? '&tags=$tags' : ''}',
-      );
-
-      final response = await http.get(url);
-      if (response.statusCode != 200) {
-        throw Exception('Failed to load ${isFood ? "recipes" : "drinks"}: ${response.statusCode}');
-      }
-
-      final data = json.decode(response.body);
-      final List recipes = data['recipes'] as List;
-
-      for (var r in recipes) {
-        final imageUrl = r['image'] as String?;
-        if (imageUrl == null || imageUrl.isEmpty) continue;
-
-        String? alcoholType;
-
-        if (!isFood) {
-          // Determine alcohol type from title or tags
-          final title = (r['title'] as String?)?.toLowerCase() ?? '';
-          final dishTypes = (r['dishTypes'] as List?)
-              ?.map((t) => t.toString().toLowerCase())
-              .toList() ??
-              [];
-
-          if (title.contains('beer') ||
-              title.contains('wine') ||
-              title.contains('vodka') ||
-              title.contains('rum') ||
-              title.contains('cocktail') ||
-              title.contains('whiskey') ||
-              title.contains('tequila')) {
-            alcoholType = 'alcoholic';
-          } else if (title.contains('mocktail') ||
-              title.contains('smoothie') ||
-              title.contains('juice') ||
-              title.contains('tea') ||
-              title.contains('coffee') ||
-              title.contains('lemonade') ||
-              title.contains('milk') ||
-              title.contains('water') ||
-              dishTypes.contains('beverage')) {
-            alcoholType = 'non-alcoholic';
-          } else {
-            alcoholType = 'optional';
-          }
-        }
-
-        results.add({
-          'name': r['title'] ?? 'Unnamed ${isFood ? "Recipe" : "Drink"}',
-          'imageUrl': imageUrl,
-          'servings': r['servings'],
-          'totalTimeMinutes': r['readyInMinutes'],
-          'alcoholType': alcoholType,
-        });
-      }
-
-      return results;
-    }
-
-
 
     return Scaffold(
       backgroundColor: mode.bgColor,
@@ -121,7 +118,8 @@ class _HomeScreenState extends State<HomeScreen> {
               children: [
                 // Top header: theme toggle + food/drink switch
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 1),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 1),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
@@ -132,7 +130,9 @@ class _HomeScreenState extends State<HomeScreen> {
                             padding: EdgeInsets.zero,
                             constraints: const BoxConstraints(),
                             icon: Icon(
-                              mode.isDark ? Icons.wb_sunny_rounded : Icons.nights_stay_rounded,
+                              mode.isDark
+                                  ? Icons.wb_sunny_rounded
+                                  : Icons.nights_stay_rounded,
                               color: accent,
                               size: 28,
                             ),
@@ -170,18 +170,22 @@ class _HomeScreenState extends State<HomeScreen> {
                           ),
                           filled: true,
                           fillColor: mode.cardColor,
-                          contentPadding: const EdgeInsets.symmetric(vertical: 10, horizontal: 16),
+                          contentPadding: const EdgeInsets.symmetric(
+                              vertical: 10, horizontal: 16),
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(24),
-                            borderSide: BorderSide(color: Colors.grey[300]!, width: 1),
+                            borderSide:
+                                BorderSide(color: Colors.grey[300]!, width: 1),
                           ),
                           enabledBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(24),
-                            borderSide: BorderSide(color: Colors.grey[300]!, width: 1),
+                            borderSide:
+                                BorderSide(color: Colors.grey[300]!, width: 1),
                           ),
                           focusedBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(24),
-                            borderSide: BorderSide(color: Colors.grey[300]!, width: 1.2),
+                            borderSide:
+                                BorderSide(color: Colors.grey[300]!, width: 1.2),
                           ),
                         ),
                       ),
@@ -266,16 +270,11 @@ class _HomeScreenState extends State<HomeScreen> {
           BottomNavigationBarItem(icon: Icon(Icons.shopping_cart_rounded), label: 'Shop'),
           BottomNavigationBarItem(icon: Icon(Icons.person_rounded), label: 'You'),
         ],
-        currentIndex: 0,
-        onTap: (index) {},
       ),
     );
   }
 
-  // ────────────────────────────────────────────────
-  // Helper methods moved here — AFTER build, but INSIDE the class
-  // ────────────────────────────────────────────────
-
+  // ───────────── Helper for Food/Drink toggle ─────────────
   Widget _buildFoodDrinkToggle(ModeProvider mode) {
     final isFood = mode.isFood;
     final accent = mode.accentColor;
@@ -316,33 +315,68 @@ class _HomeScreenState extends State<HomeScreen> {
   }) {
     return GestureDetector(
       onTap: onTap,
-      child: IntrinsicWidth(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Padding(
-              padding: const EdgeInsets.fromLTRB(10, 0, 10, 6),
-              child: Text(
-                label,
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  color: isActive ? accent : inactiveColor,
-                  fontWeight: isActive ? FontWeight.w700 : FontWeight.w600,
-                  fontSize: 16.5,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            label,
+            style: TextStyle(
+              fontWeight: FontWeight.w500,
+              color: isActive ? accent : inactiveColor,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Container(
+            height: 2,
+            width: 30,
+            color: isActive ? accent : Colors.transparent,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ───────────── Recipe Card ─────────────
+class RecipeCard extends StatelessWidget {
+  RecipeCard();
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      elevation: 2,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Expanded(
+            child: ClipRRect(
+              borderRadius: BorderRadius.vertical(top: Radius.circular(12)),
+              child: Image.network(
+                'https://images.unsplash.com/photo-1504674900247-0877df9cc836',
+                width: double.infinity,
+                fit: BoxFit.cover,
+              ),
+            ),
+          ),
+          Padding(
+            padding: EdgeInsets.all(8),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Recipe Title',
+                  style: TextStyle(fontWeight: FontWeight.bold),
                 ),
-              ),
+                SizedBox(height: 4),
+                Text(
+                  '30 min • 2 servings',
+                  style: TextStyle(fontSize: 12, color: Colors.grey),
+                ),
+              ],
             ),
-            AnimatedContainer(
-              duration: const Duration(milliseconds: 300),
-              height: isActive ? 3.5 : 0,
-              decoration: BoxDecoration(
-                color: accent,
-                borderRadius: const BorderRadius.vertical(top: Radius.circular(2)),
-              ),
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
