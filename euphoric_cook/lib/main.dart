@@ -7,13 +7,13 @@ void main() {
   runApp(
     ChangeNotifierProvider(
       create: (_) => ModeProvider(),
-      child: const MyApp(),
+      child: MyApp(), // const removed
     ),
   );
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+  MyApp({super.key}); // const removed
 
   @override
   Widget build(BuildContext context) {
@@ -34,7 +34,7 @@ class MyApp extends StatelessWidget {
         ),
         scaffoldBackgroundColor: mode.bgColor,
       ),
-      home: const HomeScreen(),
+      home: HomeScreen(), // const removed
     );
   }
 }
