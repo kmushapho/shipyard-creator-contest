@@ -1,132 +1,338 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 
-class HomeScreen extends StatelessWidget {
+import '../providers/mode_provider.dart';
+import '../widgets/featured_recipes_grid.dart';
+
+class HomeScreen extends StatefulWidget {
   HomeScreen({super.key});
 
   @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
+  int _selectedChipIndex = -1;
+
+  Future<List<Map<String, dynamic>>> _fetchFeaturedRecipes(bool isFood) async {
+    final int desiredCount = 10;
+    List<Map<String, dynamic>> results = [];
+
+    final tags = isFood ? '' : 'beverage';
+    final url = Uri.parse(
+      'https://api.spoonacular.com/recipes/random'
+          '?apiKey=9333c1e5442a422ea040f38a3f453614'
+          '&number=$desiredCount'
+          '${tags.isNotEmpty ? '&tags=$tags' : ''}',
+    );
+
+    final response = await http.get(url);
+    if (response.statusCode != 200) {
+      throw Exception('Failed to load ${isFood ? "recipes" : "drinks"}: ${response.statusCode}');
+    }
+
+    final data = json.decode(response.body);
+    final List recipes = data['recipes'] as List;
+
+    for (var r in recipes) {
+      final imageUrl = r['image'] as String?;
+      if (imageUrl == null || imageUrl.isEmpty) continue;
+
+      String? alcoholType;
+
+      if (!isFood) {
+        final title = (r['title'] as String?)?.toLowerCase() ?? '';
+        final dishTypes = (r['dishTypes'] as List?)
+                ?.map((t) => t.toString().toLowerCase())
+                .toList() ??
+            [];
+
+        if (title.contains('beer') ||
+            title.contains('wine') ||
+            title.contains('vodka') ||
+            title.contains('rum') ||
+            title.contains('cocktail') ||
+            title.contains('whiskey') ||
+            title.contains('tequila')) {
+          alcoholType = 'alcoholic';
+        } else if (title.contains('mocktail') ||
+            title.contains('smoothie') ||
+            title.contains('juice') ||
+            title.contains('tea') ||
+            title.contains('coffee') ||
+            title.contains('lemonade') ||
+            title.contains('milk') ||
+            title.contains('water') ||
+            dishTypes.contains('beverage')) {
+          alcoholType = 'non-alcoholic';
+        } else {
+          alcoholType = 'optional';
+        }
+      }
+
+      results.add({
+        'name': r['title'] ?? 'Unnamed ${isFood ? "Recipe" : "Drink"}',
+        'imageUrl': imageUrl,
+        'servings': r['servings'],
+        'totalTimeMinutes': r['readyInMinutes'],
+        'alcoholType': alcoholType,
+      });
+    }
+
+    return results;
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final mode = Provider.of<ModeProvider>(context);
+    final accent = mode.accentColor;
+
     return Scaffold(
-      // ───────────── App Bar ─────────────
-      appBar: AppBar(
-        title: Row(
-          children: [
-            Icon(Icons.restaurant_menu),
-            SizedBox(width: 8),
-            Text('SpryCook', style: TextStyle(fontWeight: FontWeight.bold)),
-          ],
+      backgroundColor: mode.bgColor,
+      body: SafeArea(
+        child: FutureBuilder<List<Map<String, dynamic>>>(
+          future: _fetchFeaturedRecipes(mode.isFood),
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const Center(child: CircularProgressIndicator());
+            }
+
+            if (snapshot.hasError) {
+              return Center(
+                child: Padding(
+                  padding: const EdgeInsets.all(24.0),
+                  child: Text(
+                    'Error loading ${mode.isFood ? "recipes" : "drinks"}:\n${snapshot.error}',
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(color: Colors.red, fontSize: 16),
+                  ),
+                ),
+              );
+            }
+
+            final featuredRecipes = snapshot.data ?? [];
+
+            return Column(
+              children: [
+                // Top header: theme toggle + food/drink switch
+                Padding(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 1),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: [
+                          IconButton(
+                            padding: EdgeInsets.zero,
+                            constraints: const BoxConstraints(),
+                            icon: Icon(
+                              mode.isDark
+                                  ? Icons.wb_sunny_rounded
+                                  : Icons.nights_stay_rounded,
+                              color: accent,
+                              size: 28,
+                            ),
+                            onPressed: mode.toggleTheme,
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 1),
+                      _buildFoodDrinkToggle(mode),
+                      const SizedBox(height: 10),
+                    ],
+                  ),
+                ),
+
+                // Search bar
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: AnimatedSwitcher(
+                    duration: const Duration(milliseconds: 400),
+                    child: Material(
+                      key: ValueKey(mode.currentMode),
+                      elevation: 2,
+                      shadowColor: Colors.black.withOpacity(0.08),
+                      borderRadius: BorderRadius.circular(24),
+                      color: mode.cardColor,
+                      child: TextField(
+                        style: mode.searchTextStyle,
+                        decoration: InputDecoration(
+                          hintText: mode.searchHint,
+                          hintStyle: mode.searchHintStyle,
+                          prefixIcon: Icon(
+                            Icons.search_rounded,
+                            size: 20,
+                            color: mode.isDark ? Colors.white54 : Colors.grey[600],
+                          ),
+                          filled: true,
+                          fillColor: mode.cardColor,
+                          contentPadding: const EdgeInsets.symmetric(
+                              vertical: 10, horizontal: 16),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(24),
+                            borderSide:
+                                BorderSide(color: Colors.grey[300]!, width: 1),
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(24),
+                            borderSide:
+                                BorderSide(color: Colors.grey[300]!, width: 1),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(24),
+                            borderSide:
+                                BorderSide(color: Colors.grey[300]!, width: 1.2),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 12),
+
+                // Horizontal category chips
+                SizedBox(
+                  height: 36,
+                  child: ListView.builder(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    scrollDirection: Axis.horizontal,
+                    itemCount: mode.categoryChips.length,
+                    itemBuilder: (context, i) {
+                      final chip = mode.categoryChips[i];
+                      return Padding(
+                        padding: const EdgeInsets.only(right: 8),
+                        child: ChoiceChip(
+                          label: Text(
+                            chip['label']!,
+                            style: TextStyle(
+                              fontSize: 13,
+                              color: _selectedChipIndex == i
+                                  ? mode.accentColor
+                                  : mode.textColor,
+                            ),
+                          ),
+                          selected: _selectedChipIndex == i,
+                          onSelected: (selected) {
+                            setState(() {
+                              _selectedChipIndex = selected ? i : -1;
+                            });
+                          },
+                          selectedColor: mode.accentColor.withOpacity(0.2),
+                          backgroundColor: mode.cardColor,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(18),
+                            side: BorderSide(
+                              color: mode.cardColor == Colors.white
+                                  ? Colors.grey[300]!
+                                  : Colors.grey[700]!,
+                              width: 1,
+                            ),
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+                const SizedBox(height: 12),
+
+                // Featured recipes grid
+                Expanded(
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: FeaturedRecipesGrid(
+                      title: mode.featuredTitle,
+                      recipes: featuredRecipes,
+                      crossAxisCount: 2,
+                    ),
+                  ),
+                ),
+              ],
+            );
+          },
         ),
-        actions: [
-          Padding(
-            padding: EdgeInsets.only(right: 12),
-            child: Icon(Icons.search),
-          ),
-        ],
       ),
 
-      // ───────────── Body ─────────────
-      body: SingleChildScrollView(
-        padding: EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Food / Drinks toggle
-            Center(
-              child: ToggleButtons(
-                isSelected: [true, false],
-                borderRadius: BorderRadius.circular(20),
-                children: [
-                  Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 20),
-                    child: Text('Food'),
-                  ),
-                  Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 20),
-                    child: Text('Drinks'),
-                  ),
-                ],
-              ),
-            ),
-
-            SizedBox(height: 12),
-
-            // Catchy sentence
-            Center(
-              child: Text(
-                'What are you craving today?',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
-              ),
-            ),
-
-            SizedBox(height: 16),
-
-            // Horizontal menu chips
-            SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: Row(
-                children: [
-                  MenuChip(label: 'Search by Pantry'),
-                  MenuChip(label: 'Recently Viewed'),
-                  MenuChip(label: 'Surprise Me'),
-                  MenuChip(label: 'Food/Drinks Favorites'),
-                ],
-              ),
-            ),
-
-            SizedBox(height: 20),
-
-            // Recipe grid
-            GridView.builder(
-              shrinkWrap: true,
-              physics: NeverScrollableScrollPhysics(),
-              itemCount: 6,
-              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 2,
-                mainAxisSpacing: 12,
-                crossAxisSpacing: 12,
-                childAspectRatio: 0.7,
-              ),
-              itemBuilder: (context, index) {
-                return RecipeCard();
-              },
-            ),
-          ],
-        ),
-      ),
-
-      // ───────────── Bottom Navigation ─────────────
       bottomNavigationBar: BottomNavigationBar(
         type: BottomNavigationBarType.fixed,
-        currentIndex: 0,
-        items: [
-          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
-          BottomNavigationBarItem(icon: Icon(Icons.search), label: 'Search'),
-          BottomNavigationBarItem(icon: Icon(Icons.book), label: 'Cookbook'),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.calendar_today),
-            label: 'Plan',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.shopping_cart),
-            label: 'Shop',
-          ),
-          BottomNavigationBarItem(icon: Icon(Icons.person), label: 'You'),
+        selectedItemColor: accent,
+        unselectedItemColor: mode.textColor.withOpacity(0.6),
+        backgroundColor: mode.cardColor,
+        showUnselectedLabels: true,
+        iconSize: 30,
+        items: const [
+          BottomNavigationBarItem(icon: Icon(Icons.home_rounded), label: 'Home'),
+          BottomNavigationBarItem(icon: Icon(Icons.book_rounded), label: 'Cookbook'),
+          BottomNavigationBarItem(icon: Icon(Icons.list_alt_rounded), label: 'Plan'),
+          BottomNavigationBarItem(icon: Icon(Icons.shopping_cart_rounded), label: 'Shop'),
+          BottomNavigationBarItem(icon: Icon(Icons.person_rounded), label: 'You'),
         ],
       ),
     );
   }
-}
 
-// ───────────── Menu Chip ─────────────
-class MenuChip extends StatelessWidget {
-  final String label;
+  // ───────────── Helper for Food/Drink toggle ─────────────
+  Widget _buildFoodDrinkToggle(ModeProvider mode) {
+    final isFood = mode.isFood;
+    final accent = mode.accentColor;
+    final inactiveColor = mode.textColor.withOpacity(0.65);
 
-  MenuChip({required this.label});
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        _buildUnderlineTab(
+          label: 'Food',
+          isActive: isFood,
+          accent: accent,
+          inactiveColor: inactiveColor,
+          onTap: () {
+            if (!isFood) mode.toggleFoodDrink();
+          },
+        ),
+        const SizedBox(width: 24),
+        _buildUnderlineTab(
+          label: 'Drink',
+          isActive: !isFood,
+          accent: accent,
+          inactiveColor: inactiveColor,
+          onTap: () {
+            if (isFood) mode.toggleFoodDrink();
+          },
+        ),
+      ],
+    );
+  }
 
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: EdgeInsets.only(right: 8),
-      child: Chip(label: Text(label)),
+  Widget _buildUnderlineTab({
+    required String label,
+    required bool isActive,
+    required Color accent,
+    required Color inactiveColor,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            label,
+            style: TextStyle(
+              fontWeight: FontWeight.w500,
+              color: isActive ? accent : inactiveColor,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Container(
+            height: 2,
+            width: 30,
+            color: isActive ? accent : Colors.transparent,
+          ),
+        ],
+      ),
     );
   }
 }
