@@ -73,7 +73,7 @@ class _PantrySelectorState extends State<PantrySelector>
 
     return Column(
       children: [
-        const SizedBox(height: 20),
+        const SizedBox(height: 3),
 
         // Title + animated icon at the end
         Center(
