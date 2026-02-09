@@ -480,8 +480,8 @@ class _CustomIngredientBottomSheetState
                           controller: _controller,
                           autofocus: true,
                           textCapitalization: TextCapitalization.words,
-                          autocorrect: false,
-                          enableSuggestions: false,
+                          autocorrect: true,
+                          enableSuggestions: true,
                           textInputAction: TextInputAction.done,
                           onSubmitted: (_) => _addIngredient(),
                           inputFormatters: [
