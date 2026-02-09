@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+
 
 class PantrySelector extends StatefulWidget {
   final bool isFood;
@@ -43,6 +46,70 @@ class _PantrySelectorState extends State<PantrySelector>
     {'name': 'Wine', 'emoji': '🍷'},
     {'name': 'Margarita', 'emoji': '🍹'},
   ];
+
+  Future<List<Map<String, dynamic>>> fetchRecipesByIngredients(Set<String> selected) async {
+    if (selected.isEmpty) return [];
+
+    // Edamam Meal Planner Endpoint
+    final String appId = '6cff42be';
+    final String appKey = 'c9667882039fd44fc94f1f4efa2cae1b';
+    final String url = 'https://api.edamam.com';
+
+    // Auth: Basic Auth (Base64 of ID:Key)
+    String basicAuth = 'Basic ' + base64Encode(utf8.encode('$appId:$appKey'));
+
+    // Prepare ingredients for the JSON body
+    List<Map<String, String>> preselected = selected.map((ing) => {"preselected": ing}).toList();
+
+    final Map<String, dynamic> requestBody = {
+      "plan": {
+        "accept": {
+          "all": preselected // Forces recipes to include these ingredients
+        }
+      },
+      "rules": {
+        "daily_meals": [
+          {"label": "Suggested Meal", "type": "selection"}
+        ]
+      }
+    };
+
+    try {
+      final response = await http.post(
+        Uri.parse(url),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': basicAuth,
+          'Edamam-Account-User': 'unique_user_id_123', // Required for Free Tier (10 max)
+        },
+        body: jsonEncode(requestBody),
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+
+        // Edamam Meal Planner returns a structure containing 'selection'
+        // You can extract recipes and nutrition facts directly from the response
+        List<Map<String, dynamic>> meals = [];
+        if (data['selection'] != null) {
+          for (var day in data['selection']) {
+            for (var section in day['sections'].values) {
+              // Access nutrition via section['assigned']['recipe']['totalNutrients']
+              meals.add(section['assigned']);
+            }
+          }
+        }
+        return meals;
+      } else {
+        print('Status Code: ${response.statusCode}');
+        print('Response: ${response.body}');
+        throw Exception('Failed to fetch meal plan');
+      }
+    } catch (e) {
+      print('Error: $e');
+      return [];
+    }
+  }
 
   Set<String> selected = {};
 
@@ -250,11 +317,11 @@ class _PantrySelectorState extends State<PantrySelector>
             width: double.infinity,
             child: ElevatedButton(
               onPressed: selected.isNotEmpty
-                  ? () {
-                print('Selected: $selected');
-                // TODO: navigate to results
+                  ? () async {
+                await fetchRecipesByIngredients(selected);
               }
                   : null,
+
               style: ElevatedButton.styleFrom(
                 backgroundColor: widget.accentColor,
                 foregroundColor: Colors.white,
