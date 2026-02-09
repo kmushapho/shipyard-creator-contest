@@ -20,11 +20,13 @@ class _PantrySelectorState extends State<PantrySelector>
   late Animation<double> _rotationAnimation;
 
   final List<Map<String, String>> _foodIngredients = [
+    // First two as requested
+    {'name': 'Water', 'emoji': '💧'},
+    {'name': 'Salt', 'emoji': '🧂'},
+    // Removed Sugar & Butter
     {'name': 'Eggs', 'emoji': '🥚'},
     {'name': 'Milk', 'emoji': '🥛'},
     {'name': 'Flour', 'emoji': '🌾'},
-    {'name': 'Butter', 'emoji': '🧈'},
-    {'name': 'Sugar', 'emoji': '🍬'},
     {'name': 'Chicken', 'emoji': '🍗'},
     {'name': 'Rice', 'emoji': '🍚'},
     {'name': 'Pasta', 'emoji': '🍝'},
@@ -32,6 +34,9 @@ class _PantrySelectorState extends State<PantrySelector>
   ];
 
   final List<Map<String, String>> _drinkIngredients = [
+    // Water first
+    {'name': 'Water', 'emoji': '💧'},
+    // Removed Bubble Tea
     {'name': 'Coffee', 'emoji': '☕'},
     {'name': 'Tea', 'emoji': '🍵'},
     {'name': 'Juice', 'emoji': '🧃'},
@@ -40,7 +45,6 @@ class _PantrySelectorState extends State<PantrySelector>
     {'name': 'Beer', 'emoji': '🍺'},
     {'name': 'Wine', 'emoji': '🍷'},
     {'name': 'Margarita', 'emoji': '🍹'},
-    {'name': 'Bubble Tea', 'emoji': '🧋'},
   ];
 
   Set<String> selected = {};
@@ -75,7 +79,7 @@ class _PantrySelectorState extends State<PantrySelector>
       children: [
         const SizedBox(height: 3),
 
-        // Title + animated icon at the end
+        // Title + animated icon
         Center(
           child: Column(
             children: [
@@ -158,7 +162,7 @@ class _PantrySelectorState extends State<PantrySelector>
 
         const SizedBox(height: 36),
 
-        // Grid
+        // Grid of ingredients
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 20),
           child: GridView.builder(
@@ -230,7 +234,7 @@ class _PantrySelectorState extends State<PantrySelector>
 
         const SizedBox(height: 36),
 
-        // Custom button
+        // Add Custom button
         Center(
           child: OutlinedButton.icon(
             onPressed: () {
@@ -249,7 +253,7 @@ class _PantrySelectorState extends State<PantrySelector>
 
         const SizedBox(height: 48),
 
-        // Let's Cook / Let's Party button
+        // Main action button
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 28),
           child: SizedBox(
