@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 class PantrySelector extends StatefulWidget {
   final bool isFood;
@@ -20,10 +21,8 @@ class _PantrySelectorState extends State<PantrySelector>
   late Animation<double> _rotationAnimation;
 
   final List<Map<String, String>> _foodIngredients = [
-    // First two as requested
     {'name': 'Water', 'emoji': '💧'},
     {'name': 'Salt', 'emoji': '🧂'},
-    // Removed Sugar & Butter
     {'name': 'Eggs', 'emoji': '🥚'},
     {'name': 'Milk', 'emoji': '🥛'},
     {'name': 'Flour', 'emoji': '🌾'},
@@ -34,9 +33,7 @@ class _PantrySelectorState extends State<PantrySelector>
   ];
 
   final List<Map<String, String>> _drinkIngredients = [
-    // Water first
     {'name': 'Water', 'emoji': '💧'},
-    // Removed Bubble Tea
     {'name': 'Coffee', 'emoji': '☕'},
     {'name': 'Tea', 'emoji': '🍵'},
     {'name': 'Juice', 'emoji': '🧃'},
@@ -79,7 +76,6 @@ class _PantrySelectorState extends State<PantrySelector>
       children: [
         const SizedBox(height: 3),
 
-        // Title + animated icon
         Center(
           child: Column(
             children: [
@@ -137,7 +133,6 @@ class _PantrySelectorState extends State<PantrySelector>
 
         const SizedBox(height: 28),
 
-        // Selected chips
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 20),
           child: Wrap(
@@ -162,7 +157,6 @@ class _PantrySelectorState extends State<PantrySelector>
 
         const SizedBox(height: 36),
 
-        // Grid of ingredients
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 20),
           child: GridView.builder(
@@ -234,12 +228,9 @@ class _PantrySelectorState extends State<PantrySelector>
 
         const SizedBox(height: 36),
 
-        // Add Custom button
         Center(
           child: OutlinedButton.icon(
-            onPressed: () {
-              // TODO: implement custom ingredient dialog
-            },
+            onPressed: () => _showCustomBottomSheet(context),
             icon: const Icon(Icons.add_circle_outline_rounded),
             label: const Text('Add Custom'),
             style: OutlinedButton.styleFrom(
@@ -253,7 +244,6 @@ class _PantrySelectorState extends State<PantrySelector>
 
         const SizedBox(height: 48),
 
-        // Main action button
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 28),
           child: SizedBox(
@@ -261,8 +251,8 @@ class _PantrySelectorState extends State<PantrySelector>
             child: ElevatedButton(
               onPressed: selected.isNotEmpty
                   ? () {
-                // TODO: navigate to results
                 print('Selected: $selected');
+                // TODO: navigate to results
               }
                   : null,
               style: ElevatedButton.styleFrom(
@@ -282,6 +272,315 @@ class _PantrySelectorState extends State<PantrySelector>
 
         const SizedBox(height: 80),
       ],
+    );
+  }
+
+  void _showCustomBottomSheet(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) {
+        return CustomIngredientBottomSheet(
+          isFood: widget.isFood,
+          accentColor: widget.accentColor,
+          initialSelected: selected,
+          onSelectionChanged: (newSet) {
+            setState(() => selected = newSet);
+          },
+        );
+      },
+    );
+  }
+}
+
+// ────────────────────────────────────────────────
+//     Bottom Sheet – input always above keyboard
+// ────────────────────────────────────────────────
+class CustomIngredientBottomSheet extends StatefulWidget {
+  final bool isFood;
+  final Color accentColor;
+  final Set<String> initialSelected;
+  final ValueChanged<Set<String>> onSelectionChanged;
+
+  const CustomIngredientBottomSheet({
+    super.key,
+    required this.isFood,
+    required this.accentColor,
+    required this.initialSelected,
+    required this.onSelectionChanged,
+  });
+
+  @override
+  State<CustomIngredientBottomSheet> createState() =>
+      _CustomIngredientBottomSheetState();
+}
+
+class _CustomIngredientBottomSheetState
+    extends State<CustomIngredientBottomSheet> {
+  late Set<String> _selected;
+  final _controller = TextEditingController();
+  String? _errorMessage;
+
+  @override
+  void initState() {
+    super.initState();
+    _selected = {...widget.initialSelected};
+    _controller.addListener(() {
+      if (_errorMessage != null) {
+        setState(() => _errorMessage = null);
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  void _addIngredient() {
+    String text = _controller.text.trim();
+    if (text.isEmpty) return;
+
+    text = text
+        .split(RegExp(r'\s+'))
+        .where((w) => w.isNotEmpty)
+        .map((w) => w[0].toUpperCase() + w.substring(1).toLowerCase())
+        .join(' ');
+
+    final lower = text.toLowerCase();
+    if (_selected.any((item) => item.toLowerCase() == lower)) {
+      setState(() {
+        _errorMessage = '"$text" is already added';
+      });
+      return;
+    }
+
+    setState(() {
+      _selected.add(text);
+      _controller.clear();
+      _errorMessage = null;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final keyboardHeight = MediaQuery.of(context).viewInsets.bottom;
+    final count = _selected.length;
+    final actionText = "Done";
+
+    return Padding(
+      padding: EdgeInsets.only(bottom: keyboardHeight),
+      child: Container(
+        height: MediaQuery.of(context).size.height * 0.88,
+        decoration: BoxDecoration(
+          color: Theme.of(context).scaffoldBackgroundColor,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+        ),
+        child: Column(
+          children: [
+            // Drag handle
+            Container(
+              width: 40,
+              height: 5,
+              margin: const EdgeInsets.only(top: 12, bottom: 8),
+              decoration: BoxDecoration(
+                color: Colors.grey[400],
+                borderRadius: BorderRadius.circular(10),
+              ),
+            ),
+
+            // Header
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    'Custom Ingredients',
+                    style: TextStyle(
+                      fontSize: 22,
+                      fontWeight: FontWeight.bold,
+                      color: widget.accentColor,
+                    ),
+                  ),
+                  IconButton(
+                    icon: Icon(Icons.close_rounded, color: widget.accentColor),
+                    onPressed: () {
+                      widget.onSelectionChanged(_selected);
+                      Navigator.pop(context);
+                    },
+                  ),
+                ],
+              ),
+            ),
+
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24),
+              child: Text(
+                '$count ingredient${count == 1 ? '' : 's'} selected',
+                style: TextStyle(
+                  fontSize: 15,
+                  color: widget.accentColor.withOpacity(0.85),
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+
+            const SizedBox(height: 16),
+
+            // Scrollable selected chips
+            Expanded(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.symmetric(horizontal: 24),
+                child: Wrap(
+                  spacing: 10,
+                  runSpacing: 12,
+                  children: _selected.map((name) {
+                    return Chip(
+                      label: Text(name),
+                      deleteIcon: const Icon(Icons.close, size: 18),
+                      onDeleted: () => setState(() => _selected.remove(name)),
+                      backgroundColor: widget.accentColor.withOpacity(0.11),
+                      labelStyle: TextStyle(color: widget.accentColor, fontSize: 15),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(24),
+                        side: BorderSide(color: widget.accentColor.withOpacity(0.3)),
+                      ),
+                    );
+                  }).toList(),
+                ),
+              ),
+            ),
+
+            // Bottom fixed input area
+            Container(
+              padding: const EdgeInsets.fromLTRB(24, 16, 24, 24),
+              decoration: BoxDecoration(
+                color: Theme.of(context).scaffoldBackgroundColor,
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.08),
+                    blurRadius: 16,
+                    offset: const Offset(0, -4),
+                  ),
+                ],
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Input row
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      Expanded(
+                        child: TextField(
+                          controller: _controller,
+                          autofocus: true,
+                          textCapitalization: TextCapitalization.words,
+                          autocorrect: false,
+                          enableSuggestions: false,
+                          textInputAction: TextInputAction.done,
+                          onSubmitted: (_) => _addIngredient(),
+                          inputFormatters: [
+                            FilteringTextInputFormatter.deny(RegExp(r'[,\n]')),
+                            FilteringTextInputFormatter.singleLineFormatter,
+                          ],
+                          decoration: InputDecoration(
+                            hintText: 'e.g. Milk',
+                            hintStyle: TextStyle(color: Colors.grey[500]),
+                            filled: true,
+                            fillColor: widget.accentColor.withOpacity(0.06),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(24),
+                              borderSide: BorderSide.none,
+                            ),
+                            contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 20,
+                              vertical: 16,
+                            ),
+                            suffixIcon: _controller.text.isNotEmpty
+                                ? IconButton(
+                              icon: Icon(Icons.clear, color: Colors.grey[600]),
+                              onPressed: _controller.clear,
+                            )
+                                : null,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      IconButton(
+                        icon: Icon(
+                          Icons.add_circle_rounded,
+                          color: widget.accentColor,
+                          size: 36,
+                        ),
+                        onPressed: _addIngredient,
+                      ),
+                    ],
+                  ),
+
+                  const SizedBox(height: 8),
+
+                  // Helper text – one at a time
+                  Text(
+                    'One at a time • + to add • Done when finished',
+                    style: TextStyle(
+                      fontSize: 13,
+                      color: Colors.grey[600],
+                      fontStyle: FontStyle.italic,
+                    ),
+                  ),
+
+                  if (_errorMessage != null) ...[
+                    const SizedBox(height: 8),
+                    Text(
+                      _errorMessage!,
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: Colors.red[700],
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
+
+                  const SizedBox(height: 20),
+
+                  // Action button
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      onPressed: _selected.isNotEmpty
+                          ? () {
+                        widget.onSelectionChanged(_selected);
+                        Navigator.pop(context);
+                      }
+                          : null,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: widget.accentColor,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(24)),
+                        elevation: 2,
+                      ),
+                      child: Text(
+                        actionText,
+                        style: const TextStyle(
+                          fontSize: 17,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
