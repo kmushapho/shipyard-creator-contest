@@ -66,7 +66,7 @@ class ModeProvider extends ChangeNotifier {
       ? [
     {'label': 'Search By Pantry'},
     {'label': 'All Day Meals'},
-    {'label': 'Recipes by Region'},
+    {'label': 'Cuisines by region'},
     {'label': 'Recently viewed'},
   ]
       : [

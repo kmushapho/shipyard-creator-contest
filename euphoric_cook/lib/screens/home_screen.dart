@@ -14,83 +14,88 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
+  int _selectedChipIndex = -1;
+
+  Future<List<Map<String, dynamic>>> _fetchFeaturedRecipes(bool isFood) async {
+    final int desiredCount = 10;
+    final tags = isFood ? '' : 'beverage';
+
+    final url = Uri.parse(
+      'https://api.spoonacular.com/recipes/random'
+          '?apiKey=9333c1e5442a422ea040f38a3f453614'
+          '&number=$desiredCount'
+          '${tags.isNotEmpty ? '&tags=$tags' : ''}',
+    );
+
+    final response = await http.get(url);
+    if (response.statusCode != 200) {
+      throw Exception('Failed to load ${isFood ? "recipes" : "drinks"}: ${response.statusCode}');
+    }
+
+    final data = json.decode(response.body);
+    final List recipes = data['recipes'];
+
+    List<Map<String, dynamic>> alcoholic = [];
+    List<Map<String, dynamic>> nonAlcoholic = [];
+    List<Map<String, dynamic>> foodResults = [];
+
+    for (var r in recipes) {
+      final imageUrl = r['image'];
+      if (imageUrl == null || imageUrl.isEmpty) continue;
+
+      final title = (r['title'] as String).toLowerCase();
+
+      if (!isFood) {
+        bool isAlcoholic = title.contains('beer') ||
+            title.contains('wine') ||
+            title.contains('vodka') ||
+            title.contains('rum') ||
+            title.contains('whiskey') ||
+            title.contains('tequila') ||
+            title.contains('cocktail');
+
+        bool isNonAlcoholic = title.contains('mocktail') ||
+            title.contains('smoothie') ||
+            title.contains('juice') ||
+            title.contains('tea') ||
+            title.contains('coffee') ||
+            title.contains('lemonade') ||
+            title.contains('milk');
+
+        final drink = {
+          'name': r['title'],
+          'imageUrl': imageUrl,
+          'servings': r['servings'],
+          'totalTimeMinutes': r['readyInMinutes'],
+          'alcoholType': isAlcoholic ? 'alcoholic' : 'non-alcoholic',
+        };
+
+        if (isAlcoholic) alcoholic.add(drink);
+        if (isNonAlcoholic) nonAlcoholic.add(drink);
+      } else {
+        foodResults.add({
+          'name': r['title'],
+          'imageUrl': imageUrl,
+          'servings': r['servings'],
+          'totalTimeMinutes': r['readyInMinutes'],
+          'alcoholType': null,
+        });
+      }
+    }
+
+    if (isFood) return foodResults;
+
+    final int half = desiredCount ~/ 2;
+    return [
+      ...alcoholic.take(half),
+      ...nonAlcoholic.take(half),
+    ];
+  }
+
   @override
   Widget build(BuildContext context) {
     final mode = Provider.of<ModeProvider>(context);
     final accent = mode.accentColor;
-    int _selectedChipIndex = -1;
-
-    Future<List<Map<String, dynamic>>> _fetchFeaturedRecipes(bool isFood) async {
-      final int desiredCount = 10;
-      List<Map<String, dynamic>> results = [];
-
-      // Correct Spoonacular endpoint
-      final tags = isFood ? '' : 'beverage';
-      final url = Uri.parse(
-        'https://api.spoonacular.com/recipes/random'
-            '?apiKey=9333c1e5442a422ea040f38a3f453614'
-            '&number=$desiredCount'
-            '${tags.isNotEmpty ? '&tags=$tags' : ''}',
-      );
-
-      final response = await http.get(url);
-      if (response.statusCode != 200) {
-        throw Exception('Failed to load ${isFood ? "recipes" : "drinks"}: ${response.statusCode}');
-      }
-
-      final data = json.decode(response.body);
-      final List recipes = data['recipes'] as List;
-
-      for (var r in recipes) {
-        final imageUrl = r['image'] as String?;
-        if (imageUrl == null || imageUrl.isEmpty) continue;
-
-        String? alcoholType;
-
-        if (!isFood) {
-          // Determine alcohol type from title or tags
-          final title = (r['title'] as String?)?.toLowerCase() ?? '';
-          final dishTypes = (r['dishTypes'] as List?)
-              ?.map((t) => t.toString().toLowerCase())
-              .toList() ??
-              [];
-
-          if (title.contains('beer') ||
-              title.contains('wine') ||
-              title.contains('vodka') ||
-              title.contains('rum') ||
-              title.contains('cocktail') ||
-              title.contains('whiskey') ||
-              title.contains('tequila')) {
-            alcoholType = 'alcoholic';
-          } else if (title.contains('mocktail') ||
-              title.contains('smoothie') ||
-              title.contains('juice') ||
-              title.contains('tea') ||
-              title.contains('coffee') ||
-              title.contains('lemonade') ||
-              title.contains('milk') ||
-              title.contains('water') ||
-              dishTypes.contains('beverage')) {
-            alcoholType = 'non-alcoholic';
-          } else {
-            alcoholType = 'optional';
-          }
-        }
-
-        results.add({
-          'name': r['title'] ?? 'Unnamed ${isFood ? "Recipe" : "Drink"}',
-          'imageUrl': imageUrl,
-          'servings': r['servings'],
-          'totalTimeMinutes': r['readyInMinutes'],
-          'alcoholType': alcoholType,
-        });
-      }
-
-      return results;
-    }
-
-
 
     return Scaffold(
       backgroundColor: mode.bgColor,
@@ -117,135 +122,157 @@ class _HomeScreenState extends State<HomeScreen> {
 
             final featuredRecipes = snapshot.data ?? [];
 
-            return Column(
-              children: [
-                // Top header: theme toggle + food/drink switch
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 1),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.end,
-                        children: [
-                          IconButton(
-                            padding: EdgeInsets.zero,
-                            constraints: const BoxConstraints(),
-                            icon: Icon(
-                              mode.isDark ? Icons.wb_sunny_rounded : Icons.nights_stay_rounded,
-                              color: accent,
-                              size: 28,
+            return CustomScrollView(
+              slivers: [
+                // Header (theme + toggle)
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.end,
+                          children: [
+                            IconButton(
+                              padding: EdgeInsets.zero,
+                              constraints: const BoxConstraints(),
+                              icon: Icon(
+                                mode.isDark ? Icons.wb_sunny_rounded : Icons.nights_stay_rounded,
+                                color: accent,
+                                size: 28,
+                              ),
+                              onPressed: mode.toggleTheme,
                             ),
-                            onPressed: mode.toggleTheme,
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 1),
-                      _buildFoodDrinkToggle(mode),
-                      const SizedBox(height: 10),
-                    ],
+                          ],
+                        ),
+                        const SizedBox(height: 4),
+                        _buildFoodDrinkToggle(mode),
+                        const SizedBox(height: 12),
+                      ],
+                    ),
                   ),
                 ),
 
                 // Search bar
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child: AnimatedSwitcher(
-                    duration: const Duration(milliseconds: 400),
-                    child: Material(
-                      key: ValueKey(mode.currentMode),
-                      elevation: 2,
-                      shadowColor: Colors.black.withOpacity(0.08),
-                      borderRadius: BorderRadius.circular(24),
-                      color: mode.cardColor,
-                      child: TextField(
-                        style: mode.searchTextStyle,
-                        decoration: InputDecoration(
-                          hintText: mode.searchHint,
-                          hintStyle: mode.searchHintStyle,
-                          prefixIcon: Icon(
-                            Icons.search_rounded,
-                            size: 20,
-                            color: mode.isDark ? Colors.white54 : Colors.grey[600],
-                          ),
-                          filled: true,
-                          fillColor: mode.cardColor,
-                          contentPadding: const EdgeInsets.symmetric(vertical: 10, horizontal: 16),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(24),
-                            borderSide: BorderSide(color: Colors.grey[300]!, width: 1),
-                          ),
-                          enabledBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(24),
-                            borderSide: BorderSide(color: Colors.grey[300]!, width: 1),
-                          ),
-                          focusedBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(24),
-                            borderSide: BorderSide(color: Colors.grey[300]!, width: 1.2),
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: AnimatedSwitcher(
+                      duration: const Duration(milliseconds: 400),
+                      child: Material(
+                        key: ValueKey(mode.currentMode),
+                        elevation: 2,
+                        shadowColor: Colors.black.withOpacity(0.08),
+                        borderRadius: BorderRadius.circular(24),
+                        color: mode.cardColor,
+                        child: TextField(
+                          style: mode.searchTextStyle,
+                          decoration: InputDecoration(
+                            hintText: mode.searchHint,
+                            hintStyle: mode.searchHintStyle,
+                            prefixIcon: Icon(
+                              Icons.search_rounded,
+                              size: 20,
+                              color: mode.isDark ? Colors.white54 : Colors.grey[600],
+                            ),
+                            filled: true,
+                            fillColor: mode.cardColor,
+                            contentPadding: const EdgeInsets.symmetric(vertical: 10, horizontal: 16),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(24),
+                              borderSide: BorderSide(color: Colors.grey[300]!, width: 1),
+                            ),
+                            enabledBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(24),
+                              borderSide: BorderSide(color: Colors.grey[300]!, width: 1),
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(24),
+                              borderSide: BorderSide(color: Colors.grey[300]!, width: 1.2),
+                            ),
                           ),
                         ),
                       ),
                     ),
                   ),
                 ),
-                const SizedBox(height: 12),
 
-                // Horizontal category chips
-                SizedBox(
-                  height: 36,
-                  child: ListView.builder(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    scrollDirection: Axis.horizontal,
-                    itemCount: mode.categoryChips.length,
-                    itemBuilder: (context, i) {
-                      final chip = mode.categoryChips[i];
-                      return Padding(
-                        padding: const EdgeInsets.only(right: 8),
-                        child: ChoiceChip(
-                          label: Text(
-                            chip['label']!,
-                            style: TextStyle(
-                              fontSize: 13,
-                              color: _selectedChipIndex == i
-                                  ? mode.accentColor
-                                  : mode.textColor,
+                const SliverToBoxAdapter(child: SizedBox(height: 16)),
+
+                // Chips
+                SliverToBoxAdapter(
+                  child: SizedBox(
+                    height: 36,
+                    child: ListView.builder(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      scrollDirection: Axis.horizontal,
+                      itemCount: mode.categoryChips.length,
+                      itemBuilder: (context, i) {
+                        final chip = mode.categoryChips[i];
+                        return Padding(
+                          padding: const EdgeInsets.only(right: 8),
+                          child: ChoiceChip(
+                            label: Text(
+                              chip['label']!,
+                              style: TextStyle(
+                                fontSize: 13,
+                                color: _selectedChipIndex == i ? mode.accentColor : mode.textColor,
+                              ),
+                            ),
+                            selected: _selectedChipIndex == i,
+                            onSelected: (selected) {
+                              setState(() => _selectedChipIndex = selected ? i : -1);
+                            },
+                            selectedColor: mode.accentColor.withOpacity(0.2),
+                            backgroundColor: mode.cardColor,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(18),
+                              side: BorderSide(
+                                color: mode.cardColor == Colors.white ? Colors.grey[300]! : Colors.grey[700]!,
+                                width: 1,
+                              ),
                             ),
                           ),
-                          selected: _selectedChipIndex == i,
-                          onSelected: (selected) {
-                            setState(() {
-                              _selectedChipIndex = selected ? i : -1;
-                            });
-                          },
-                          selectedColor: mode.accentColor.withOpacity(0.2),
-                          backgroundColor: mode.cardColor,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(18),
-                            side: BorderSide(
-                              color: mode.cardColor == Colors.white
-                                  ? Colors.grey[300]!
-                                  : Colors.grey[700]!,
-                              width: 1,
-                            ),
-                          ),
-                        ),
-                      );
-                    },
+                        );
+                      },
+                    ),
                   ),
                 ),
-                const SizedBox(height: 12),
 
-                // Featured recipes grid
-                Expanded(
-                  child: SingleChildScrollView(
+                const SliverToBoxAdapter(child: SizedBox(height: 16)),
+
+                // Title
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: Text(
+                      mode.featuredTitle,
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: mode.textColor,
+                      ),
+                    ),
+                  ),
+                ),
+
+                const SliverToBoxAdapter(child: SizedBox(height: 12)),
+
+                // The grid — wrapped safely
+                SliverToBoxAdapter(
+                  child: Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 16),
                     child: FeaturedRecipesGrid(
-                      title: mode.featuredTitle,
+                      title: '', // already shown above
                       recipes: featuredRecipes,
                       crossAxisCount: 2,
                     ),
                   ),
                 ),
+
+                // Extra bottom padding so content isn't hidden under bottom nav
+                const SliverToBoxAdapter(child: SizedBox(height: 24)),
               ],
             );
           },
@@ -271,10 +298,6 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
     );
   }
-
-  // ────────────────────────────────────────────────
-  // Helper methods moved here — AFTER build, but INSIDE the class
-  // ────────────────────────────────────────────────
 
   Widget _buildFoodDrinkToggle(ModeProvider mode) {
     final isFood = mode.isFood;
