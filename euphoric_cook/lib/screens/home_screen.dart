@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/mode_provider.dart';
-import 'pantry_selector.dart'; // ← Import the new widget
+import 'pantry_selector.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -24,16 +24,16 @@ class _HomeScreenState extends State<HomeScreen> {
       body: SafeArea(
         child: CustomScrollView(
           slivers: [
-            // Header: theme + mode toggle
+            // Theme toggle row (top right)
             SliverToBoxAdapter(
               child: Padding(
-                padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
+                padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
                 child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  mainAxisAlignment: MainAxisAlignment.end,
                   children: [
-                    const SizedBox(width: 48), // for balance
-                    _buildFoodDrinkToggle(mode),
                     IconButton(
+                      padding: EdgeInsets.zero,
+                      constraints: const BoxConstraints(),
                       icon: Icon(
                         mode.isDark ? Icons.wb_sunny_rounded : Icons.nights_stay_rounded,
                         color: accent,
@@ -43,6 +43,14 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                   ],
                 ),
+              ),
+            ),
+
+            // Food / Drink underline toggle – centered
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(16, 0, 16, 20),
+                child: _buildFoodDrinkToggle(mode),
               ),
             ),
 
@@ -62,7 +70,10 @@ class _HomeScreenState extends State<HomeScreen> {
                       decoration: InputDecoration(
                         hintText: mode.searchHint,
                         hintStyle: mode.searchHintStyle,
-                        prefixIcon: Icon(Icons.search_rounded, color: accent.withOpacity(0.7)),
+                        prefixIcon: Icon(
+                          Icons.search_rounded,
+                          color: accent.withOpacity(0.7),
+                        ),
                         border: InputBorder.none,
                         contentPadding: const EdgeInsets.symmetric(vertical: 14),
                       ),
@@ -111,7 +122,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
             const SliverToBoxAdapter(child: SizedBox(height: 20)),
 
-            // Pantry selector (main content)
+            // Main content
             SliverToBoxAdapter(
               key: _contentKey,
               child: PantrySelector(
@@ -119,6 +130,8 @@ class _HomeScreenState extends State<HomeScreen> {
                 accentColor: accent,
               ),
             ),
+
+            const SliverToBoxAdapter(child: SizedBox(height: 80)),
           ],
         ),
       ),
@@ -144,12 +157,14 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Widget _buildFoodDrinkToggle(ModeProvider mode) {
     final isFood = mode.isFood;
-    final accent = mode.accentColor;
-    final inactive = mode.textColor.withOpacity(0.65);
+    final foodColor = Colors.orangeAccent.shade700;   // active color for Food
+    final drinkColor = Colors.blueAccent.shade700;    // active color for Drink
+    final inactiveColor = mode.textColor.withOpacity(0.65);
 
     return Row(
-      mainAxisSize: MainAxisSize.min,
+      mainAxisAlignment: MainAxisAlignment.center,
       children: [
+        // Food tab
         GestureDetector(
           onTap: () {
             if (!isFood) {
@@ -157,24 +172,34 @@ class _HomeScreenState extends State<HomeScreen> {
               setState(() => _contentKey = UniqueKey());
             }
           },
-          child: AnimatedContainer(
-            duration: const Duration(milliseconds: 300),
-            padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
-            decoration: BoxDecoration(
-              color: isFood ? accent.withOpacity(0.18) : Colors.transparent,
-              borderRadius: BorderRadius.circular(24),
-            ),
-            child: Text(
-              'Food',
-              style: TextStyle(
-                color: isFood ? accent : inactive,
-                fontWeight: isFood ? FontWeight.bold : FontWeight.w600,
-                fontSize: 17,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                'Food',
+                style: TextStyle(
+                  color: isFood ? foodColor : inactiveColor,
+                  fontSize: 18,
+                  fontWeight: isFood ? FontWeight.w700 : FontWeight.w600,
+                ),
               ),
-            ),
+              const SizedBox(height: 4),
+              AnimatedContainer(
+                duration: const Duration(milliseconds: 280),
+                width: 60,
+                height: isFood ? 3.2 : 0,
+                decoration: BoxDecoration(
+                  color: foodColor,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+            ],
           ),
         ),
-        const SizedBox(width: 20),
+
+        const SizedBox(width: 48),
+
+        // Drink tab
         GestureDetector(
           onTap: () {
             if (isFood) {
@@ -182,21 +207,28 @@ class _HomeScreenState extends State<HomeScreen> {
               setState(() => _contentKey = UniqueKey());
             }
           },
-          child: AnimatedContainer(
-            duration: const Duration(milliseconds: 300),
-            padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
-            decoration: BoxDecoration(
-              color: !isFood ? accent.withOpacity(0.18) : Colors.transparent,
-              borderRadius: BorderRadius.circular(24),
-            ),
-            child: Text(
-              'Drink',
-              style: TextStyle(
-                color: !isFood ? accent : inactive,
-                fontWeight: !isFood ? FontWeight.bold : FontWeight.w600,
-                fontSize: 17,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                'Drinks',
+                style: TextStyle(
+                  color: !isFood ? drinkColor : inactiveColor,
+                  fontSize: 18,
+                  fontWeight: !isFood ? FontWeight.w700 : FontWeight.w600,
+                ),
               ),
-            ),
+              const SizedBox(height: 4),
+              AnimatedContainer(
+                duration: const Duration(milliseconds: 280),
+                width: 60,
+                height: !isFood ? 3.2 : 0,
+                decoration: BoxDecoration(
+                  color: drinkColor,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+            ],
           ),
         ),
       ],
