@@ -3,20 +3,24 @@ import 'package:provider/provider.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import '../providers/mode_provider.dart';
-// import '../widgets/featured_recipes_grid.dart';  // ← removed
 
-class HomeScreen extends StatefulWidget {
-  const HomeScreen({super.key});
+// We'll move the ingredient grid into its own widget
+class IngredientSelector extends StatefulWidget {
+  final bool isFood;
+  final Color accentColor;
+
+  const IngredientSelector({
+    super.key,
+    required this.isFood,
+    required this.accentColor,
+  });
 
   @override
-  State<HomeScreen> createState() => _HomeScreenState();
+  State<IngredientSelector> createState() => _IngredientSelectorState();
 }
 
-class _HomeScreenState extends State<HomeScreen> {
-  int _selectedChipIndex = -1;
-
-  // ── Ingredient selection state ────────────────────────────────────────────
-  final List<Map<String, String>> _ingredients = [
+class _IngredientSelectorState extends State<IngredientSelector> {
+  final List<Map<String, String>> _foodIngredients = [
     {'name': 'Eggs', 'emoji': '🥚'},
     {'name': 'Milk', 'emoji': '🥛'},
     {'name': 'Flour', 'emoji': '🌾'},
@@ -26,59 +30,225 @@ class _HomeScreenState extends State<HomeScreen> {
     {'name': 'Rice', 'emoji': '🍚'},
     {'name': 'Pasta', 'emoji': '🍝'},
     {'name': 'Cheese', 'emoji': '🧀'},
-    {'name': 'Tomato', 'emoji': '🍅'},
-    {'name': 'Lemon', 'emoji': '🍋'},
-    {'name': 'Coffee', 'emoji': '☕'},
   ];
 
-  final Set<String> _selectedIngredients = {};
+  final List<Map<String, String>> _drinkIngredients = [
+    {'name': 'Coffee', 'emoji': '☕'},
+    {'name': 'Tea', 'emoji': '🍵'},
+    {'name': 'Juice', 'emoji': '🧃'},
+    {'name': 'Milk', 'emoji': '🥛'},
+    {'name': 'Lemonade', 'emoji': '🍋'},
+    {'name': 'Cocktail', 'emoji': '🍸'},
+    {'name': 'Beer', 'emoji': '🍺'},
+    {'name': 'Wine', 'emoji': '🍷'},
+    {'name': 'Tropical', 'emoji': '🍹'},
+    {'name': 'Bubble Tea', 'emoji': '🧋'},
+  ];
 
-  // You can keep _fetchFeaturedRecipes if you want to use it elsewhere later
-  Future<List<Map<String, dynamic>>> _fetchFeaturedRecipes(bool isFood) async {
-    // ... (your original implementation remains – not used in UI now)
-    // This can be removed if you no longer need random recipes on home
-    final int desiredCount = 10;
-    final tags = isFood ? '' : 'beverage';
-    final url = Uri.parse(
-      'https://api.spoonacular.com/recipes/random'
-          '?apiKey=9333c1e5442a422ea040f38a3f453614'
-          '&number=$desiredCount'
-          '${tags.isNotEmpty ? '&tags=$tags' : ''}',
+  Set<String> selected = {};
+
+  @override
+  Widget build(BuildContext context) {
+    final ingredients = widget.isFood ? _foodIngredients : _drinkIngredients;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: Text(
+            'Your Pantry',
+            style: TextStyle(
+              fontSize: 22,
+              fontWeight: FontWeight.bold,
+              color: widget.accentColor,
+            ),
+          ),
+        ),
+        const SizedBox(height: 8),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: Text(
+            '${selected.length} selected',
+            style: TextStyle(color: Colors.grey[600]),
+          ),
+        ),
+        const SizedBox(height: 12),
+
+        // Selected pills
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: selected.map((name) {
+              return Chip(
+                label: Text(name),
+                deleteIcon: const Icon(Icons.close, size: 18),
+                onDeleted: () => setState(() => selected.remove(name)),
+                backgroundColor: widget.accentColor.withOpacity(0.15),
+                labelStyle: TextStyle(color: widget.accentColor),
+                shape: StadiumBorder(side: BorderSide(color: widget.accentColor)),
+              );
+            }).toList(),
+          ),
+        ),
+
+        const SizedBox(height: 24),
+
+        // Grid
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: GridView.builder(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 3,
+              childAspectRatio: 0.9,
+              crossAxisSpacing: 16,
+              mainAxisSpacing: 16,
+            ),
+            itemCount: ingredients.length,
+            itemBuilder: (context, i) {
+              final ing = ingredients[i];
+              final name = ing['name']!;
+              final emoji = ing['emoji']!;
+              final isSel = selected.contains(name);
+
+              return GestureDetector(
+                onTap: () {
+                  setState(() {
+                    if (isSel) {
+                      selected.remove(name);
+                    } else {
+                      selected.add(name);
+                    }
+                  });
+                },
+                child: Column(
+                  children: [
+                    Stack(
+                      alignment: Alignment.bottomRight,
+                      children: [
+                        CircleAvatar(
+                          radius: 38,
+                          backgroundColor: widget.accentColor.withOpacity(0.15),
+                          child: Text(emoji, style: const TextStyle(fontSize: 32)),
+                        ),
+                        if (isSel)
+                          CircleAvatar(
+                            radius: 12,
+                            backgroundColor: Colors.green,
+                            child: const Icon(Icons.check, size: 16, color: Colors.white),
+                          ),
+                      ],
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      name,
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(fontSize: 13),
+                    ),
+                  ],
+                ),
+              );
+            },
+          ),
+        ),
+
+        const SizedBox(height: 24),
+
+        // Custom + button
+        Center(
+          child: OutlinedButton.icon(
+            onPressed: () {
+              // TODO: show dialog to add custom ingredient
+            },
+            icon: const Icon(Icons.add),
+            label: const Text('Custom'),
+            style: OutlinedButton.styleFrom(
+              foregroundColor: widget.accentColor,
+              side: BorderSide(color: widget.accentColor),
+            ),
+          ),
+        ),
+
+        const SizedBox(height: 32),
+
+        // Big action button
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 24),
+          child: SizedBox(
+            width: double.infinity,
+            child: ElevatedButton(
+              onPressed: selected.isNotEmpty
+                  ? () {
+                // TODO: navigate to recipes/drinks list
+                print('Selected: $selected');
+              }
+                  : null,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: widget.accentColor,
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+              ),
+              child: Text(
+                widget.isFood ? "Let's Cook!" : "Let's Party!",
+                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
+            ),
+          ),
+        ),
+
+        const SizedBox(height: 40),
+      ],
     );
-    final response = await http.get(url);
-    if (response.statusCode != 200) {
-      throw Exception('Failed to load ${isFood ? "recipes" : "drinks"}');
-    }
-    final data = json.decode(response.body);
-    return (data['recipes'] as List).map((r) => {
-      'name': r['title'],
-      'imageUrl': r['image'] ?? '',
-    }).toList();
   }
+}
+
+class HomeScreen extends StatefulWidget {
+  const HomeScreen({super.key});
+
+  @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
+  int _selectedChipIndex = 0; // default: Search by Pantry selected
+
+  // We use a key to force rebuild / "mini reload" when mode changes
+  Key _gridKey = UniqueKey();
 
   @override
   Widget build(BuildContext context) {
     final mode = Provider.of<ModeProvider>(context);
     final accent = mode.accentColor;
 
+    // Listen to mode changes → trigger mini reload
+    void onModeChanged() {
+      setState(() {
+        _gridKey = UniqueKey(); // forces rebuild of the ingredient selector
+        _selectedChipIndex = 0; // reset to "Search by Pantry"
+      });
+    }
+
+    // Optional: you can listen in didChangeDependencies or use didUpdateWidget
+
     return Scaffold(
       backgroundColor: mode.bgColor,
       body: SafeArea(
         child: CustomScrollView(
           slivers: [
-            // Header (theme + toggle)
+            // Header with theme toggle + Food/Drink switch
             SliverToBoxAdapter(
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                 child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
                     Row(
                       mainAxisAlignment: MainAxisAlignment.end,
                       children: [
                         IconButton(
-                          padding: EdgeInsets.zero,
-                          constraints: const BoxConstraints(),
                           icon: Icon(
                             mode.isDark ? Icons.wb_sunny_rounded : Icons.nights_stay_rounded,
                             color: accent,
@@ -89,14 +259,14 @@ class _HomeScreenState extends State<HomeScreen> {
                       ],
                     ),
                     const SizedBox(height: 4),
-                    _buildFoodDrinkToggle(mode),
-                    const SizedBox(height: 12),
+                    _buildFoodDrinkToggle(mode, onModeChanged),
+                    const SizedBox(height: 16),
                   ],
                 ),
               ),
             ),
 
-            // Search bar
+            // Search bar (kept from original)
             SliverToBoxAdapter(
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -113,222 +283,75 @@ class _HomeScreenState extends State<HomeScreen> {
                       decoration: InputDecoration(
                         hintText: mode.searchHint,
                         hintStyle: mode.searchHintStyle,
-                        prefixIcon: Icon(
-                          Icons.search_rounded,
-                          size: 20,
-                          color: mode.isDark ? Colors.white54 : Colors.grey[600],
+                        prefixIcon: Icon(Icons.search_rounded, color: accent.withOpacity(0.7)),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(24),
+                          borderSide: BorderSide.none,
                         ),
                         filled: true,
                         fillColor: mode.cardColor,
-                        contentPadding: const EdgeInsets.symmetric(vertical: 10, horizontal: 16),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(24),
-                          borderSide: BorderSide(color: Colors.grey[300]!),
-                        ),
-                        enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(24),
-                          borderSide: BorderSide(color: Colors.grey[300]!),
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(24),
-                          borderSide: BorderSide(color: Colors.grey[300]!, width: 1.2),
-                        ),
                       ),
                     ),
                   ),
                 ),
               ),
             ),
+
             const SliverToBoxAdapter(child: SizedBox(height: 16)),
 
-            // Chips (your existing category chips)
+            // Horizontal chips — "Search by Pantry" always selected in current mode
             SliverToBoxAdapter(
               child: SizedBox(
-                height: 36,
+                height: 40,
                 child: ListView.builder(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
                   scrollDirection: Axis.horizontal,
                   itemCount: mode.categoryChips.length,
                   itemBuilder: (context, i) {
                     final chip = mode.categoryChips[i];
+                    final isSelected = i == _selectedChipIndex;
+
                     return Padding(
-                      padding: const EdgeInsets.only(right: 8),
+                      padding: const EdgeInsets.only(right: 10),
                       child: ChoiceChip(
                         label: Text(
                           chip['label']!,
                           style: TextStyle(
-                            fontSize: 13,
-                            color: _selectedChipIndex == i ? mode.accentColor : mode.textColor,
+                            color: isSelected ? Colors.white : mode.textColor,
                           ),
                         ),
-                        selected: _selectedChipIndex == i,
-                        onSelected: (selected) {
-                          setState(() => _selectedChipIndex = selected ? i : -1);
+                        selected: isSelected,
+                        onSelected: (sel) {
+                          setState(() => _selectedChipIndex = sel ? i : 0);
                         },
-                        selectedColor: mode.accentColor.withOpacity(0.2),
+                        selectedColor: accent,
                         backgroundColor: mode.cardColor,
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(18),
-                          side: BorderSide(
-                            color: mode.cardColor == Colors.white ? Colors.grey[300]! : Colors.grey[700]!,
-                          ),
+                          borderRadius: BorderRadius.circular(20),
+                          side: BorderSide(color: accent.withOpacity(0.5)),
                         ),
+                        elevation: isSelected ? 2 : 0,
                       ),
                     );
                   },
                 ),
               ),
             ),
-            const SliverToBoxAdapter(child: SizedBox(height: 24)),
 
-            // ── Your Pantry section ───────────────────────────────────────────────
+            const SliverToBoxAdapter(child: SizedBox(height: 16)),
+
+            // Main content — ingredient selector with key for reload animation
             SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Your Pantry',
-                      style: TextStyle(
-                        fontSize: 22,
-                        fontWeight: FontWeight.bold,
-                        color: mode.textColor,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      '${_selectedIngredients.length} ingredients selected',
-                      style: TextStyle(fontSize: 14, color: mode.textColor.withOpacity(0.7)),
-                    ),
-                    const SizedBox(height: 16),
-                    Wrap(
-                      spacing: 8,
-                      runSpacing: 8,
-                      children: _selectedIngredients.map((name) {
-                        return Chip(
-                          label: Text(name),
-                          deleteIcon: const Icon(Icons.close, size: 18),
-                          onDeleted: () => setState(() => _selectedIngredients.remove(name)),
-                          backgroundColor: accent.withOpacity(0.15),
-                          labelStyle: TextStyle(color: accent),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-                        );
-                      }).toList(),
-                    ),
-                    const SizedBox(height: 24),
-
-                    // Grid of ingredients
-                    Text(
-                      'Tap to select your ingredients!',
-                      style: TextStyle(fontSize: 16, color: mode.textColor.withOpacity(0.8)),
-                    ),
-                    const SizedBox(height: 16),
-                    GridView.builder(
-                      shrinkWrap: true,
-                      physics: const NeverScrollableScrollPhysics(),
-                      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                        crossAxisCount: 4,
-                        childAspectRatio: 0.9,
-                        crossAxisSpacing: 12,
-                        mainAxisSpacing: 16,
-                      ),
-                      itemCount: _ingredients.length,
-                      itemBuilder: (context, index) {
-                        final ing = _ingredients[index];
-                        final name = ing['name']!;
-                        final emoji = ing['emoji']!;
-                        final selected = _selectedIngredients.contains(name);
-
-                        return GestureDetector(
-                          onTap: () {
-                            setState(() {
-                              if (selected) {
-                                _selectedIngredients.remove(name);
-                              } else {
-                                _selectedIngredients.add(name);
-                              }
-                            });
-                          },
-                          child: Column(
-                            children: [
-                              Stack(
-                                alignment: Alignment.bottomRight,
-                                children: [
-                                  CircleAvatar(
-                                    radius: 32,
-                                    backgroundColor: accent.withOpacity(0.25),
-                                    child: Text(emoji, style: const TextStyle(fontSize: 28)),
-                                  ),
-                                  if (selected)
-                                    CircleAvatar(
-                                      radius: 10,
-                                      backgroundColor: Colors.green,
-                                      child: const Icon(Icons.check, size: 14, color: Colors.white),
-                                    ),
-                                ],
-                              ),
-                              const SizedBox(height: 6),
-                              Text(
-                                name,
-                                textAlign: TextAlign.center,
-                                style: TextStyle(fontSize: 12, color: mode.textColor),
-                              ),
-                            ],
-                          ),
-                        );
-                      },
-                    ),
-
-                    const SizedBox(height: 16),
-
-                    // Custom ingredient button
-                    Center(
-                      child: OutlinedButton.icon(
-                        onPressed: _showCustomIngredientDialog,
-                        icon: const Icon(Icons.add),
-                        label: const Text('Custom'),
-                        style: OutlinedButton.styleFrom(
-                          foregroundColor: accent,
-                          side: BorderSide(color: accent),
-                        ),
-                      ),
-                    ),
-
-                    const SizedBox(height: 32),
-
-                    // Let's Cook / Let's Party button
-                    SizedBox(
-                      width: double.infinity,
-                      child: ElevatedButton(
-                        onPressed: _selectedIngredients.isNotEmpty
-                            ? () {
-                          // TODO: navigate to results / recipes screen
-                          // You can pass _selectedIngredients
-                          print('Selected: $_selectedIngredients');
-                        }
-                            : null,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: accent,
-                          foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(vertical: 16),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                        ),
-                        child: Text(
-                          mode.isFood ? "Let's Cook!" : "Let's Party!",
-                          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                        ),
-                      ),
-                    ),
-
-                    const SizedBox(height: 32),
-                  ],
-                ),
+              key: _gridKey, // this causes rebuild when mode changes
+              child: IngredientSelector(
+                isFood: mode.isFood,
+                accentColor: accent,
               ),
             ),
           ],
         ),
       ),
+      // Bottom nav kept as is
       bottomNavigationBar: BottomNavigationBar(
         type: BottomNavigationBarType.fixed,
         selectedItemColor: accent,
@@ -349,107 +372,42 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildFoodDrinkToggle(ModeProvider mode) {
+  Widget _buildFoodDrinkToggle(ModeProvider mode, VoidCallback onSwitch) {
     final isFood = mode.isFood;
     final accent = mode.accentColor;
-    final inactiveColor = mode.textColor.withOpacity(0.65);
+    final inactive = mode.textColor.withOpacity(0.6);
 
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        _buildUnderlineTab(
-          label: 'Food',
-          isActive: isFood,
-          accent: accent,
-          inactiveColor: inactiveColor,
-          onTap: () {
-            if (!isFood) mode.toggleFoodDrink();
-          },
-        ),
-        const SizedBox(width: 24),
-        _buildUnderlineTab(
-          label: 'Drink',
-          isActive: !isFood,
-          accent: accent,
-          inactiveColor: inactiveColor,
-          onTap: () {
-            if (isFood) mode.toggleFoodDrink();
-          },
-        ),
+        _buildTab('Food', isFood, accent, inactive, () {
+          if (!isFood) {
+            mode.toggleFoodDrink();
+            onSwitch();
+          }
+        }),
+        const SizedBox(width: 32),
+        _buildTab('Drink', !isFood, accent, inactive, () {
+          if (isFood) {
+            mode.toggleFoodDrink();
+            onSwitch();
+          }
+        }),
       ],
     );
   }
 
-  Widget _buildUnderlineTab({
-    required String label,
-    required bool isActive,
-    required Color accent,
-    required Color inactiveColor,
-    required VoidCallback onTap,
-  }) {
+  Widget _buildTab(String label, bool active, Color accent, Color inactive, VoidCallback onTap) {
     return GestureDetector(
       onTap: onTap,
-      child: IntrinsicWidth(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Padding(
-              padding: const EdgeInsets.fromLTRB(10, 0, 10, 6),
-              child: Text(
-                label,
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  color: isActive ? accent : inactiveColor,
-                  fontWeight: isActive ? FontWeight.w700 : FontWeight.w600,
-                  fontSize: 16.5,
-                ),
-              ),
-            ),
-            AnimatedContainer(
-              duration: const Duration(milliseconds: 300),
-              height: isActive ? 3.5 : 0,
-              decoration: BoxDecoration(
-                color: accent,
-                borderRadius: const BorderRadius.vertical(top: Radius.circular(2)),
-              ),
-            ),
-          ],
+      child: AnimatedDefaultTextStyle(
+        duration: const Duration(milliseconds: 300),
+        style: TextStyle(
+          fontSize: 18,
+          fontWeight: active ? FontWeight.bold : FontWeight.w600,
+          color: active ? accent : inactive,
         ),
-      ),
-    );
-  }
-
-  void _showCustomIngredientDialog() {
-    final controller = TextEditingController();
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Add Custom Ingredient'),
-        content: TextField(
-          controller: controller,
-          decoration: const InputDecoration(hintText: 'e.g. Gin, Avocado, Mint...'),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text('Cancel'),
-          ),
-          TextButton(
-            onPressed: () {
-              final name = controller.text.trim();
-              if (name.isNotEmpty) {
-                setState(() {
-                  _selectedIngredients.add(name);
-                  // Optional: add to grid with generic emoji
-                  _ingredients.add({'name': name, 'emoji': '🛒'});
-                });
-              }
-              Navigator.pop(ctx);
-            },
-            child: const Text('Add'),
-          ),
-        ],
+        child: Text(label),
       ),
     );
   }
