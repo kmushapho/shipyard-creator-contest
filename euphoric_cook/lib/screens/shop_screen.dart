@@ -27,7 +27,7 @@ class ManualList {
 }
 
 // ────────────────────────────────────────────────
-// Shared Detail Screen (Smart List & Manual List)
+// Detail screen (used for both Smart List and each Manual List)
 // ────────────────────────────────────────────────
 
 class ListDetailScreen extends StatefulWidget {
@@ -80,6 +80,7 @@ class _ListDetailScreenState extends State<ListDetailScreen> {
       _addController.clear();
     });
     widget.onItemsChanged?.call();
+
     // Keep keyboard open after adding
     Future.delayed(const Duration(milliseconds: 50), () {
       _focusNode.requestFocus();
@@ -115,8 +116,8 @@ class _ListDetailScreenState extends State<ListDetailScreen> {
 
   void _deleteSelected() {
     setState(() {
-      final sortedIndices = _selectedIndices.toList()..sort((a, b) => b.compareTo(a));
-      for (var idx in sortedIndices) {
+      final sorted = _selectedIndices.toList()..sort((a, b) => b.compareTo(a));
+      for (var idx in sorted) {
         widget.items.removeAt(idx);
       }
       _selectedIndices.clear();
@@ -140,7 +141,7 @@ class _ListDetailScreenState extends State<ListDetailScreen> {
           if (_multiSelectMode && _selectedIndices.isNotEmpty)
             IconButton(
               icon: const Icon(Icons.delete_forever),
-              tooltip: 'Delete selected items',
+              tooltip: 'Delete selected',
               onPressed: _deleteSelected,
             ),
           IconButton(
@@ -157,7 +158,7 @@ class _ListDetailScreenState extends State<ListDetailScreen> {
           padding: EdgeInsets.only(bottom: bottomInset + 16),
           child: Column(
             children: [
-              // Progress & quick actions
+              // Progress + quick actions
               Padding(
                 padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
                 child: Row(
@@ -174,6 +175,7 @@ class _ListDetailScreenState extends State<ListDetailScreen> {
                     ),
                     Wrap(
                       spacing: 8,
+                      runSpacing: 8,
                       children: [
                         TextButton.icon(
                           onPressed: widget.items.isNotEmpty ? _markAllDone : null,
@@ -188,7 +190,7 @@ class _ListDetailScreenState extends State<ListDetailScreen> {
                         TextButton.icon(
                           onPressed: widget.items.isNotEmpty ? _clearAll : null,
                           icon: const Icon(Icons.delete_sweep, size: 18),
-                          label: const Text('Clear'),
+                          label: const Text('Clear all'),
                         ),
                       ],
                     ),
@@ -196,15 +198,15 @@ class _ListDetailScreenState extends State<ListDetailScreen> {
                 ),
               ),
 
-              // Items or empty state
+              // Content or empty state
               widget.items.isEmpty
                   ? Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 64),
+                padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 80),
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Icon(
-                      widget.isSmartList ? Icons.lightbulb_outline : Icons.list_alt_rounded,
+                      widget.isSmartList ? Icons.lightbulb_outline : Icons.playlist_add_rounded,
                       size: 80,
                       color: Colors.grey[500],
                     ),
@@ -212,7 +214,7 @@ class _ListDetailScreenState extends State<ListDetailScreen> {
                     Text(
                       widget.isSmartList
                           ? "Your smart list is empty.\nAdd items from recipes in Cookbook or manually below!"
-                          : "This list has no items yet.\nUse the field below to add some.",
+                          : "This list is empty.\nAdd items using the field below.",
                       textAlign: TextAlign.center,
                       style: TextStyle(
                         fontSize: 16,
@@ -230,13 +232,13 @@ class _ListDetailScreenState extends State<ListDetailScreen> {
                 itemCount: widget.items.length,
                 itemBuilder: (context, index) {
                   final item = widget.items[index];
-                  final isSelected = _selectedIndices.contains(index);
+                  final selected = _selectedIndices.contains(index);
 
                   return ListTile(
                     contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                     leading: _multiSelectMode
                         ? Checkbox(
-                      value: isSelected,
+                      value: selected,
                       onChanged: (v) {
                         setState(() {
                           if (v == true) {
@@ -290,9 +292,9 @@ class _ListDetailScreenState extends State<ListDetailScreen> {
                 },
               ),
 
-              // Add item input (always above keyboard)
+              // Add item row
               Padding(
-                padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
+                padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
@@ -302,14 +304,15 @@ class _ListDetailScreenState extends State<ListDetailScreen> {
                         focusNode: _focusNode,
                         textInputAction: TextInputAction.done,
                         decoration: InputDecoration(
-                          hintText: 'Add item (e.g. chicken breast)',
+                          hintText: 'Add item (e.g. 500 g chicken breast)',
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
                             borderSide: BorderSide(color: Colors.grey[400]!),
                           ),
                           filled: true,
                           fillColor: isDark ? Colors.grey[900] : Colors.grey[100],
-                          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                          contentPadding:
+                          const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
                         ),
                         onSubmitted: (_) => _addItem(),
                       ),
@@ -344,7 +347,7 @@ class _ListDetailScreenState extends State<ListDetailScreen> {
 }
 
 // ────────────────────────────────────────────────
-// Main Shop Screen
+// Main Shopping Screen
 // ────────────────────────────────────────────────
 
 class ShopScreen extends StatefulWidget {
@@ -357,10 +360,8 @@ class ShopScreen extends StatefulWidget {
 class _ShopScreenState extends State<ShopScreen> with SingleTickerProviderStateMixin {
   late TabController _tabController;
 
-  // Smart list starts empty
   List<ShoppingItem> _smartItems = [];
 
-  // Manual lists – one default empty weekly list
   final List<ManualList> _manualLists = [
     ManualList(
       name: "Weekly Groceries",
@@ -387,22 +388,27 @@ class _ShopScreenState extends State<ShopScreen> with SingleTickerProviderStateM
     showDialog(
       context: context,
       builder: (context) {
-        final nameCtrl = TextEditingController(text: "New List ${DateTime.now().day}");
+        final ctrl = TextEditingController(
+          text: "List ${DateFormat('MMM d').format(DateTime.now())}",
+        );
         return AlertDialog(
           title: const Text("New Manual List"),
           content: TextField(
-            controller: nameCtrl,
+            controller: ctrl,
             autofocus: true,
-            decoration: const InputDecoration(hintText: "List name"),
+            decoration: const InputDecoration(
+              hintText: "e.g. Party Shopping, Birthday Cake Ingredients",
+              border: OutlineInputBorder(),
+            ),
           ),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
               child: const Text("Cancel"),
             ),
-            TextButton(
+            FilledButton(
               onPressed: () {
-                final name = nameCtrl.text.trim();
+                final name = ctrl.text.trim();
                 if (name.isNotEmpty) {
                   setState(() {
                     _manualLists.insert(
@@ -464,48 +470,98 @@ class _ShopScreenState extends State<ShopScreen> with SingleTickerProviderStateM
                     onItemsChanged: _refresh,
                   ),
 
-                  // Manual Lists overview
-                  _manualLists.isEmpty
-                      ? const Center(child: Text("No manual lists yet"))
-                      : ListView.builder(
-                    padding: const EdgeInsets.all(12),
-                    itemCount: _manualLists.length,
-                    itemBuilder: (context, index) {
-                      final list = _manualLists[index];
-                      final checked = list.items.where((i) => i.checked).length;
-                      final total = list.items.length;
-                      final dateStr = DateFormat('MMM d, yyyy').format(list.createdAt);
-
-                      return Card(
-                        margin: const EdgeInsets.only(bottom: 12),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                        elevation: 1,
-                        child: ListTile(
-                          contentPadding: const EdgeInsets.fromLTRB(16, 12, 12, 12),
-                          title: Text(
-                            list.name,
-                            style: const TextStyle(fontWeight: FontWeight.w600),
-                          ),
-                          subtitle: Text(
-                            "$dateStr • $checked/$total",
-                            style: TextStyle(color: Colors.grey[600]),
-                          ),
-                          trailing: const Icon(Icons.chevron_right_rounded),
-                          onTap: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (_) => ListDetailScreen(
-                                  title: list.name,
-                                  items: list.items,
-                                  onItemsChanged: _refresh,
-                                ),
+                  // Manual Lists tab
+                  Stack(
+                    children: [
+                      _manualLists.isEmpty
+                          ? Center(
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              Icons.playlist_add_rounded,
+                              size: 80,
+                              color: Colors.grey[500],
+                            ),
+                            const SizedBox(height: 24),
+                            Text(
+                              "No manual lists yet",
+                              style: TextStyle(
+                                fontSize: 20,
+                                fontWeight: FontWeight.w500,
+                                color: isDark ? Colors.white70 : Colors.black87,
                               ),
-                            );
-                          },
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              "Tap the button below to create one",
+                              style: TextStyle(color: Colors.grey[600]),
+                            ),
+                          ],
                         ),
-                      );
-                    },
+                      )
+                          : ListView.builder(
+                        padding: const EdgeInsets.fromLTRB(12, 12, 12, 100),
+                        itemCount: _manualLists.length,
+                        itemBuilder: (context, index) {
+                          final list = _manualLists[index];
+                          final checked = list.items.where((i) => i.checked).length;
+                          final total = list.items.length;
+                          final dateStr = DateFormat('MMM d, yyyy').format(list.createdAt);
+
+                          return Card(
+                            margin: const EdgeInsets.only(bottom: 12),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                            elevation: 1,
+                            child: ListTile(
+                              contentPadding: const EdgeInsets.fromLTRB(16, 12, 12, 12),
+                              title: Text(
+                                list.name,
+                                style: const TextStyle(fontWeight: FontWeight.w600),
+                              ),
+                              subtitle: Text(
+                                "$dateStr • $checked/$total",
+                                style: TextStyle(color: Colors.grey[600]),
+                              ),
+                              trailing: const Icon(Icons.chevron_right_rounded),
+                              onTap: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (_) => ListDetailScreen(
+                                      title: list.name,
+                                      items: list.items,
+                                      onItemsChanged: _refresh,
+                                    ),
+                                  ),
+                                );
+                              },
+                            ),
+                          );
+                        },
+                      ),
+
+                      // Bottom "Create New List" button – only on Manual Lists tab
+                      if (_tabController.index == 1)
+                        Positioned(
+                          left: 16,
+                          right: 16,
+                          bottom: 16,
+                          child: FilledButton.icon(
+                            onPressed: _createNewManualList,
+                            icon: const Icon(Icons.add_rounded),
+                            label: const Text("Create New List"),
+                            style: FilledButton.styleFrom(
+                              backgroundColor: AppColors.vibrantOrange,
+                              foregroundColor: Colors.white,
+                              padding: const EdgeInsets.symmetric(vertical: 16),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(16),
+                              ),
+                            ),
+                          ),
+                        ),
+                    ],
                   ),
                 ],
               ),
@@ -513,15 +569,6 @@ class _ShopScreenState extends State<ShopScreen> with SingleTickerProviderStateM
           ],
         ),
       ),
-
-      floatingActionButton: _tabController.index == 1
-          ? FloatingActionButton(
-        onPressed: _createNewManualList,
-        backgroundColor: AppColors.vibrantOrange,
-        foregroundColor: Colors.white,
-        child: const Icon(Icons.add),
-      )
-          : null,
     );
   }
 }
