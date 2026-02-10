@@ -61,12 +61,12 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                   // Dots to show progress
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
-                    children: List.generate(5, (i) => _buildDot(i == _currentPage)),
+                    children: List.generate(4, (i) => _buildDot(i == _currentPage)),
                   ),
                   const SizedBox(height: 20),
 
                   // Next/Skip button
-                  if (_currentPage < 4)
+                  if (_currentPage < 3)
                     ElevatedButton(
                       onPressed: () => _pageController.nextPage(
                         duration: const Duration(milliseconds: 300),
@@ -94,7 +94,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             ),
 
             // Skip button on top right (for early slides)
-            if (_currentPage < 4)
+            if (_currentPage < 3)
               Positioned(
                 top: 20,
                 right: 20,

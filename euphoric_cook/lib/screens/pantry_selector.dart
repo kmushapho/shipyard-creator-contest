@@ -25,27 +25,35 @@ class _PantrySelectorState extends State<PantrySelector>
 
   final List<Map<String, String>> _foodIngredients = [
     {'name': 'Water', 'emoji': '💧'},
-    {'name': 'Salt', 'emoji': '🧂'},
-    {'name': 'Eggs', 'emoji': '🥚'},
     {'name': 'Milk', 'emoji': '🥛'},
     {'name': 'Flour', 'emoji': '🌾'},
-    {'name': 'Chicken', 'emoji': '🍗'},
     {'name': 'Rice', 'emoji': '🍚'},
     {'name': 'Pasta', 'emoji': '🍝'},
+    {'name': 'Eggs', 'emoji': '🥚'},
+    {'name': 'Chicken', 'emoji': '🍗'},
     {'name': 'Cheese', 'emoji': '🧀'},
+    {'name': 'Butter', 'emoji': '🧈'},
+    {'name': 'Salt', 'emoji': '🧂'},
+    {'name': 'Onion', 'emoji': '🧅'},
+    {'name': 'Garlic', 'emoji': '🧄'},
   ];
+
 
   final List<Map<String, String>> _drinkIngredients = [
     {'name': 'Water', 'emoji': '💧'},
+    {'name': 'Milk', 'emoji': '🥛'},
     {'name': 'Coffee', 'emoji': '☕'},
     {'name': 'Tea', 'emoji': '🍵'},
     {'name': 'Juice', 'emoji': '🧃'},
     {'name': 'Lemonade', 'emoji': '🍋'},
-    {'name': 'Cocktail', 'emoji': '🍸'},
+    {'name': 'Soda', 'emoji': '🥤'},
+    {'name': 'Honey', 'emoji': '🍯'},
     {'name': 'Beer', 'emoji': '🍺'},
     {'name': 'Wine', 'emoji': '🍷'},
+    {'name': 'Cocktail', 'emoji': '🍸'},
     {'name': 'Margarita', 'emoji': '🍹'},
   ];
+
 
   Future<List<Map<String, dynamic>>> fetchRecipesByIngredients(Set<String> selected) async {
     if (selected.isEmpty) return [];
