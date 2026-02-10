@@ -8,7 +8,6 @@ import 'welcome_page.dart';
 import 'auth_page.dart';
 import 'features_page.dart';
 import 'get_started_page.dart';
-import 'loading_page.dart';
 
 class OnboardingScreen extends StatefulWidget {
   const OnboardingScreen({super.key});
@@ -49,7 +48,6 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 AuthPage(),
                 FeaturesPage(),
                 GetStartedPage(),
-                LoadingPage(),
               ],
             ),
 
