@@ -99,26 +99,32 @@ class _HomeScreenState extends State<HomeScreen> {
 
                     return Padding(
                       padding: const EdgeInsets.only(right: 12),
-                      child: ChoiceChip(
-                        label: Text(chip['label']!),
-                        selected: isSelected,
+                      child: RawChip(
+                        label: Text(
+                          chip['label']!,
+                          style: TextStyle(
+                            color: isSelected ? Colors.white : mode.textColor,
+                          ),
+                        ),
                         onSelected: (sel) {
                           setState(() => _selectedChipIndex = sel ? i : 0);
                         },
+                        selected: isSelected,
                         selectedColor: accent,
                         backgroundColor: mode.cardColor,
-                        labelStyle: TextStyle(
-                          color: isSelected ? Colors.white : mode.textColor,
-                        ),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(20),
                         ),
+                        // ✅ Remove checkmark
+                        avatar: null,      // important
+                        showCheckmark: false, // this works on newer Flutter versions
                       ),
                     );
                   },
                 ),
               ),
             ),
+
 
             const SliverToBoxAdapter(child: SizedBox(height: 20)),
 
