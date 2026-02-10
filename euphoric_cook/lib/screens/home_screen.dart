@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/mode_provider.dart';
 import 'pantry_selector.dart';
-import 'cookbook_screen.dart'; // ← Make sure this import exists (your CookbookScreen file)
+import 'cookbook_screen.dart';
+import 'shop_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -149,7 +150,7 @@ class _HomeScreenState extends State<HomeScreen> {
             const Center(child: Text('Meal Planner – Coming soon')),
 
             // Screen 3: Shop (placeholder)
-            const Center(child: Text('Shopping List – Coming soon')),
+            const ShopScreen(),
 
             // Screen 4: You (placeholder)
             const Center(child: Text('Profile / You – Coming soon')),

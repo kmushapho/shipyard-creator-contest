@@ -93,7 +93,6 @@ class _CookbookScreenState extends State<CookbookScreen> with SingleTickerProvid
                   subtitle: "Heart recipes you love to find them here quickly",
                 ),
 
-                // My Recipes – matches your screenshot most closely
                 _buildEmptyState(
                   icon: Icons.book_outlined,
                   title: "No custom recipes yet",
