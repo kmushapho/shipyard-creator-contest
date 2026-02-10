@@ -88,12 +88,39 @@ class _WelcomePageState extends State<WelcomePage>
               ),
               const SizedBox(height: 30),
               const Text(
-                "Welcome to\nEuphoric Cook",
+                "Welcome to",
                 textAlign: TextAlign.center,
                 style: TextStyle(
                     fontSize: 26,
                     fontWeight: FontWeight.bold,
                     color: Colors.white),
+              ),
+              AnimatedBuilder(
+                animation: _glowController,
+                builder: (_, child) {
+                  return Transform.scale(
+                    scale: 1 + (_glowController.value * 0.05),
+                    child: Text(
+                      "Euphoric Cook",
+                      style: TextStyle(
+                        fontSize: 30,
+                        fontWeight: FontWeight.w900,
+                        letterSpacing: 1.2,
+                        color: Colors.white,
+                        shadows: [
+                          Shadow(
+                            blurRadius: 15,
+                            color: Colors.white.withOpacity(0.7),
+                          ),
+                          Shadow(
+                            blurRadius: 30,
+                            color: Colors.orangeAccent.withOpacity(0.8),
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                },
               ),
               const SizedBox(height: 12),
               const Text(
