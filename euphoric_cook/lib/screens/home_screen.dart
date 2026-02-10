@@ -115,9 +115,8 @@ class _HomeScreenState extends State<HomeScreen> {
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(20),
                         ),
-                        // ✅ Remove checkmark
-                        avatar: null,      // important
-                        showCheckmark: false, // this works on newer Flutter versions
+                        avatar: null,
+                        showCheckmark: false,
                       ),
                     );
                   },
