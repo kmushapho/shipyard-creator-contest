@@ -48,6 +48,7 @@ class _WelcomePageState extends State<WelcomePage>
         _floatingIcon(Icons.favorite, top: 200, left: 80),
         _floatingIcon(Icons.restaurant, bottom: 150, right: 50),
         _floatingIcon(Icons.ramen_dining, bottom: 80, left: 40),
+        _floatingIcon(Icons.local_florist, top: 60, left: 200),
 
         // ❤️ Twinkling hearts
         Positioned(
@@ -142,20 +143,11 @@ class _WelcomePageState extends State<WelcomePage>
       left: left,
       right: right,
       bottom: bottom,
-      child: TweenAnimationBuilder(
-        tween: Tween(begin: -5.0, end: 5.0),
-        duration: Duration(seconds: 3 + Random().nextInt(3)),
-        curve: Curves.easeInOut,
-        builder: (_, double value, child) {
-          return Transform.translate(
-            offset: Offset(0, value),
-            child: child,
-          );
-        },
-        child: const Icon(Icons.local_florist, color: Colors.white70, size: 26),
-      ),
+      child: _BreathingIcon(icon: icon),
     );
   }
+
+
 
   // Twinkling heart helper
   Widget _twinkleIcon(IconData icon, Color color) {
@@ -170,6 +162,47 @@ class _WelcomePageState extends State<WelcomePage>
         );
       },
       child: Icon(icon, color: color, size: 20),
+    );
+  }
+}
+
+class _BreathingIcon extends StatefulWidget {
+  final IconData icon;
+  const _BreathingIcon({required this.icon});
+
+  @override
+  State<_BreathingIcon> createState() => _BreathingIconState();
+}
+
+class _BreathingIconState extends State<_BreathingIcon>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _scale;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 3),
+    )..repeat(reverse: true); // 🔁 LOOP
+
+    _scale = Tween(begin: 0.9, end: 1.1).animate(
+      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
+    );
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return ScaleTransition(
+      scale: _scale,
+      child: Icon(widget.icon, color: Colors.white70, size: 26),
     );
   }
 }

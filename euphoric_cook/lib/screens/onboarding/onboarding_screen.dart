@@ -100,7 +100,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 right: 20,
                 child: TextButton(
                   onPressed: _completeOnboarding,
-                  child: Text('Skip', style: TextStyle(color: AppColors.vibrantOrange)),
+                  child: Text('Skip', style: TextStyle(color: AppColors.lightText)),
                 ),
               ),
           ],
