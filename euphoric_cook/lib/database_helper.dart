@@ -1,5 +1,5 @@
 import 'dart:async';
-import 'dart:convert';               // ← added for jsonDecode
+import 'dart:convert';
 import 'dart:io';
 import 'package:csv/csv.dart';
 import 'package:flutter/services.dart' show rootBundle;
@@ -22,9 +22,6 @@ class DatabaseHelper {
   Future<Database> _initDatabase() async {
     final Directory documentsDirectory = await getApplicationDocumentsDirectory();
     final String path = join(documentsDirectory.path, dbName);
-
-    // Delete old DB during testing (remove this line later)
-    // await deleteDatabase(path);
 
     return await openDatabase(
       path,
@@ -95,7 +92,7 @@ class DatabaseHelper {
             'name': name,
             'servings': servings,
             'serving_size': servingSize,
-            'steps': stepsStr,           // keep original JSON string
+            'steps': stepsStr,
             'ingredients': ingredientsStr,
             'ingredients_raw': ingredientsRaw,
           },
