@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../constants/colors.dart';
-import '../home_screen.dart'; // ← Make sure this import points to your HomeScreen
+import '../bottom_nav/home_screen.dart'; // ← Make sure this import points to your HomeScreen
 
 class AuthPage extends StatefulWidget {
   const AuthPage({super.key});

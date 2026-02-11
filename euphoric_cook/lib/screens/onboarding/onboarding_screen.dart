@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../constants/colors.dart'; // Adjust path if your AppColors is elsewhere
-import '../home_screen.dart'; // Path to your HomeScreen
+import '../bottom_nav/home_screen.dart'; // Path to your HomeScreen
 
 // Import these if using (we'll define them in Step 2)
 import 'welcome_page.dart';

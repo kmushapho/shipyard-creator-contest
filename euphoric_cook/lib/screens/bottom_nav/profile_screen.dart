@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import '../providers/mode_provider.dart';
-import '../providers/user_provider.dart';
-import 'onboarding/auth_page.dart';
+import '../../providers/mode_provider.dart';
+import '../../providers/user_provider.dart';
+import '../onboarding/auth_page.dart';
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});

@@ -4,7 +4,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'providers/mode_provider.dart';
 import 'providers/user_provider.dart';
-import 'screens/profile_screen.dart';
+import 'screens/bottom_nav/profile_screen.dart';
 import 'screens/onboarding/onboarding_screen.dart';
 
 void main() async {

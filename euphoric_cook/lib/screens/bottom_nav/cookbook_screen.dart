@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart'; // optional – for gentle animations
 
-import '../../constants/colors.dart'; // ← your colors file
+import '../../../constants/colors.dart'; // ← your colors file
 
 class CookbookScreen extends StatefulWidget {
   const CookbookScreen({super.key});

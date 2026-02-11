@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../providers/mode_provider.dart';
-import 'pantry_selector.dart';
+import '../../providers/mode_provider.dart';
+import '../horizontal_menu/pantry_selector.dart';
 import 'cookbook_screen.dart';
 import 'meal_plan_screen.dart';
 import 'shop_screen.dart';
