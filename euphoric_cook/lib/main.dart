@@ -59,5 +59,6 @@ class MyApp extends StatelessWidget {
       // The key decision: onboarding only once
       home: hasCompletedOnboarding ? const HomeScreen() : const OnboardingScreen(),
     );
+
   }
 }

@@ -45,9 +45,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               onPageChanged: (index) => setState(() => _currentPage = index),
               children: const [
                 WelcomePage(),
-                AuthPage(),
                 FeaturesPage(),
                 GetStartedPage(),
+                AuthPage(),
               ],
             ),
 
@@ -79,16 +79,6 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                       ),
                       child: const Text('Next', style: TextStyle(color: Colors.white, fontSize: 18)),
                     )
-                  else
-                    ElevatedButton(
-                      onPressed: _completeOnboarding,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.vibrantOrange,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
-                        padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 15),
-                      ),
-                      child: const Text('Get Started!', style: TextStyle(color: Colors.white, fontSize: 18)),
-                    ),
                 ],
               ),
             ),

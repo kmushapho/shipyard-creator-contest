@@ -27,7 +27,7 @@ class ManualList {
 }
 
 // ────────────────────────────────────────────────
-// Detail screen (used for both Smart List and each Manual List)
+// Detail screen – used for Smart List and each Manual List
 // ────────────────────────────────────────────────
 
 class ListDetailScreen extends StatefulWidget {
@@ -81,7 +81,6 @@ class _ListDetailScreenState extends State<ListDetailScreen> {
     });
     widget.onItemsChanged?.call();
 
-    // Keep keyboard open after adding
     Future.delayed(const Duration(milliseconds: 50), () {
       _focusNode.requestFocus();
     });
@@ -89,39 +88,75 @@ class _ListDetailScreenState extends State<ListDetailScreen> {
 
   void _markAllDone() {
     setState(() {
-      for (var item in widget.items) {
-        item.checked = true;
-      }
+      for (var item in widget.items) item.checked = true;
     });
     widget.onItemsChanged?.call();
   }
 
   void _resetAll() {
     setState(() {
-      for (var item in widget.items) {
-        item.checked = false;
-      }
+      for (var item in widget.items) item.checked = false;
     });
     widget.onItemsChanged?.call();
   }
 
   void _clearAll() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text("Clear All Items?"),
+        content: const Text(
+          "This will remove every item from the list permanently.\nAre you sure?",
+          style: TextStyle(height: 1.4),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text("Cancel"),
+          ),
+          TextButton(
+            onPressed: () {
+              setState(() {
+                widget.items.clear();
+                _selectedIndices.clear();
+                _multiSelectMode = false;
+              });
+              widget.onItemsChanged?.call();
+              Navigator.pop(context);
+
+              // Optional: show a quick feedback
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text("All items cleared"),
+                  duration: Duration(seconds: 2),
+                ),
+              );
+            },
+            child: const Text(
+              "Clear All",
+              style: TextStyle(color: Colors.redAccent),
+            ),
+          ),
+        ],
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      ),
+    );
+  }
+
+  void _deleteSelected() {
     setState(() {
-      widget.items.clear();
+      final sorted = _selectedIndices.toList()..sort((a, b) => b.compareTo(a));
+      for (var idx in sorted) widget.items.removeAt(idx);
       _selectedIndices.clear();
       _multiSelectMode = false;
     });
     widget.onItemsChanged?.call();
   }
 
-  void _deleteSelected() {
+  void _removeItem(int index) {
     setState(() {
-      final sorted = _selectedIndices.toList()..sort((a, b) => b.compareTo(a));
-      for (var idx in sorted) {
-        widget.items.removeAt(idx);
-      }
-      _selectedIndices.clear();
-      _multiSelectMode = false;
+      widget.items.removeAt(index);
+      _selectedIndices.remove(index);
     });
     widget.onItemsChanged?.call();
   }
@@ -146,7 +181,7 @@ class _ListDetailScreenState extends State<ListDetailScreen> {
             ),
           IconButton(
             icon: Icon(_multiSelectMode ? Icons.close : Icons.checklist),
-            tooltip: _multiSelectMode ? 'Cancel selection' : 'Select items',
+            tooltip: _multiSelectMode ? 'Cancel' : 'Select items',
             onPressed: _toggleMultiSelect,
           ),
         ],
@@ -158,7 +193,6 @@ class _ListDetailScreenState extends State<ListDetailScreen> {
           padding: EdgeInsets.only(bottom: bottomInset + 16),
           child: Column(
             children: [
-              // Progress + quick actions
               Padding(
                 padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
                 child: Row(
@@ -198,7 +232,6 @@ class _ListDetailScreenState extends State<ListDetailScreen> {
                 ),
               ),
 
-              // Content or empty state
               widget.items.isEmpty
                   ? Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 80),
@@ -213,14 +246,10 @@ class _ListDetailScreenState extends State<ListDetailScreen> {
                     const SizedBox(height: 24),
                     Text(
                       widget.isSmartList
-                          ? "Your smart list is empty.\nAdd items from recipes in Cookbook or manually below!"
+                          ? "Your smart list is empty.\nAdd items from recipes or manually below!"
                           : "This list is empty.\nAdd items using the field below.",
                       textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontSize: 16,
-                        color: Colors.grey[600],
-                        height: 1.5,
-                      ),
+                      style: TextStyle(fontSize: 16, color: Colors.grey[600], height: 1.5),
                     ),
                   ],
                 ),
@@ -235,22 +264,18 @@ class _ListDetailScreenState extends State<ListDetailScreen> {
                   final selected = _selectedIndices.contains(index);
 
                   return ListTile(
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                    leading: _multiSelectMode
-                        ? Checkbox(
-                      value: selected,
-                      onChanged: (v) {
-                        setState(() {
-                          if (v == true) {
-                            _selectedIndices.add(index);
-                          } else {
-                            _selectedIndices.remove(index);
-                          }
-                        });
-                      },
-                      activeColor: AppColors.vibrantOrange,
-                    )
-                        : null,
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                    leading: IconButton(
+                      icon: const Icon(
+                        Icons.delete_forever_outlined,
+                        color: Colors.redAccent,
+                        size: 24,
+                      ),
+                      tooltip: 'Remove item',
+                      onPressed: () => _removeItem(index),
+                      padding: EdgeInsets.zero,
+                      constraints: const BoxConstraints(),
+                    ),
                     title: Text(
                       item.name,
                       style: TextStyle(
@@ -258,41 +283,57 @@ class _ListDetailScreenState extends State<ListDetailScreen> {
                         color: item.checked ? Colors.grey[600] : null,
                       ),
                     ),
-                    trailing: !_multiSelectMode
-                        ? Checkbox(
-                      value: item.checked,
-                      onChanged: (val) {
-                        setState(() => item.checked = val ?? false);
-                        widget.onItemsChanged?.call();
+                    trailing: Checkbox(
+                      value: _multiSelectMode ? _selectedIndices.contains(index) : item.checked,
+                      onChanged: (bool? newValue) {
+                        if (newValue == null) return;
+
+                        setState(() {
+                          if (_multiSelectMode) {
+                            // multi-select mode → toggle selection
+                            if (newValue) {
+                              _selectedIndices.add(index);
+                            } else {
+                              _selectedIndices.remove(index);
+                            }
+                          } else {
+                            // normal mode → toggle checked state
+                            item.checked = newValue;
+                            widget.onItemsChanged?.call();
+                          }
+                        });
                       },
                       activeColor: AppColors.vibrantOrange,
-                    )
-                        : null,
+                    ),
                     onLongPress: () {
                       setState(() {
                         _multiSelectMode = true;
                         _selectedIndices.add(index);
                       });
                     },
-                    onTap: _multiSelectMode
-                        ? () {
-                      setState(() {
-                        if (_selectedIndices.contains(index)) {
-                          _selectedIndices.remove(index);
-                        } else {
-                          _selectedIndices.add(index);
-                        }
-                      });
-                    }
-                        : () {
-                      setState(() => item.checked = !item.checked);
-                      widget.onItemsChanged?.call();
+                    onTap: () {
+                      if (_multiSelectMode) {
+                        // in multi-select: tap toggles selection
+                        setState(() {
+                          if (_selectedIndices.contains(index)) {
+                            _selectedIndices.remove(index);
+                          } else {
+                            _selectedIndices.add(index);
+                          }
+                        });
+                      } else {
+                        // normal mode: tap toggles checked state
+                        setState(() {
+                          item.checked = !item.checked;
+                        });
+                        widget.onItemsChanged?.call();
+                      }
                     },
                   );
                 },
               ),
 
-              // Add item row
+              // Add item input
               Padding(
                 padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
                 child: Row(
@@ -304,15 +345,14 @@ class _ListDetailScreenState extends State<ListDetailScreen> {
                         focusNode: _focusNode,
                         textInputAction: TextInputAction.done,
                         decoration: InputDecoration(
-                          hintText: 'Add item (e.g. 500 g chicken breast)',
+                          hintText: 'Add (e.g. chicken )',
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
                             borderSide: BorderSide(color: Colors.grey[400]!),
                           ),
                           filled: true,
                           fillColor: isDark ? Colors.grey[900] : Colors.grey[100],
-                          contentPadding:
-                          const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
                         ),
                         onSubmitted: (_) => _addItem(),
                       ),
@@ -347,7 +387,7 @@ class _ListDetailScreenState extends State<ListDetailScreen> {
 }
 
 // ────────────────────────────────────────────────
-// Main Shopping Screen
+// Main Shop Screen
 // ────────────────────────────────────────────────
 
 class ShopScreen extends StatefulWidget {
@@ -369,6 +409,9 @@ class _ShopScreenState extends State<ShopScreen> with SingleTickerProviderStateM
       items: [],
     ),
   ];
+
+  bool _multiSelectManualMode = false;
+  final Set<int> _selectedManualLists = {};
 
   @override
   void initState() {
@@ -402,19 +445,13 @@ class _ShopScreenState extends State<ShopScreen> with SingleTickerProviderStateM
             ),
           ),
           actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text("Cancel"),
-            ),
+            TextButton(onPressed: () => Navigator.pop(context), child: const Text("Cancel")),
             FilledButton(
               onPressed: () {
                 final name = ctrl.text.trim();
                 if (name.isNotEmpty) {
                   setState(() {
-                    _manualLists.insert(
-                      0,
-                      ManualList(name: name, createdAt: DateTime.now()),
-                    );
+                    _manualLists.insert(0, ManualList(name: name, createdAt: DateTime.now()));
                   });
                 }
                 Navigator.pop(context);
@@ -424,6 +461,52 @@ class _ShopScreenState extends State<ShopScreen> with SingleTickerProviderStateM
           ],
         );
       },
+    );
+  }
+
+  void _confirmDeleteList(int index) {
+    final listName = _manualLists[index].name;
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text("Delete List"),
+        content: Text("Delete '$listName' permanently?"),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context), child: const Text("Cancel")),
+          TextButton(
+            onPressed: () {
+              setState(() => _manualLists.removeAt(index));
+              Navigator.pop(context);
+            },
+            child: const Text("Delete", style: TextStyle(color: Colors.red)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _confirmDeleteSelectedLists() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text("Delete Selected"),
+        content: Text("Delete ${_selectedManualLists.length} lists? This cannot be undone."),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context), child: const Text("Cancel")),
+          TextButton(
+            onPressed: () {
+              setState(() {
+                final sorted = _selectedManualLists.toList()..sort((a, b) => b.compareTo(a));
+                for (var idx in sorted) _manualLists.removeAt(idx);
+                _multiSelectManualMode = false;
+                _selectedManualLists.clear();
+              });
+              Navigator.pop(context);
+            },
+            child: const Text("Delete", style: TextStyle(color: Colors.red)),
+          ),
+        ],
+      ),
     );
   }
 
@@ -452,10 +535,7 @@ class _ShopScreenState extends State<ShopScreen> with SingleTickerProviderStateM
               labelColor: AppColors.vibrantOrange,
               unselectedLabelColor: isDark ? Colors.white70 : Colors.black54,
               indicatorColor: AppColors.vibrantOrange,
-              tabs: const [
-                Tab(text: "Smart List"),
-                Tab(text: "Manual Lists"),
-              ],
+              tabs: const [Tab(text: "Smart List"), Tab(text: "Manual Lists")],
             ),
 
             Expanded(
@@ -470,7 +550,7 @@ class _ShopScreenState extends State<ShopScreen> with SingleTickerProviderStateM
                     onItemsChanged: _refresh,
                   ),
 
-                  // Manual Lists tab
+                  // Manual Lists overview with multi-select & delete
                   Stack(
                     children: [
                       _manualLists.isEmpty
@@ -478,11 +558,7 @@ class _ShopScreenState extends State<ShopScreen> with SingleTickerProviderStateM
                         child: Column(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            Icon(
-                              Icons.playlist_add_rounded,
-                              size: 80,
-                              color: Colors.grey[500],
-                            ),
+                            Icon(Icons.playlist_add_rounded, size: 80, color: Colors.grey[500]),
                             const SizedBox(height: 24),
                             Text(
                               "No manual lists yet",
@@ -493,38 +569,67 @@ class _ShopScreenState extends State<ShopScreen> with SingleTickerProviderStateM
                               ),
                             ),
                             const SizedBox(height: 8),
-                            Text(
-                              "Tap the button below to create one",
-                              style: TextStyle(color: Colors.grey[600]),
-                            ),
+                            Text("Tap below to create one", style: TextStyle(color: Colors.grey[600])),
                           ],
                         ),
                       )
                           : ListView.builder(
-                        padding: const EdgeInsets.fromLTRB(12, 12, 12, 100),
+                        padding: const EdgeInsets.fromLTRB(12, 12, 12, 140),
                         itemCount: _manualLists.length,
                         itemBuilder: (context, index) {
                           final list = _manualLists[index];
                           final checked = list.items.where((i) => i.checked).length;
                           final total = list.items.length;
                           final dateStr = DateFormat('MMM d, yyyy').format(list.createdAt);
+                          final selected = _selectedManualLists.contains(index);
 
                           return Card(
                             margin: const EdgeInsets.only(bottom: 12),
                             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                             elevation: 1,
+                            color: selected ? AppColors.vibrantOrange.withOpacity(0.15) : null,
                             child: ListTile(
-                              contentPadding: const EdgeInsets.fromLTRB(16, 12, 12, 12),
-                              title: Text(
-                                list.name,
-                                style: const TextStyle(fontWeight: FontWeight.w600),
-                              ),
+                              contentPadding: const EdgeInsets.fromLTRB(8, 12, 12, 12),
+                              leading: _multiSelectManualMode
+                                  ? Checkbox(
+                                value: selected,
+                                onChanged: (v) {
+                                  setState(() {
+                                    if (v == true) _selectedManualLists.add(index);
+                                    else _selectedManualLists.remove(index);
+                                  });
+                                },
+                                activeColor: AppColors.vibrantOrange,
+                              )
+                                  : null,
+                              title: Text(list.name, style: const TextStyle(fontWeight: FontWeight.w600)),
                               subtitle: Text(
                                 "$dateStr • $checked/$total",
                                 style: TextStyle(color: Colors.grey[600]),
                               ),
-                              trailing: const Icon(Icons.chevron_right_rounded),
-                              onTap: () {
+                              trailing: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  if (!_multiSelectManualMode)
+                                    IconButton(
+                                      icon: const Icon(Icons.delete_outline, color: Colors.redAccent),
+                                      tooltip: 'Delete list',
+                                      onPressed: () => _confirmDeleteList(index),
+                                    ),
+                                  const Icon(Icons.chevron_right_rounded),
+                                ],
+                              ),
+                              onTap: _multiSelectManualMode
+                                  ? () {
+                                setState(() {
+                                  if (_selectedManualLists.contains(index)) {
+                                    _selectedManualLists.remove(index);
+                                  } else {
+                                    _selectedManualLists.add(index);
+                                  }
+                                });
+                              }
+                                  : () {
                                 Navigator.push(
                                   context,
                                   MaterialPageRoute(
@@ -536,31 +641,61 @@ class _ShopScreenState extends State<ShopScreen> with SingleTickerProviderStateM
                                   ),
                                 );
                               },
+                              onLongPress: () {
+                                setState(() {
+                                  _multiSelectManualMode = true;
+                                  _selectedManualLists.add(index);
+                                });
+                              },
                             ),
                           );
                         },
                       ),
 
-                      // Bottom "Create New List" button – only on Manual Lists tab
-                      if (_tabController.index == 1)
-                        Positioned(
-                          left: 16,
-                          right: 16,
-                          bottom: 16,
-                          child: FilledButton.icon(
-                            onPressed: _createNewManualList,
-                            icon: const Icon(Icons.add_rounded),
-                            label: const Text("Create New List"),
-                            style: FilledButton.styleFrom(
-                              backgroundColor: AppColors.vibrantOrange,
-                              foregroundColor: Colors.white,
-                              padding: const EdgeInsets.symmetric(vertical: 16),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(16),
+                      // Bottom controls
+                      Positioned(
+                        left: 16,
+                        right: 16,
+                        bottom: 16,
+                        child: _multiSelectManualMode
+                            ? Row(
+                          children: [
+                            Expanded(
+                              child: OutlinedButton.icon(
+                                onPressed: _selectedManualLists.isEmpty ? null : _confirmDeleteSelectedLists,
+                                icon: const Icon(Icons.delete_forever, color: Colors.red),
+                                label: Text(
+                                  "Delete ${_selectedManualLists.length}",
+                                  style: const TextStyle(color: Colors.red),
+                                ),
+                                style: OutlinedButton.styleFrom(side: const BorderSide(color: Colors.red)),
                               ),
                             ),
+                            const SizedBox(width: 12),
+                            FilledButton.icon(
+                              onPressed: () {
+                                setState(() {
+                                  _multiSelectManualMode = false;
+                                  _selectedManualLists.clear();
+                                });
+                              },
+                              icon: const Icon(Icons.close),
+                              label: const Text("Cancel"),
+                            ),
+                          ],
+                        )
+                            : FilledButton.icon(
+                          onPressed: _createNewManualList,
+                          icon: const Icon(Icons.add_rounded),
+                          label: const Text("Create New List"),
+                          style: FilledButton.styleFrom(
+                            backgroundColor: AppColors.vibrantOrange,
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(vertical: 16),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                           ),
                         ),
+                      ),
                     ],
                   ),
                 ],

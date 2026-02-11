@@ -1,132 +1,88 @@
 import 'package:flutter/material.dart';
 import '../../constants/colors.dart';
 
-class AuthPage extends StatelessWidget {
+class AuthPage extends StatefulWidget {
   const AuthPage({super.key});
+
+  @override
+  State<AuthPage> createState() => _AuthPageState();
+}
+
+class _AuthPageState extends State<AuthPage> {
+  bool isLogin = true;
+  bool _obscurePassword = true;
+  bool _obscureConfirmPassword = true;
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      resizeToAvoidBottomInset: true,
-      body: SafeArea(
-        child: Container(
-          width: double.infinity,
-          height: double.infinity,
-          decoration: const BoxDecoration(
-            gradient: LinearGradient(
-              colors: [Color(0xFFFF8C42), Color(0xFFFF6B3D)],
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-            ),
+      body: Container(
+        width: double.infinity,
+        height: double.infinity,
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            colors: [Color(0xFFFF8C42), Color(0xFFFF6B3D)],
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
           ),
+        ),
+        child: Center(
           child: SingleChildScrollView(
-            padding: EdgeInsets.fromLTRB(
-              20,
-              40,
-              20,
-              MediaQuery.of(context).viewInsets.bottom + 20,
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                const SizedBox(height: 40),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 30),
+              child: Column(
+                children: [
+                  // --- TOGGLE SWITCH ---
+                  _buildToggleSwitch(),
+                  const SizedBox(height: 40),
 
-                // Title
-                const Text(
-                  "Welcome Back or Join the Fun",
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: 22,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                  ),
-                ),
+                  // --- FORM CONTAINER ---
+                  Container(
+                    padding: const EdgeInsets.all(30),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(30),
+                    ),
+                    child: Column(
+                      children: [
+                        Text(
+                          isLogin ? 'Welcome Back!' : 'Create Account',
+                          style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: AppColors.darkText),
+                        ),
+                        const SizedBox(height: 25),
 
-                const SizedBox(height: 30),
+                        // Email Field
+                        _buildTextField(Icons.email_outlined, 'Email'),
+                        const SizedBox(height: 15),
 
-                // Google button
-                ElevatedButton.icon(
-                  onPressed: () {},
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.white,
-                    foregroundColor: AppColors.vibrantOrange,
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(30)),
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                  ),
-                  icon: const Icon(Icons.g_mobiledata, size: 26),
-                  label: const Text("Continue with Google"),
-                ),
+                        // Password Field with Eye Toggle
+                        _buildTextField(
+                          Icons.lock_outline,
+                          'Password',
+                          isPassword: true,
+                          isObscured: _obscurePassword,
+                          onToggle: () => setState(() => _obscurePassword = !_obscurePassword),
+                        ),
 
-                const SizedBox(height: 20),
+                        // Confirm Password Field (Sign Up Only)
+                        if (!isLogin) ...[
+                          const SizedBox(height: 15),
+                          _buildTextField(
+                            Icons.lock_reset_outlined,
+                            'Confirm Password',
+                            isPassword: true,
+                            isObscured: _obscureConfirmPassword,
+                            onToggle: () => setState(() => _obscureConfirmPassword = !_obscureConfirmPassword),
+                          ),
+                        ],
 
-                const Center(
-                  child: Text(
-                    "or",
-                    style: TextStyle(color: Colors.white70),
-                  ),
-                ),
-
-                const SizedBox(height: 20),
-
-                // Email field
-                _inputField(hint: "Your email", icon: Icons.email, obscure: false),
-
-                const SizedBox(height: 15),
-
-                // Password field
-                _inputField(hint: "Password", icon: Icons.lock, obscure: true),
-
-                Align(
-                  alignment: Alignment.centerRight,
-                  child: TextButton(
-                    onPressed: () {},
-                    child: const Text(
-                      "Forgot password?",
-                      style: TextStyle(color: Colors.white70),
+                        const SizedBox(height: 30),
+                        _buildSubmitButton(),
+                      ],
                     ),
                   ),
-                ),
-
-                const SizedBox(height: 20),
-
-                // Login button
-                ElevatedButton(
-                  onPressed: () {},
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFFFFA87D),
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(30)),
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                    foregroundColor: Colors.white,
-                  ),
-                  child: const Text("Log In"),
-                ),
-
-                const SizedBox(height: 12),
-
-                // Sign Up button
-                ElevatedButton(
-                  onPressed: () {},
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFFDB5A28),
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(30)),
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                    foregroundColor: Colors.white,
-                  ),
-                  child: const Text("Sign Up"),
-                ),
-
-                const SizedBox(height: 30),
-
-                const Center(
-                  child: Text(
-                    "By signing up you agree to Terms & Privacy",
-                    style: TextStyle(fontSize: 12, color: Colors.white70),
-                  ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         ),
@@ -134,21 +90,78 @@ class AuthPage extends StatelessWidget {
     );
   }
 
-  Widget _inputField({
-    required String hint,
-    required IconData icon,
-    required bool obscure,
-  }) {
+  Widget _buildTextField(IconData icon, String hint, {bool isPassword = false, bool isObscured = false, VoidCallback? onToggle}) {
     return TextField(
-      obscureText: obscure,
+      obscureText: isPassword ? isObscured : false,
       decoration: InputDecoration(
-        filled: true,
-        fillColor: Colors.white.withOpacity(0.9),
+        prefixIcon: Icon(icon, color: Colors.grey),
+        suffixIcon: isPassword
+            ? IconButton(
+          icon: Icon(isObscured ? Icons.visibility_off : Icons.visibility, color: Colors.grey),
+          onPressed: onToggle,
+        )
+            : null,
         hintText: hint,
-        prefixIcon: Icon(icon, color: AppColors.vibrantOrange),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(30),
-          borderSide: BorderSide.none,
+        filled: true,
+        fillColor: Colors.grey.shade100,
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(15), borderSide: BorderSide.none),
+      ),
+    );
+  }
+
+  Widget _buildToggleSwitch() {
+    return Container(
+      height: 55, width: 280,
+      decoration: BoxDecoration(color: Colors.white.withOpacity(0.2), borderRadius: BorderRadius.circular(30)),
+      child: Stack(
+        children: [
+          AnimatedAlign(
+            duration: const Duration(milliseconds: 250),
+            alignment: isLogin ? Alignment.centerLeft : Alignment.centerRight,
+            child: Container(
+              width: 140, height: 55,
+              decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(30)),
+            ),
+          ),
+          Row(
+            children: [
+              _toggleButton('Login', true),
+              _toggleButton('Sign Up', false),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _toggleButton(String label, bool value) {
+    return Expanded(
+      child: GestureDetector(
+        onTap: () => setState(() => isLogin = value),
+        child: Center(
+          child: Text(
+            label,
+            style: TextStyle(fontWeight: FontWeight.bold, color: isLogin == value ? AppColors.vibrantOrange : Colors.white),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSubmitButton() {
+    return SizedBox(
+      width: double.infinity,
+      height: 55,
+      child: ElevatedButton(
+        onPressed: () {},
+        style: ElevatedButton.styleFrom(
+          backgroundColor: AppColors.vibrantOrange,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+          elevation: 0,
+        ),
+        child: Text(
+          isLogin ? 'Log In' : 'Sign Up',
+          style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
         ),
       ),
     );

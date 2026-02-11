@@ -4,6 +4,8 @@ import '../providers/mode_provider.dart';
 import 'pantry_selector.dart';
 import 'cookbook_screen.dart';
 import 'shop_screen.dart';
+import 'profile_screen.dart';
+import 'package:flutter/material.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -153,7 +155,7 @@ class _HomeScreenState extends State<HomeScreen> {
             const ShopScreen(),
 
             // Screen 4: You (placeholder)
-            const Center(child: Text('Profile / You – Coming soon')),
+            const ProfileScreen()
           ],
         ),
       ),
