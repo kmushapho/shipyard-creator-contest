@@ -35,6 +35,7 @@ class _PantrySelectorState extends State<PantrySelector>
     {'name': 'Salt', 'emoji': '🧂'},
     {'name': 'Onion', 'emoji': '🧅'},
     {'name': 'Garlic', 'emoji': '🧄'},
+    // Add more food items here → grid will automatically show more rows
   ];
 
   final List<Map<String, String>> _drinkIngredients = [
@@ -50,6 +51,7 @@ class _PantrySelectorState extends State<PantrySelector>
     {'name': 'Wine', 'emoji': '🍷'},
     {'name': 'Cocktail', 'emoji': '🍸'},
     {'name': 'Margarita', 'emoji': '🍹'},
+    // Add more drink items here → grid will automatically grow
   ];
 
   Future<List<Map<String, dynamic>>> fetchRecipesByIngredients(Set<String> selected) async {
@@ -97,12 +99,12 @@ class _PantrySelectorState extends State<PantrySelector>
         }
         return meals;
       } else {
-        print('Edamam status: ${response.statusCode}');
-        print('Response: ${response.body}');
+        print('Edamam error - status: ${response.statusCode}');
+        print('Body: ${response.body}');
         return [];
       }
     } catch (e) {
-      print('Error fetching recipes: $e');
+      print('Fetch error: $e');
       return [];
     }
   }
@@ -132,36 +134,86 @@ class _PantrySelectorState extends State<PantrySelector>
   Widget build(BuildContext context) {
     final ingredients = widget.isFood ? _foodIngredients : _drinkIngredients;
     final buttonText = widget.isFood ? "Let's Cook!" : "Let's Party!";
+    final selectedCount = selected.length;
 
     return Column(
       children: [
         const SizedBox(height: 16),
 
-        // Custom ingredient button
+        // Main action row: Custom (longer) + Let's Cook (smaller) side by side
         Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 28),
-          child: SizedBox(
-            width: double.infinity,
-            child: OutlinedButton.icon(
-              onPressed: () => _showCustomBottomSheet(context),
-              icon: const Icon(Icons.add_circle_outline_rounded, size: 22),
-              label: const Text(
-                'Add Custom Ingredient',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: Row(
+            children: [
+              // Longer "Add Custom" button
+              Expanded(
+                flex: 65, // ≈65% width – feels longer
+                child: OutlinedButton.icon(
+                  onPressed: () => _showCustomBottomSheet(context),
+                  icon: const Icon(Icons.add_circle_outline_rounded, size: 20),
+                  label: const Text(
+                    'Add Ingredient',
+                    style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
+                  ),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: widget.accentColor,
+                    side: BorderSide(color: widget.accentColor, width: 1.4),
+                    padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                  ),
+                ),
               ),
-              style: OutlinedButton.styleFrom(
-                foregroundColor: widget.accentColor,
-                side: BorderSide(color: widget.accentColor, width: 1.5),
-                padding: const EdgeInsets.symmetric(vertical: 16),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+              const SizedBox(width: 12),
+              // Smaller action button – always visible
+              Expanded(
+                flex: 35, // ≈35% width – noticeably smaller
+                child: ElevatedButton(
+                  onPressed: selected.isNotEmpty
+                      ? () async {
+                    final recipes = await fetchRecipesByIngredients(selected);
+                    // Replace this with real UI feedback (dialog, navigation, list view, etc.)
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('Found ${recipes.length} suggestions!'),
+                        duration: const Duration(seconds: 3),
+                      ),
+                    );
+                  }
+                      : null,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: widget.accentColor,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                    elevation: selected.isNotEmpty ? 4 : 1,
+                  ),
+                  child: Text(
+                    buttonText,
+                    style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+                  ),
+                ),
               ),
+            ],
+          ),
+        ),
+
+        const SizedBox(height: 10),
+
+        // Ingredient counter – directly under the custom button area
+        Center(
+          child: Text(
+            '$selectedCount ingredient${selectedCount == 1 ? '' : 's'} selected',
+            style: TextStyle(
+              fontSize: 15,
+              fontWeight: FontWeight.w600,
+              color: selectedCount > 0 ? widget.accentColor : Colors.grey[700],
             ),
           ),
         ),
 
-        const SizedBox(height: 24),
+        const SizedBox(height: 16),
 
-        // Selected chips (only shown when there are selections)
+        // Chips of selected items
         if (selected.isNotEmpty)
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -185,10 +237,9 @@ class _PantrySelectorState extends State<PantrySelector>
             ),
           ),
 
-        // ← This was the problematic line – removed 'const'
-        SizedBox(height: selected.isNotEmpty ? 28 : 40),
+        SizedBox(height: selected.isNotEmpty ? 24 : 32),
 
-        // 4-column grid
+        // Grid – grows automatically when you add more items to the lists above
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16),
           child: GridView.builder(
@@ -210,7 +261,11 @@ class _PantrySelectorState extends State<PantrySelector>
               return GestureDetector(
                 onTap: () {
                   setState(() {
-                    isSelected ? selected.remove(name) : selected.add(name);
+                    if (isSelected) {
+                      selected.remove(name);
+                    } else {
+                      selected.add(name);
+                    }
                   });
                 },
                 child: Column(
@@ -256,36 +311,6 @@ class _PantrySelectorState extends State<PantrySelector>
           ),
         ),
 
-        const SizedBox(height: 40),
-
-        // Main action button
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 28),
-          child: SizedBox(
-            width: double.infinity,
-            child: ElevatedButton(
-              onPressed: selected.isNotEmpty
-                  ? () async {
-                final recipes = await fetchRecipesByIngredients(selected);
-                print('Found ${recipes.length} suggestions!');
-                // TODO: show results in UI (dialog, new page, etc.)
-              }
-                  : null,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: widget.accentColor,
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(vertical: 18),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                elevation: selected.isNotEmpty ? 6 : 0,
-              ),
-              child: Text(
-                buttonText,
-                style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-              ),
-            ),
-          ),
-        ),
-
         const SizedBox(height: 60),
       ],
     );
@@ -311,7 +336,7 @@ class _PantrySelectorState extends State<PantrySelector>
 }
 
 // ────────────────────────────────────────────────
-// Custom bottom sheet (unchanged except for const safety)
+// Custom Ingredient Bottom Sheet (unchanged)
 // ────────────────────────────────────────────────
 class CustomIngredientBottomSheet extends StatefulWidget {
   final bool isFood;
