@@ -206,7 +206,7 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget _buildFoodDrinkToggle(ModeProvider mode) {
     final isFood = mode.isFood;
     final foodColor = Colors.orangeAccent.shade700;
-    final drinkColor = Colors.blueAccent.shade700;
+    final drinkColor = Colors.orangeAccent.shade700;
     final inactiveColor = mode.textColor.withOpacity(0.65);
 
     return Row(

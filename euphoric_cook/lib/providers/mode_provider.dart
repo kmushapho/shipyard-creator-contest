@@ -17,7 +17,7 @@ class ModeProvider extends ChangeNotifier {
 
   ThemeMode get themeMode => _isDark ? ThemeMode.dark : ThemeMode.light;
 
-  Color get accentColor => isFood ? AppColors.vibrantOrange : AppColors.vibrantBlue;
+  Color get accentColor => isFood ? AppColors.vibrantOrange : AppColors.vibrantOrange ;
 
   Color get textColor => _isDark ? AppColors.lightText : AppColors.darkText;
 
