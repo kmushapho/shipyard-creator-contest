@@ -49,63 +49,80 @@ class _AuthPageState extends State<AuthPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      resizeToAvoidBottomInset: false, // prevents Scaffold from resizing
+      resizeToAvoidBottomInset: false, // prevent Scaffold from resizing
       body: Stack(
         children: [
-          // Main scrollable content
-          SingleChildScrollView(
-            padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 60),
-            child: Column(
-              children: [
-                _buildToggleSwitch(),
-                const SizedBox(height: 40),
-                Container(
-                  padding: const EdgeInsets.all(30),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(30),
-                  ),
-                  child: Column(
-                    children: [
-                      Text(
-                        isLogin ? 'Welcome Back!' : 'Create Account',
-                        style: const TextStyle(
-                          fontSize: 24,
-                          fontWeight: FontWeight.bold,
-                          color: AppColors.darkText,
-                        ),
-                      ),
-                      const SizedBox(height: 25),
-                      _buildTextField(Icons.email_outlined, 'Email'),
-                      const SizedBox(height: 15),
-                      _buildTextField(
-                        Icons.lock_outline,
-                        'Password',
-                        isPassword: true,
-                        isObscured: _obscurePassword,
-                        onToggle: () => setState(() => _obscurePassword = !_obscurePassword),
-                      ),
-                      if (!isLogin) ...[
-                        const SizedBox(height: 15),
-                        _buildTextField(
-                          Icons.lock_reset_outlined,
-                          'Confirm Password',
-                          isPassword: true,
-                          isObscured: _obscureConfirmPassword,
-                          onToggle: () => setState(() => _obscureConfirmPassword = !_obscureConfirmPassword),
-                        ),
-                      ],
-                      const SizedBox(height: 30),
-                      _buildSubmitButton(),
-                      const SizedBox(height: 150), // extra space so scroll works nicely
-                    ],
-                  ),
-                ),
-              ],
+          // Gradient background
+          Container(
+            width: double.infinity,
+            height: double.infinity,
+            decoration: const BoxDecoration(
+              gradient: LinearGradient(
+                colors: [Color(0xFFFF8C42), Color(0xFFFF6B3D)],
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+              ),
             ),
           ),
 
-          // Fixed guest button at bottom
+          // Scrollable form
+          SafeArea(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 60),
+              child: Column(
+                children: [
+                  _buildToggleSwitch(),
+                  const SizedBox(height: 40),
+                  Container(
+                    padding: const EdgeInsets.all(30),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(30),
+                    ),
+                    child: Column(
+                      children: [
+                        Text(
+                          isLogin ? 'Welcome Back!' : 'Create Account',
+                          style: const TextStyle(
+                            fontSize: 24,
+                            fontWeight: FontWeight.bold,
+                            color: AppColors.darkText,
+                          ),
+                        ),
+                        const SizedBox(height: 25),
+                        _buildTextField(Icons.email_outlined, 'Email'),
+                        const SizedBox(height: 15),
+                        _buildTextField(
+                          Icons.lock_outline,
+                          'Password',
+                          isPassword: true,
+                          isObscured: _obscurePassword,
+                          onToggle: () =>
+                              setState(() => _obscurePassword = !_obscurePassword),
+                        ),
+                        if (!isLogin) ...[
+                          const SizedBox(height: 15),
+                          _buildTextField(
+                            Icons.lock_reset_outlined,
+                            'Confirm Password',
+                            isPassword: true,
+                            isObscured: _obscureConfirmPassword,
+                            onToggle: () => setState(
+                                    () => _obscureConfirmPassword = !_obscureConfirmPassword),
+                          ),
+                        ],
+                        const SizedBox(height: 30),
+                        _buildSubmitButton(),
+                        const SizedBox(height: 150), // space to scroll above guest button
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+
+          // Fixed guest button
           Align(
             alignment: Alignment.bottomCenter,
             child: Padding(
@@ -229,7 +246,7 @@ class _AuthPageState extends State<AuthPage> {
       height: 55,
       child: ElevatedButton(
         onPressed: () {
-          // Add your login/signup logic
+          // Add login/signup logic
         },
         style: ElevatedButton.styleFrom(
           backgroundColor: AppColors.vibrantOrange,
