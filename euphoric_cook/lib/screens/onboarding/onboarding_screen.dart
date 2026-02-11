@@ -38,6 +38,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     final bool isLastPage = _currentPage == _totalPages - 1;
 
     return Scaffold(
+      resizeToAvoidBottomInset: false,
       backgroundColor: AppColors.lightBg,
       body: SafeArea(
         child: Stack(

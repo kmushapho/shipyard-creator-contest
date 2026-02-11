@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../constants/colors.dart';
-import '../bottom_nav/home_screen.dart'; // ← Make sure this import points to your HomeScreen
+import '../bottom_nav/home_screen.dart';
 
 class AuthPage extends StatefulWidget {
   const AuthPage({super.key});
@@ -27,21 +27,17 @@ class _AuthPageState extends State<AuthPage> {
     super.dispose();
   }
 
-  // New: Function to handle guest continue
   Future<void> _continueAsGuest() async {
-    // Mark onboarding as completed
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool('hasCompletedOnboarding', true);
 
     if (!mounted) return;
 
-    // Go directly to home screen
     Navigator.pushReplacement(
       context,
       MaterialPageRoute(builder: (context) => const HomeScreen()),
     );
 
-    // Optional: show a quick toast/feedback
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
         content: Text('Continuing as guest...'),
@@ -53,104 +49,73 @@ class _AuthPageState extends State<AuthPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      resizeToAvoidBottomInset: true,
+      resizeToAvoidBottomInset: false, // prevents Scaffold from resizing
       body: Stack(
         children: [
-          // Background + scrollable content
-          Container(
-            width: double.infinity,
-            height: double.infinity,
-            decoration: const BoxDecoration(
-              gradient: LinearGradient(
-                colors: [Color(0xFFFF8C42), Color(0xFFFF6B3D)],
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-              ),
-            ),
-            child: Center(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 60),
-                child: Column(
-                  children: [
-                    _buildToggleSwitch(),
-                    const SizedBox(height: 40),
-
-                    Container(
-                      padding: const EdgeInsets.all(30),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(30),
+          // Main scrollable content
+          SingleChildScrollView(
+            padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 60),
+            child: Column(
+              children: [
+                _buildToggleSwitch(),
+                const SizedBox(height: 40),
+                Container(
+                  padding: const EdgeInsets.all(30),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(30),
+                  ),
+                  child: Column(
+                    children: [
+                      Text(
+                        isLogin ? 'Welcome Back!' : 'Create Account',
+                        style: const TextStyle(
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.darkText,
+                        ),
                       ),
-                      child: Column(
-                        children: [
-                          Text(
-                            isLogin ? 'Welcome Back!' : 'Create Account',
-                            style: const TextStyle(
-                              fontSize: 24,
-                              fontWeight: FontWeight.bold,
-                              color: AppColors.darkText,
-                            ),
-                          ),
-                          const SizedBox(height: 25),
-
-                          _buildTextField(Icons.email_outlined, 'Email'),
-
-                          const SizedBox(height: 15),
-
-                          _buildTextField(
-                            Icons.lock_outline,
-                            'Password',
-                            isPassword: true,
-                            isObscured: _obscurePassword,
-                            onToggle: () => setState(() => _obscurePassword = !_obscurePassword),
-                          ),
-
-                          if (!isLogin) ...[
-                            const SizedBox(height: 15),
-                            _buildTextField(
-                              Icons.lock_reset_outlined,
-                              'Confirm Password',
-                              isPassword: true,
-                              isObscured: _obscureConfirmPassword,
-                              onToggle: () => setState(
-                                    () => _obscureConfirmPassword = !_obscureConfirmPassword,
-                              ),
-                            ),
-                          ],
-
-                          const SizedBox(height: 30),
-
-                          _buildSubmitButton(),
-
-                          const SizedBox(height: 40),
-                        ],
+                      const SizedBox(height: 25),
+                      _buildTextField(Icons.email_outlined, 'Email'),
+                      const SizedBox(height: 15),
+                      _buildTextField(
+                        Icons.lock_outline,
+                        'Password',
+                        isPassword: true,
+                        isObscured: _obscurePassword,
+                        onToggle: () => setState(() => _obscurePassword = !_obscurePassword),
                       ),
-                    ),
-
-                    const SizedBox(height: 100), // space for guest button
-                  ],
+                      if (!isLogin) ...[
+                        const SizedBox(height: 15),
+                        _buildTextField(
+                          Icons.lock_reset_outlined,
+                          'Confirm Password',
+                          isPassword: true,
+                          isObscured: _obscureConfirmPassword,
+                          onToggle: () => setState(() => _obscureConfirmPassword = !_obscureConfirmPassword),
+                        ),
+                      ],
+                      const SizedBox(height: 30),
+                      _buildSubmitButton(),
+                      const SizedBox(height: 150), // extra space so scroll works nicely
+                    ],
+                  ),
                 ),
-              ),
+              ],
             ),
           ),
 
           // Fixed guest button at bottom
-          Positioned(
-            bottom: 0,
-            left: 0,
-            right: 0,
+          Align(
+            alignment: Alignment.bottomCenter,
             child: Padding(
-              padding: EdgeInsets.fromLTRB(
-                30,
-                20,
-                30,
-                MediaQuery.of(context).viewInsets.bottom + 20,
-              ),
+              padding: const EdgeInsets.all(20),
               child: SizedBox(
+                width: double.infinity,
                 height: 55,
-                child: TextButton(
-                  onPressed: _continueAsGuest, // ← Now calls the new function
-                  style: TextButton.styleFrom(
+                child: ElevatedButton(
+                  onPressed: _continueAsGuest,
+                  style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.white,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(15),
@@ -173,8 +138,6 @@ class _AuthPageState extends State<AuthPage> {
       ),
     );
   }
-
-  // ── The rest remains the same ─────────────────────────────────────────────
 
   Widget _buildTextField(
       IconData icon,
@@ -266,8 +229,7 @@ class _AuthPageState extends State<AuthPage> {
       height: 55,
       child: ElevatedButton(
         onPressed: () {
-          // TODO: Add your real login / signup logic here later
-          // For now you can leave it empty or show a snackbar
+          // Add your login/signup logic
         },
         style: ElevatedButton.styleFrom(
           backgroundColor: AppColors.vibrantOrange,
