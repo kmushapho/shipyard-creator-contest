@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../providers/mode_provider.dart';
 import 'pantry_selector.dart';
 import 'cookbook_screen.dart';
+import 'meal_plan_screen.dart';
 import 'shop_screen.dart';
 import 'profile_screen.dart';
 import 'package:flutter/material.dart';
@@ -149,7 +150,7 @@ class _HomeScreenState extends State<HomeScreen> {
             const CookbookScreen(),
 
             // Screen 2: Plan (placeholder – replace later)
-            const Center(child: Text('Meal Planner – Coming soon')),
+            const MealPlannerPage(),
 
             // Screen 3: Shop (placeholder)
             const ShopScreen(),
