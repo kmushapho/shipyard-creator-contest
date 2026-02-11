@@ -17,10 +17,11 @@ class OnboardingScreen extends StatefulWidget {
 }
 
 class _OnboardingScreenState extends State<OnboardingScreen> {
-  final PageController _pageController = PageController(); // Controls swiping
-  int _currentPage = 0; // Tracks which slide you're on
+  final PageController _pageController = PageController();
+  int _currentPage = 0;
 
-  // Function to finish onboarding and go to home
+  final int _totalPages = 4;
+
   Future<void> _completeOnboarding() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool('hasCompletedOnboarding', true);
@@ -34,15 +35,19 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final bool isLastPage = _currentPage == _totalPages - 1;
+
     return Scaffold(
-      backgroundColor: AppColors.lightBg, // Light background from your colors
+      backgroundColor: AppColors.lightBg,
       body: SafeArea(
         child: Stack(
           children: [
-            // The swiper for slides
+            // PageView with onboarding slides
             PageView(
               controller: _pageController,
-              onPageChanged: (index) => setState(() => _currentPage = index),
+              onPageChanged: (index) {
+                setState(() => _currentPage = index);
+              },
               children: const [
                 WelcomePage(),
                 FeaturesPage(),
@@ -51,46 +56,66 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               ],
             ),
 
-            // Bottom dots and button (fixed on screen)
-            Positioned(
-              bottom: 0,
-              left: 0,
-              right: 0,
-              child: Column(
-                children: [
-                  // Dots to show progress
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: List.generate(4, (i) => _buildDot(i == _currentPage)),
-                  ),
-                  const SizedBox(height: 20),
-
-                  // Next/Skip button
-                  if (_currentPage < 3)
-                    ElevatedButton(
-                      onPressed: () => _pageController.nextPage(
-                        duration: const Duration(milliseconds: 300),
-                        curve: Curves.easeInOut,
+            // Bottom dots + Next button → HIDDEN on AuthPage
+            if (!isLastPage)
+              Positioned(
+                bottom: 0,
+                left: 0,
+                right: 0,
+                child: Column(
+                  children: [
+                    // Progress Dots
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: List.generate(
+                        _totalPages,
+                            (i) => _buildDot(i == _currentPage),
                       ),
+                    ),
+                    const SizedBox(height: 20),
+
+                    // Next Button
+                    ElevatedButton(
+                      onPressed: () {
+                        _pageController.nextPage(
+                          duration: const Duration(milliseconds: 300),
+                          curve: Curves.easeInOut,
+                        );
+                      },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: AppColors.vibrantOrange,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
-                        padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 15),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(30),
+                        ),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 40,
+                          vertical: 15,
+                        ),
                       ),
-                      child: const Text('Next', style: TextStyle(color: Colors.white, fontSize: 18)),
-                    )
-                ],
+                      child: const Text(
+                        'Next',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 18,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 40), // breathing room at bottom
+                  ],
+                ),
               ),
-            ),
 
-            // Skip button on top right (for early slides)
-            if (_currentPage < 3)
+            // Skip button → also hidden on last page
+            if (!isLastPage)
               Positioned(
                 top: 20,
                 right: 20,
                 child: TextButton(
                   onPressed: _completeOnboarding,
-                  child: Text('Skip', style: TextStyle(color: AppColors.lightText)),
+                  child: Text(
+                    'Skip',
+                    style: TextStyle(color: AppColors.lightText),
+                  ),
                 ),
               ),
           ],
@@ -99,7 +124,6 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     );
   }
 
-  // Helper for dots
   Widget _buildDot(bool isActive) {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 5),
