@@ -23,20 +23,56 @@ class _PantrySelectorState extends State<PantrySelector>
   late Animation<double> _rotationAnimation;
 
   final List<Map<String, String>> _foodIngredients = [
-    {'name': 'Water', 'emoji': '💧'},
-    {'name': 'Milk', 'emoji': '🥛'},
+  // --- PANTRY ---
     {'name': 'Flour', 'emoji': '🌾'},
-    {'name': 'Rice', 'emoji': '🍚'},
-    {'name': 'Pasta', 'emoji': '🍝'},
-    {'name': 'Eggs', 'emoji': '🥚'},
-    {'name': 'Chicken', 'emoji': '🍗'},
-    {'name': 'Cheese', 'emoji': '🧀'},
-    {'name': 'Butter', 'emoji': '🧈'},
-    {'name': 'Salt', 'emoji': '🧂'},
-    {'name': 'Onion', 'emoji': '🧅'},
-    {'name': 'Garlic', 'emoji': '🧄'},
-    // Add more food items here → grid will automatically show more rows
+  {'name': 'Sugar', 'emoji': '🍭'},
+  {'name': 'Rice', 'emoji': '🍚'},
+  {'name': 'Pasta', 'emoji': '🍝'},
+  {'name': 'Bread', 'emoji': '🍞'},
+  {'name': 'Honey', 'emoji': '🍯'},
+  {'name': 'Olive Oil', 'emoji': '🫒'},
+  {'name': 'Vinegar', 'emoji': '🧪'},
+  {'name': 'Soy Sauce', 'emoji': '🍶'},
+  {'name': 'Oats', 'emoji': '🥣'},
+  {'name': 'Noodles', 'emoji': '🍜'},
+  {'name': 'Beans', 'emoji': '🫘'},
+
+  // --- FRIDGE ---
+      {'name': 'Milk', 'emoji': '🥛'},
+  {'name': 'Eggs', 'emoji': '🥚'},
+  {'name': 'Butter', 'emoji': '🧈'},
+  {'name': 'Cheese', 'emoji': '🧀'},
+  {'name': 'Yogurt', 'emoji': '🍧'},
+  {'name': 'Chicken', 'emoji': '🍗'},
+  {'name': 'Beef', 'emoji': '🥩'},
+  {'name': 'Bacon', 'emoji': '🥓'},
+  {'name': 'Fish', 'emoji': '🐟'},
+  {'name': 'Shrimp', 'emoji': '🍤'},
+  {'name': 'Water', 'emoji': '💧'},
+
+  // --- PRODUCE ---
+      {'name': 'Onion', 'emoji': '🧅'},
+  {'name': 'Garlic', 'emoji': '🧄'},
+  {'name': 'Potato', 'emoji': '🥔'},
+  {'name': 'Tomato', 'emoji': '🍅'},
+  {'name': 'Carrot', 'emoji': '🥕'},
+  {'name': 'Lemon', 'emoji': '🍋'},
+  {'name': 'Ginger', 'emoji': '🫚'},
+  {'name': 'Chili', 'emoji': '🌶️'},
+  {'name': 'Bell Pepper', 'emoji': '🫑'},
+  {'name': 'Broccoli', 'emoji': '🥦'},
+  {'name': 'Mushroom', 'emoji': '🍄'},
+  {'name': 'Avocado', 'emoji': '🥑'},
+
+  // --- SPICES/MISC ---
+      {'name': 'Salt', 'emoji': '🧂'},
+  {'name': 'Black Pepper', 'emoji': '🧂'},
+  {'name': 'Cinnamon', 'emoji': '🍂'},
+  {'name': 'Chocolate', 'emoji': '🍫'},
+  {'name': 'Coffee', 'emoji': '☕'},
+  {'name': 'Tea', 'emoji': '🍵'},
   ];
+
 
   final List<Map<String, String>> _drinkIngredients = [
     {'name': 'Water', 'emoji': '💧'},
@@ -51,7 +87,6 @@ class _PantrySelectorState extends State<PantrySelector>
     {'name': 'Wine', 'emoji': '🍷'},
     {'name': 'Cocktail', 'emoji': '🍸'},
     {'name': 'Margarita', 'emoji': '🍹'},
-    // Add more drink items here → grid will automatically grow
   ];
 
   Future<List<Map<String, dynamic>>> fetchRecipesByIngredients(Set<String> selected) async {
