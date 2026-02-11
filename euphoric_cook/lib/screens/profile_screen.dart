@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+
 import '../providers/mode_provider.dart';
 import '../providers/user_provider.dart';
+import 'onboarding/auth_page.dart';
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
@@ -13,7 +15,6 @@ class ProfileScreen extends StatelessWidget {
 
     final accent = mode.accentColor;
     final textColor = mode.textPrimary;
-    final cardColor = mode.cardColor;
     final bgColor = mode.bgColor;
 
     return Scaffold(
@@ -43,12 +44,31 @@ class ProfileScreen extends StatelessWidget {
                   children: [
                     Text(
                       user.name,
-                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: textColor),
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w600,
+                        color: textColor,
+                      ),
                     ),
-                    Text(
-                      user.isGuest ? "Sign in to sync your data" : "Logged in",
-                      style: TextStyle(fontSize: 13, color: textColor.withOpacity(0.6)),
-                    ),
+                    GestureDetector(
+                      onTap: () {
+                        if (user.isGuest) {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (_) => const AuthPage()),
+                          );
+                        }
+                      },
+                      child: Text(
+                        user.isGuest ? "Sign in to sync your data" : "Logged in",
+                        style: TextStyle(
+                          fontSize: 13,
+                          color: textColor.withOpacity(0.6),
+                          decoration: user.isGuest ? TextDecoration.underline : null,
+                        ),
+                      ),
+                    )
+
                   ],
                 ),
               ],
@@ -65,18 +85,40 @@ class ProfileScreen extends StatelessWidget {
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
-                children: const [
-                  Text("Euphoric Cook Premium",
-                      style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
-                  SizedBox(height: 6),
-                  Text(
+                children: [
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: const [
+                      Text(
+                        "Euphoric Cook Premium",
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      SizedBox(width: 6),
+                      Icon(
+                        Icons.workspace_premium_outlined,
+                        color: Colors.white,
+                        size: 20,
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 6),
+                  const Text(
                     "Unlimited meal plans, no ads, advanced features & more",
                     style: TextStyle(color: Colors.white70),
                   ),
-                  SizedBox(height: 14),
-                  Center(
-                    child: Text("Upgrade Now",
-                        style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600)),
+                  const SizedBox(height: 14),
+                  const Center(
+                    child: Text(
+                      "Upgrade Now",
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
                   )
                 ],
               ),
@@ -85,14 +127,17 @@ class ProfileScreen extends StatelessWidget {
             const SizedBox(height: 30),
 
             _section("Preferences"),
-            _tile(icon: Icons.dark_mode, title: "Switch to Dark Mode", trailing: Switch(
-              value: mode.isDark,
-              onChanged: (_) => mode.toggleTheme(),
-              activeColor: accent,
-            )),
+            _tile(
+              icon: Icons.dark_mode,
+              title: "Switch to Dark Mode",
+              trailing: Switch(
+                value: mode.isDark,
+                onChanged: (_) => mode.toggleTheme(),
+                activeColor: accent,
+              ),
+            ),
 
             _tile(icon: Icons.notifications, title: "Notifications"),
-
             _tile(icon: Icons.straighten, title: "Units: Metric"),
 
             const SizedBox(height: 20),
@@ -139,11 +184,15 @@ class ProfileScreen extends StatelessWidget {
             _section("Foods to Avoid"),
             Wrap(
               spacing: 10,
-              children: user.foodsToAvoid.map((f) => Chip(
-                label: Text(f),
-                deleteIcon: const Icon(Icons.close),
-                onDeleted: () => user.removeFoodToAvoid(f),
-              )).toList(),
+              children: user.foodsToAvoid
+                  .map(
+                    (f) => Chip(
+                  label: Text(f),
+                  deleteIcon: const Icon(Icons.close),
+                  onDeleted: () => user.removeFoodToAvoid(f),
+                ),
+              )
+                  .toList(),
             ),
 
             const SizedBox(height: 12),
@@ -161,7 +210,10 @@ class ProfileScreen extends StatelessWidget {
                 child: OutlinedButton.icon(
                   onPressed: user.logoutToGuest,
                   icon: const Icon(Icons.logout, color: Colors.red),
-                  label: const Text("Log Out", style: TextStyle(color: Colors.red)),
+                  label: const Text(
+                    "Log Out",
+                    style: TextStyle(color: Colors.red),
+                  ),
                 ),
               ),
           ],
@@ -173,12 +225,22 @@ class ProfileScreen extends StatelessWidget {
   Widget _section(String title) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 8),
-      child: Text(title.toUpperCase(),
-          style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Colors.grey)),
+      child: Text(
+        title.toUpperCase(),
+        style: const TextStyle(
+          fontSize: 12,
+          fontWeight: FontWeight.w600,
+          color: Colors.grey,
+        ),
+      ),
     );
   }
 
-  Widget _tile({required IconData icon, required String title, Widget? trailing}) {
+  Widget _tile({
+    required IconData icon,
+    required String title,
+    Widget? trailing,
+  }) {
     return ListTile(
       leading: Icon(icon),
       title: Text(title),
@@ -187,14 +249,16 @@ class ProfileScreen extends StatelessWidget {
     );
   }
 
-  Widget _multiSelectDropdown(BuildContext context, String title, List<String> items) {
+  Widget _multiSelectDropdown(
+      BuildContext context, String title, List<String> items) {
     return ExpansionTile(
       title: Text(title),
       children: items.map((item) {
         return CheckboxListTile(
           title: Text(item),
           value: context.read<UserProvider>().isTagSelected(item),
-          onChanged: (_) => context.read<UserProvider>().toggleTag(item),
+          onChanged: (_) =>
+              context.read<UserProvider>().toggleTag(item),
         );
       }).toList(),
     );
@@ -208,10 +272,14 @@ class ProfileScreen extends StatelessWidget {
         title: const Text("Add Food to Avoid"),
         content: TextField(
           controller: controller,
-          decoration: const InputDecoration(hintText: "e.g. peanuts"),
+          decoration:
+          const InputDecoration(hintText: "e.g. peanuts"),
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: const Text("Cancel")),
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text("Cancel"),
+          ),
           TextButton(
             onPressed: () {
               user.addFoodToAvoid(controller.text);
