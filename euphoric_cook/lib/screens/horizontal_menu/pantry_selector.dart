@@ -22,71 +22,95 @@ class _PantrySelectorState extends State<PantrySelector>
   late AnimationController _animationController;
   late Animation<double> _rotationAnimation;
 
+  // Helper: convert ingredient name → filename (lowercase + spaces → underscores)
+  String _toAssetFilename(String name) {
+    return name.toLowerCase().replaceAll(' ', '_') + '.png';
+  }
+
   final List<Map<String, String>> _foodIngredients = [
-  // --- PANTRY ---
-    {'name': 'Flour', 'emoji': '🌾'},
-  {'name': 'Sugar', 'emoji': '🍭'},
-  {'name': 'Rice', 'emoji': '🍚'},
-  {'name': 'Pasta', 'emoji': '🍝'},
-  {'name': 'Bread', 'emoji': '🍞'},
-  {'name': 'Honey', 'emoji': '🍯'},
-  {'name': 'Olive Oil', 'emoji': '🫒'},
-  {'name': 'Vinegar', 'emoji': '🧪'},
-  {'name': 'Soy Sauce', 'emoji': '🍶'},
-  {'name': 'Oats', 'emoji': '🥣'},
-  {'name': 'Noodles', 'emoji': '🍜'},
-  {'name': 'Beans', 'emoji': '🫘'},
-
-  // --- FRIDGE ---
-      {'name': 'Milk', 'emoji': '🥛'},
-  {'name': 'Eggs', 'emoji': '🥚'},
-  {'name': 'Butter', 'emoji': '🧈'},
-  {'name': 'Cheese', 'emoji': '🧀'},
-  {'name': 'Yogurt', 'emoji': '🍧'},
-  {'name': 'Chicken', 'emoji': '🍗'},
-  {'name': 'Beef', 'emoji': '🥩'},
-  {'name': 'Bacon', 'emoji': '🥓'},
-  {'name': 'Fish', 'emoji': '🐟'},
-  {'name': 'Shrimp', 'emoji': '🍤'},
-  {'name': 'Water', 'emoji': '💧'},
-
-  // --- PRODUCE ---
-      {'name': 'Onion', 'emoji': '🧅'},
-  {'name': 'Garlic', 'emoji': '🧄'},
-  {'name': 'Potato', 'emoji': '🥔'},
-  {'name': 'Tomato', 'emoji': '🍅'},
-  {'name': 'Carrot', 'emoji': '🥕'},
-  {'name': 'Lemon', 'emoji': '🍋'},
-  {'name': 'Ginger', 'emoji': '🫚'},
-  {'name': 'Chili', 'emoji': '🌶️'},
-  {'name': 'Bell Pepper', 'emoji': '🫑'},
-  {'name': 'Broccoli', 'emoji': '🥦'},
-  {'name': 'Mushroom', 'emoji': '🍄'},
-  {'name': 'Avocado', 'emoji': '🥑'},
-
-  // --- SPICES/MISC ---
-      {'name': 'Salt', 'emoji': '🧂'},
-  {'name': 'Black Pepper', 'emoji': '🧂'},
-  {'name': 'Cinnamon', 'emoji': '🍂'},
-  {'name': 'Chocolate', 'emoji': '🍫'},
-  {'name': 'Coffee', 'emoji': '☕'},
-  {'name': 'Tea', 'emoji': '🍵'},
+    {'name': 'Flour'},
+    {'name': 'Sugar'},
+    {'name': 'Rice'},
+    {'name': 'Pasta'},
+    {'name': 'Bread'},
+    {'name': 'Honey'},
+    {'name': 'Olive Oil'},
+    {'name': 'Vinegar'},
+    {'name': 'Soy Sauce'},
+    {'name': 'Oats'},
+    {'name': 'Noodles'},
+    {'name': 'Beans'},
+    {'name': 'Milk'},
+    {'name': 'Eggs'},
+    {'name': 'Butter'},
+    {'name': 'Cheese'},
+    {'name': 'Yogurt'},
+    {'name': 'Chicken'},
+    {'name': 'Beef'},
+    {'name': 'Bacon'},
+    {'name': 'Fish'},
+    {'name': 'Shrimp'},
+    {'name': 'Water'},
+    {'name': 'Onion'},
+    {'name': 'Garlic'},
+    {'name': 'Potato'},
+    {'name': 'Tomato'},
+    {'name': 'Carrot'},
+    {'name': 'Lemon'},
+    {'name': 'Ginger'},
+    {'name': 'Chili'},
+    {'name': 'Bell Pepper'},
+    {'name': 'Broccoli'},
+    {'name': 'Mushroom'},
+    {'name': 'Avocado'},
+    {'name': 'Salt'},
+    {'name': 'Black Pepper'},
+    {'name': 'Cinnamon'},
+    {'name': 'Chocolate'},
+    {'name': 'Tea'},
   ];
 
-
   final List<Map<String, String>> _drinkIngredients = [
-    {'name': 'Water', 'emoji': '💧'},
-    {'name': 'Milk', 'emoji': '🥛'},
-    {'name': 'Coffee', 'emoji': '☕'},
-    {'name': 'Tea', 'emoji': '🍵'},
-    {'name': 'Juice', 'emoji': '🧃'},
-    {'name': 'Lemonade', 'emoji': '🍋'},
-    {'name': 'Soda', 'emoji': '🥤'},
-    {'name': 'Honey', 'emoji': '🍯'},
-    {'name': 'Beer', 'emoji': '🍺'},
-    {'name': 'Wine', 'emoji': '🍷'},
-    {'name': 'Cocktail', 'emoji': '🍸'},
-    {'name': 'Margarita', 'emoji': '🍹'},
+    {'name': 'Vodka'},
+    {'name': 'Gin'},
+    {'name': 'Light Rum'},
+    {'name': 'Dark Rum'},
+    {'name': 'Tequila'},
+    {'name': 'Bourbon'},
+    {'name': 'Whiskey'},
+    {'name': 'Brandy'},
+    {'name': 'Champagne'},
+    {'name': 'Red Wine'},
+    {'name': 'White Wine'},
+    {'name': 'Beer'},
+    {'name': 'Water'},
+    {'name': 'Club Soda'},
+    {'name': 'Tonic Water'},
+    {'name': 'Ginger Ale'},
+    {'name': 'Cola'},
+    {'name': 'Milk'},
+    {'name': 'Coffee'},
+    {'name': 'Tea'},
+    {'name': 'Orange Juice'},
+    {'name': 'Lemon Juice'},
+    {'name': 'Lime Juice'},
+    {'name': 'Pineapple Juice'},
+    {'name': 'Cranberry Juice'},
+    {'name': 'Apple Juice'},
+    {'name': 'Tomato Juice'},
+    {'name': 'Grapefruit Juice'},
+    {'name': 'Simple Syrup'},
+    {'name': 'Honey'},
+    {'name': 'Sugar'},
+    {'name': 'Maple Syrup'},
+    {'name': 'Grenadine'},
+    {'name': 'Mint'},
+    {'name': 'Lemon Peel'},
+    {'name': 'Lime Wedge'},
+    {'name': 'Cherry'},
+    {'name': 'Olive'},
+    {'name': 'Cinnamon'},
+    {'name': 'Ice'},
   ];
 
   Future<List<Map<String, dynamic>>> fetchRecipesByIngredients(Set<String> selected) async {
@@ -134,8 +158,7 @@ class _PantrySelectorState extends State<PantrySelector>
         }
         return meals;
       } else {
-        print('Edamam error - status: ${response.statusCode}');
-        print('Body: ${response.body}');
+        print('Edamam status: ${response.statusCode} - ${response.body}');
         return [];
       }
     } catch (e) {
@@ -175,14 +198,13 @@ class _PantrySelectorState extends State<PantrySelector>
       children: [
         const SizedBox(height: 16),
 
-        // Main action row: Custom (longer) + Let's Cook (smaller) side by side
+        // Action buttons row
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 20),
           child: Row(
             children: [
-              // Longer "Add Custom" button
               Expanded(
-                flex: 65, // ≈65% width – feels longer
+                flex: 65,
                 child: OutlinedButton.icon(
                   onPressed: () => _showCustomBottomSheet(context),
                   icon: const Icon(Icons.add_circle_outline_rounded, size: 20),
@@ -199,14 +221,12 @@ class _PantrySelectorState extends State<PantrySelector>
                 ),
               ),
               const SizedBox(width: 12),
-              // Smaller action button – always visible
               Expanded(
-                flex: 35, // ≈35% width – noticeably smaller
+                flex: 35,
                 child: ElevatedButton(
                   onPressed: selected.isNotEmpty
                       ? () async {
                     final recipes = await fetchRecipesByIngredients(selected);
-                    // Replace this with real UI feedback (dialog, navigation, list view, etc.)
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
                         content: Text('Found ${recipes.length} suggestions!'),
@@ -234,7 +254,6 @@ class _PantrySelectorState extends State<PantrySelector>
 
         const SizedBox(height: 10),
 
-        // Ingredient counter – directly under the custom button area
         Center(
           child: Text(
             '$selectedCount ingredient${selectedCount == 1 ? '' : 's'} selected',
@@ -248,7 +267,6 @@ class _PantrySelectorState extends State<PantrySelector>
 
         const SizedBox(height: 16),
 
-        // Chips of selected items
         if (selected.isNotEmpty)
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -274,7 +292,7 @@ class _PantrySelectorState extends State<PantrySelector>
 
         SizedBox(height: selected.isNotEmpty ? 24 : 32),
 
-        // Grid – grows automatically when you add more items to the lists above
+        // ─── Image Grid ──────────────────────────────────────────────────────
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16),
           child: GridView.builder(
@@ -287,11 +305,14 @@ class _PantrySelectorState extends State<PantrySelector>
               mainAxisSpacing: 20,
             ),
             itemCount: ingredients.length,
-            itemBuilder: (context, i) {
-              final ing = ingredients[i];
+            itemBuilder: (context, index) {
+              final ing = ingredients[index];
               final name = ing['name']!;
-              final emoji = ing['emoji']!;
               final isSelected = selected.contains(name);
+
+              final String folder = widget.isFood ? 'food' : 'drink';
+              final String filename = _toAssetFilename(name);
+              final String assetPath = 'assets/pics/$folder/$filename';
 
               return GestureDetector(
                 onTap: () {
@@ -313,7 +334,11 @@ class _PantrySelectorState extends State<PantrySelector>
                         CircleAvatar(
                           radius: 32,
                           backgroundColor: widget.accentColor.withOpacity(0.14),
-                          child: Text(emoji, style: const TextStyle(fontSize: 32)),
+                          backgroundImage: AssetImage(assetPath),
+                          onBackgroundImageError: (_, __) {
+                            // Optional: you can log or handle missing images here
+                          },
+                          child: null, // no fallback emoji/text needed if images exist
                         ),
                         if (isSelected)
                           Positioned(
@@ -338,6 +363,8 @@ class _PantrySelectorState extends State<PantrySelector>
                       name,
                       textAlign: TextAlign.center,
                       style: const TextStyle(fontSize: 12, height: 1.2),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
                     ),
                   ],
                 ),
