@@ -113,7 +113,7 @@ class _AuthPageState extends State<AuthPage> {
                         ],
                         const SizedBox(height: 30),
                         _buildSubmitButton(),
-                        const SizedBox(height: 150), // space to scroll above guest button
+                        const SizedBox(height: 30), // space to scroll above guest button
                       ],
                     ),
                   ),
