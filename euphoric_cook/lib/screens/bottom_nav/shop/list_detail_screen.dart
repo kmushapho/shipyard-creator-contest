@@ -132,6 +132,19 @@ class _ListDetailScreenState extends State<ListDetailScreen> {
     widget.onItemsChanged?.call();
   }
 
+  String _getEmptySmartMessage() {
+    final titleLower = widget.title.toLowerCase();
+    if (titleLower.contains('food & drink')) {
+      return "Nothing here yet.\nAdd ingredients from any recipe\nor enter items manually.";
+    } else if (titleLower.contains('food')) {
+      return "No food items yet.\nAdd ingredients from a food recipe\nor type items manually.";
+    } else if (titleLower.contains('drink')) {
+      return "No drink items yet.\nAdd ingredients from a drink recipe\nor type items manually.";
+    } else {
+      return "This smart list is empty.\nTap + to add items manually!";
+    }
+  }
+
   Widget _buildAddInputRow() {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
@@ -286,7 +299,7 @@ class _ListDetailScreenState extends State<ListDetailScreen> {
                           const SizedBox(height: 24),
                           Text(
                             widget.isSmartList
-                                ? "Your smart list is empty.\nTap + to add items!"
+                                ? _getEmptySmartMessage()
                                 : "This list is empty.\nTap + to add items.",
                             textAlign: TextAlign.center,
                             style: TextStyle(fontSize: 16, color: Colors.grey[600], height: 1.5),
@@ -307,7 +320,11 @@ class _ListDetailScreenState extends State<ListDetailScreen> {
                         return ListTile(
                           contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                           leading: IconButton(
-                            icon: const Icon(Icons.delete_forever_outlined, color: Colors.redAccent, size: 24),
+                            icon: const Icon(
+                              Icons.delete_forever_outlined,
+                              color: Colors.redAccent,
+                              size: 24,
+                            ),
                             tooltip: 'Remove item',
                             onPressed: () => _removeItem(index),
                             padding: EdgeInsets.zero,
@@ -362,7 +379,6 @@ class _ListDetailScreenState extends State<ListDetailScreen> {
               ),
             ),
 
-            // Bottom-right: either FAB or input row
             Align(
               alignment: Alignment.bottomRight,
               child: Padding(
