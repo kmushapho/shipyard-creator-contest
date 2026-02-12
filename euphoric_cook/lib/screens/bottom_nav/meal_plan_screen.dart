@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import '../../constants/colors.dart'; // ← your AppColors file
+import '../../constants/colors.dart';
 
 class MealPlannerPage extends StatefulWidget {
   const MealPlannerPage({super.key});
@@ -10,7 +10,7 @@ class MealPlannerPage extends StatefulWidget {
 }
 
 class _MealPlannerPageState extends State<MealPlannerPage> {
-  DateTime _selectedDate = DateTime.now();
+  DateTime? _selectedDate; // nullable → defaults to showing today
 
   List<DateTime> getWeekDates() {
     final now = DateTime.now();
@@ -19,9 +19,10 @@ class _MealPlannerPageState extends State<MealPlannerPage> {
   }
 
   bool _isSelected(DateTime date) {
-    return date.year == _selectedDate.year &&
-        date.month == _selectedDate.month &&
-        date.day == _selectedDate.day;
+    if (_selectedDate == null) return _isToday(date);
+    return date.year == _selectedDate!.year &&
+        date.month == _selectedDate!.month &&
+        date.day == _selectedDate!.day;
   }
 
   bool _isToday(DateTime date) {
@@ -32,6 +33,7 @@ class _MealPlannerPageState extends State<MealPlannerPage> {
   @override
   Widget build(BuildContext context) {
     final weekDates = getWeekDates();
+    final effectiveSelectedDate = _selectedDate ?? DateTime.now();
 
     return Scaffold(
       backgroundColor: AppColors.lightBg,
@@ -56,7 +58,7 @@ class _MealPlannerPageState extends State<MealPlannerPage> {
             children: [
               const SizedBox(height: 8),
 
-              // ── Weekly Progress Card (inspo style) ───────────────────────────────
+              // ── Progress Card ──────────────────────────────────────────────────
               Container(
                 width: double.infinity,
                 padding: const EdgeInsets.all(20),
@@ -81,50 +83,70 @@ class _MealPlannerPageState extends State<MealPlannerPage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    const Text(
+                      'Your Current Progress',
+                      style: TextStyle(
+                        color: AppColors.lightText,
+                        fontSize: 19,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const SizedBox(height: 16),
                     Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text(
-                          'Your Weekly Progress',
-                          style: TextStyle(
-                            color: AppColors.lightText,
-                            fontSize: 18,
-                            fontWeight: FontWeight.w600,
+                        // Circular progress
+                        SizedBox(
+                          width: 68,
+                          height: 68,
+                          child: Stack(
+                            alignment: Alignment.center,
+                            children: [
+                              CircularProgressIndicator(
+                                value: 0.65, // example progress (65%)
+                                backgroundColor: Colors.white.withOpacity(0.25),
+                                color: Colors.white,
+                                strokeWidth: 8,
+                              ),
+                              Text(
+                                '65%',
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ],
                           ),
                         ),
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                          decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.22),
-                            borderRadius: BorderRadius.circular(30),
-                          ),
-                          child: Text(
-                            DateFormat('MMM yyyy').format(DateTime.now()),
-                            style: const TextStyle(
-                              color: AppColors.lightText,
-                              fontSize: 13,
-                              fontWeight: FontWeight.w500,
-                            ),
+                        const SizedBox(width: 24),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              _buildProgressItem(
+                                icon: Icons.directions_walk_rounded,
+                                label: 'Steps',
+                                value: '5,500',
+                              ),
+                              const SizedBox(height: 12),
+                              _buildProgressItem(
+                                icon: Icons.check_circle_outline_rounded,
+                                label: 'Meals logged',
+                                value: '12',
+                              ),
+                            ],
                           ),
                         ),
                       ],
                     ),
-                    const SizedBox(height: 20),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        _buildProgressItem(
-                          icon: Icons.directions_walk_rounded,
-                          label: 'Steps',
-                          value: '5,500',
-                        ),
-                        _buildProgressItem(
-                          icon: Icons.check_circle_outline_rounded,
-                          label: 'Done',
-                          value: '12',
-                        ),
-                      ],
+                    const SizedBox(height: 16),
+                    Text(
+                      'Check your progress so far',
+                      style: TextStyle(
+                        color: AppColors.lightText.withOpacity(0.85),
+                        fontSize: 13,
+                        fontStyle: FontStyle.italic,
+                      ),
                     ),
                   ],
                 ),
@@ -132,7 +154,7 @@ class _MealPlannerPageState extends State<MealPlannerPage> {
 
               const SizedBox(height: 24),
 
-              // ── Horizontal Date Picker ───────────────────────────────────────────
+              // ── Horizontal Calendar ────────────────────────────────────────────
               SizedBox(
                 height: 96,
                 child: ListView.builder(
@@ -140,27 +162,29 @@ class _MealPlannerPageState extends State<MealPlannerPage> {
                   itemCount: weekDates.length,
                   itemBuilder: (context, index) {
                     final day = weekDates[index];
-                    final isSelected = _isSelected(day);
+                    final selected = _isSelected(day);
                     final today = _isToday(day);
 
                     return GestureDetector(
                       onTap: () {
-                        setState(() => _selectedDate = day);
+                        setState(() {
+                          _selectedDate = day;
+                        });
                       },
                       child: Container(
                         width: 68,
                         margin: const EdgeInsets.symmetric(horizontal: 5),
                         decoration: BoxDecoration(
-                          color: isSelected
+                          color: selected
                               ? AppColors.vibrantOrange
-                              : (today ? AppColors.vibrantOrange.withOpacity(0.14) : AppColors.cardBgLight),
+                              : AppColors.cardBgLight,
                           borderRadius: BorderRadius.circular(16),
-                          boxShadow: isSelected || today
+                          boxShadow: selected
                               ? [
                             BoxShadow(
-                              color: AppColors.vibrantOrange.withOpacity(0.3),
-                              blurRadius: 8,
-                              offset: const Offset(0, 3),
+                              color: AppColors.vibrantOrange.withOpacity(0.35),
+                              blurRadius: 10,
+                              offset: const Offset(0, 4),
                             )
                           ]
                               : null,
@@ -173,7 +197,7 @@ class _MealPlannerPageState extends State<MealPlannerPage> {
                               style: TextStyle(
                                 fontSize: 13,
                                 fontWeight: FontWeight.w600,
-                                color: isSelected || today ? AppColors.lightText : AppColors.darkText.withOpacity(0.65),
+                                color: selected ? AppColors.lightText : AppColors.darkText.withOpacity(0.65),
                               ),
                             ),
                             const SizedBox(height: 6),
@@ -182,16 +206,16 @@ class _MealPlannerPageState extends State<MealPlannerPage> {
                               style: TextStyle(
                                 fontSize: 22,
                                 fontWeight: FontWeight.bold,
-                                color: isSelected || today ? AppColors.lightText : AppColors.darkText,
+                                color: selected ? AppColors.lightText : AppColors.darkText,
                               ),
                             ),
-                            if (today)
+                            if (today && !selected)
                               Container(
                                 margin: const EdgeInsets.only(top: 6),
                                 width: 6,
                                 height: 6,
                                 decoration: BoxDecoration(
-                                  color: AppColors.vibrantOrange,
+                                  color: AppColors.vibrantOrange.withOpacity(0.7),
                                   shape: BoxShape.circle,
                                 ),
                               ),
@@ -209,7 +233,7 @@ class _MealPlannerPageState extends State<MealPlannerPage> {
               Padding(
                 padding: const EdgeInsets.only(left: 4),
                 child: Text(
-                  DateFormat('EEEE, MMMM d').format(_selectedDate),
+                  DateFormat('EEEE, MMMM d').format(effectiveSelectedDate),
                   style: TextStyle(
                     fontSize: 20,
                     fontWeight: FontWeight.w700,
@@ -220,37 +244,14 @@ class _MealPlannerPageState extends State<MealPlannerPage> {
 
               const SizedBox(height: 16),
 
-              // ── Meal Cards ───────────────────────────────────────────────────────
-              _buildMealCard(
-                title: 'Breakfast',
-                color: AppColors.vibrantGreen,
-                items: const [
-                  'Oats + Banana + 🥜',
-                  'Greek Yogurt + Berries',
-                ],
-              ),
-
+              // ── Meal Cards (empty + add button) ───────────────────────────────
+              _buildMealCard('Breakfast', AppColors.vibrantGreen),
               const SizedBox(height: 16),
-
-              _buildMealCard(
-                title: 'Lunch',
-                color: AppColors.vibrantBlue,
-                items: const [
-                  'Grilled Chicken Salad + Avocado',
-                  'Quinoa + Roasted Veggies',
-                ],
-              ),
-
+              _buildMealCard('Lunch', AppColors.vibrantBlue),
               const SizedBox(height: 16),
-
-              _buildMealCard(
-                title: 'Dinner',
-                color: AppColors.vibrantOrange,
-                items: const [
-                  'Baked Salmon + Broccoli + Sweet Potato',
-                  'Mixed Greens Salad',
-                ],
-              ),
+              _buildMealCard('Dinner', AppColors.vibrantOrange),
+              const SizedBox(height: 16),
+              _buildMealCard('Snack', AppColors.vibrantGreen.withOpacity(0.8)),
 
               const SizedBox(height: 40),
             ],
@@ -293,11 +294,7 @@ class _MealPlannerPageState extends State<MealPlannerPage> {
     );
   }
 
-  Widget _buildMealCard({
-    required String title,
-    required Color color,
-    required List<String> items,
-  }) {
+  Widget _buildMealCard(String title, Color color) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -332,32 +329,14 @@ class _MealPlannerPageState extends State<MealPlannerPage> {
                 ),
               ),
               const Spacer(),
-              Icon(Icons.add_circle_outline_rounded, color: color, size: 28),
+              Icon(
+                Icons.add_circle_outline_rounded,
+                color: color,
+                size: 28,
+              ),
             ],
           ),
-          const SizedBox(height: 14),
-          ...items.map(
-                (item) => Padding(
-              padding: const EdgeInsets.only(bottom: 10),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Icon(Icons.circle, size: 10, color: color),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Text(
-                      item,
-                      style: const TextStyle(
-                        fontSize: 16,
-                        height: 1.35,
-                        color: AppColors.darkText,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
+          // No items → empty card ready for user-added meals
         ],
       ),
     );
