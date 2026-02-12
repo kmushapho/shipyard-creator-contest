@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+
 import '../../providers/mode_provider.dart';
 import '../horizontal_menu/pantry_selector.dart';
-import 'cookbook_screen.dart';
-import 'meal_plan_screen.dart';
-import 'shop_screen.dart';
-import 'profile_screen.dart';
-import 'package:flutter/material.dart';
+import '../horizontal_menu/all_day_meals.dart';
+import '../bottom_nav/cookbook_screen.dart';
+import '../bottom_nav/meal_plan_screen.dart';
+import '../bottom_nav/shop_screen.dart';
+import '../bottom_nav/profile_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -16,12 +17,13 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  int _currentIndex = 0; // ← Tracks which tab is active (starts at Home)
+  int _currentIndex = 0;
+  int _selectedChipIndex = 0;
 
   @override
   Widget build(BuildContext context) {
     final mode = Provider.of<ModeProvider>(context);
-    final accent = mode.accentColor; // This is your vibrant orange, I assume
+    final accent = mode.accentColor;
 
     return Scaffold(
       backgroundColor: mode.bgColor,
@@ -29,10 +31,9 @@ class _HomeScreenState extends State<HomeScreen> {
         child: IndexedStack(
           index: _currentIndex,
           children: [
-            // Screen 0: Home (your original scrollable content)
+            /// ───────── HOME TAB ─────────
             CustomScrollView(
               slivers: [
-                // Theme toggle row (top right)
                 SliverToBoxAdapter(
                   child: Padding(
                     padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
@@ -40,12 +41,11 @@ class _HomeScreenState extends State<HomeScreen> {
                       mainAxisAlignment: MainAxisAlignment.end,
                       children: [
                         IconButton(
-                          padding: EdgeInsets.zero,
-                          constraints: const BoxConstraints(),
                           icon: Icon(
-                            mode.isDark ? Icons.wb_sunny_rounded : Icons.nights_stay_rounded,
+                            mode.isDark
+                                ? Icons.wb_sunny_rounded
+                                : Icons.nights_stay_rounded,
                             color: accent,
-                            size: 28,
                           ),
                           onPressed: mode.toggleTheme,
                         ),
@@ -54,7 +54,6 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                 ),
 
-                // Food / Drink underline toggle – centered
                 SliverToBoxAdapter(
                   child: Padding(
                     padding: const EdgeInsets.fromLTRB(16, 0, 16, 20),
@@ -62,29 +61,25 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                 ),
 
-                // Search bar
                 SliverToBoxAdapter(
                   child: Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 16),
-                    child: AnimatedSwitcher(
-                      duration: const Duration(milliseconds: 400),
-                      child: Material(
-                        key: ValueKey(mode.currentMode),
-                        elevation: 1.5,
-                        borderRadius: BorderRadius.circular(30),
-                        color: mode.cardColor,
-                        child: TextField(
-                          style: mode.searchTextStyle,
-                          decoration: InputDecoration(
-                            hintText: mode.searchHint,
-                            hintStyle: mode.searchHintStyle,
-                            prefixIcon: Icon(
-                              Icons.search_rounded,
-                              color: accent.withOpacity(0.7),
-                            ),
-                            border: InputBorder.none,
-                            contentPadding: const EdgeInsets.symmetric(vertical: 14),
+                    child: Material(
+                      elevation: 1.5,
+                      borderRadius: BorderRadius.circular(30),
+                      color: mode.cardColor,
+                      child: TextField(
+                        style: mode.searchTextStyle,
+                        decoration: InputDecoration(
+                          hintText: mode.searchHint,
+                          hintStyle: mode.searchHintStyle,
+                          prefixIcon: Icon(
+                            Icons.search_rounded,
+                            color: accent.withOpacity(0.7),
                           ),
+                          border: InputBorder.none,
+                          contentPadding:
+                          const EdgeInsets.symmetric(vertical: 14),
                         ),
                       ),
                     ),
@@ -93,7 +88,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
                 const SliverToBoxAdapter(child: SizedBox(height: 24)),
 
-                // Horizontal chips
+                /// ─── CHIPS ───
                 SliverToBoxAdapter(
                   child: SizedBox(
                     height: 44,
@@ -111,11 +106,13 @@ class _HomeScreenState extends State<HomeScreen> {
                             label: Text(
                               chip['label']!,
                               style: TextStyle(
-                                color: isSelected ? Colors.white : mode.textColor,
+                                color: isSelected
+                                    ? Colors.white
+                                    : mode.textColor,
                               ),
                             ),
-                            onSelected: (sel) {
-                              setState(() => _selectedChipIndex = sel ? i : 0);
+                            onSelected: (_) {
+                              setState(() => _selectedChipIndex = i);
                             },
                             selected: isSelected,
                             selectedColor: accent,
@@ -133,149 +130,129 @@ class _HomeScreenState extends State<HomeScreen> {
 
                 const SliverToBoxAdapter(child: SizedBox(height: 20)),
 
-                // Main content
-                SliverToBoxAdapter(
-                  key: _contentKey,
-                  child: PantrySelector(
-                    isFood: mode.isFood,
-                    accentColor: accent,
-                  ),
-                ),
+                /// ─── CONTENT ───
+                _buildSelectedChipContent(mode, accent),
 
                 const SliverToBoxAdapter(child: SizedBox(height: 80)),
               ],
             ),
 
-            // Screen 1: Cookbook
             const CookbookScreen(),
-
-            // Screen 2: Plan (placeholder – replace later)
             const MealPlannerPage(),
-
-            // Screen 3: Shop (placeholder)
             const ShopScreen(),
-
-            // Screen 4: You (placeholder)
-            const ProfileScreen()
+            const ProfileScreen(),
           ],
         ),
       ),
 
       bottomNavigationBar: BottomNavigationBar(
         type: BottomNavigationBarType.fixed,
-        selectedItemColor: accent, // ← This makes selected icon + label use vibrant orange
+        selectedItemColor: accent,
         unselectedItemColor: mode.textColor.withOpacity(0.6),
         backgroundColor: mode.cardColor,
-        showUnselectedLabels: true,
-        currentIndex: _currentIndex, // ← Now dynamic!
+        currentIndex: _currentIndex,
         onTap: (index) {
-          setState(() {
-            _currentIndex = index; // ← This updates the highlight
-          });
+          setState(() => _currentIndex = index);
         },
         items: const [
           BottomNavigationBarItem(
-            icon: Icon(Icons.home_rounded),
-            label: 'Home',
-          ),
+              icon: Icon(Icons.home_rounded), label: 'Home'),
           BottomNavigationBarItem(
-            icon: Icon(Icons.book_rounded),
-            label: 'Cookbook',
-          ),
+              icon: Icon(Icons.book_rounded), label: 'Cookbook'),
           BottomNavigationBarItem(
-            icon: Icon(Icons.list_alt_rounded),
-            label: 'Plan',
-          ),
+              icon: Icon(Icons.list_alt_rounded), label: 'Plan'),
           BottomNavigationBarItem(
-            icon: Icon(Icons.shopping_cart_rounded),
-            label: 'Shop',
-          ),
+              icon: Icon(Icons.shopping_cart_rounded), label: 'Shop'),
           BottomNavigationBarItem(
-            icon: Icon(Icons.person_rounded),
-            label: 'You',
+              icon: Icon(Icons.person_rounded), label: 'You'),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildFoodDrinkToggle(ModeProvider mode) {
+    final isFood = mode.isFood;
+    final activeColor = Colors.orangeAccent.shade700;
+    final inactiveColor = mode.textColor.withOpacity(0.65);
+
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        _toggleItem('Food', isFood, () {
+          mode.setFoodMode();
+          setState(() => _selectedChipIndex = 0);
+        }, activeColor, inactiveColor),
+        const SizedBox(width: 48),
+        _toggleItem('Drinks', !isFood, () {
+          mode.setDrinkMode();
+          setState(() => _selectedChipIndex = 0);
+        }, activeColor, inactiveColor),
+      ],
+    );
+  }
+
+  Widget _toggleItem(String text, bool active, VoidCallback onTap,
+      Color activeColor, Color inactiveColor) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Column(
+        children: [
+          Text(
+            text,
+            style: TextStyle(
+              color: active ? activeColor : inactiveColor,
+              fontSize: 18,
+              fontWeight: active ? FontWeight.w700 : FontWeight.w600,
+            ),
+          ),
+          const SizedBox(height: 4),
+          AnimatedContainer(
+            duration: const Duration(milliseconds: 280),
+            width: 60,
+            height: active ? 3.2 : 0,
+            decoration: BoxDecoration(
+              color: activeColor,
+              borderRadius: BorderRadius.circular(2),
+            ),
           ),
         ],
       ),
     );
   }
 
-  // You still need this method (moved it outside build for cleanliness)
-  int _selectedChipIndex = 0; // ← You had this but it was local to build – moved up
-  Key _contentKey = UniqueKey();
+  Widget _buildSelectedChipContent(ModeProvider mode, Color accent) {
+    final label = mode.categoryChips[_selectedChipIndex]['label']!;
 
-  Widget _buildFoodDrinkToggle(ModeProvider mode) {
-    final isFood = mode.isFood;
-    final foodColor = Colors.orangeAccent.shade700;
-    final drinkColor = Colors.orangeAccent.shade700;
-    final inactiveColor = mode.textColor.withOpacity(0.65);
+    switch (label) {
+      case 'Search By Pantry':
+        return SliverToBoxAdapter(
+          child: PantrySelector(
+            isFood: mode.isFood,
+            accentColor: accent,
+          ),
+        );
 
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        GestureDetector(
-          onTap: () {
-            if (!isFood) {
-              mode.toggleFoodDrink();
-              setState(() => _contentKey = UniqueKey());
-            }
-          },
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                'Food',
+      case 'All Day Meals':
+        return SliverToBoxAdapter(
+          child: AllDayMealsMenu(), // ❌ NO CONST
+        );
+
+      default:
+        return SliverToBoxAdapter(
+          child: Center(
+            child: Padding(
+              padding: const EdgeInsets.all(32),
+              child: Text(
+                'Coming soon: $label',
                 style: TextStyle(
-                  color: isFood ? foodColor : inactiveColor,
                   fontSize: 18,
-                  fontWeight: isFood ? FontWeight.w700 : FontWeight.w600,
+                  color: mode.textColor.withOpacity(0.7),
                 ),
+                textAlign: TextAlign.center,
               ),
-              const SizedBox(height: 4),
-              AnimatedContainer(
-                duration: const Duration(milliseconds: 280),
-                width: 60,
-                height: isFood ? 3.2 : 0,
-                decoration: BoxDecoration(
-                  color: foodColor,
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
-            ],
+            ),
           ),
-        ),
-        const SizedBox(width: 48),
-        GestureDetector(
-          onTap: () {
-            if (isFood) {
-              mode.toggleFoodDrink();
-              setState(() => _contentKey = UniqueKey());
-            }
-          },
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                'Drinks',
-                style: TextStyle(
-                  color: !isFood ? drinkColor : inactiveColor,
-                  fontSize: 18,
-                  fontWeight: !isFood ? FontWeight.w700 : FontWeight.w600,
-                ),
-              ),
-              const SizedBox(height: 4),
-              AnimatedContainer(
-                duration: const Duration(milliseconds: 280),
-                width: 60,
-                height: !isFood ? 3.2 : 0,
-                decoration: BoxDecoration(
-                  color: drinkColor,
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
+        );
+    }
   }
 }
