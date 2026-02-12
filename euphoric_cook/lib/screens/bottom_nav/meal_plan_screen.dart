@@ -1,25 +1,28 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart'; // For nice date formatting
+import '../../constants/colors.dart';
 
-class AppColors {
-  static const vibrantOrange = Color(0xFFFF6B35);
-  static const vibrantGreen = Color(0xFF4CAF50);
-  static const vibrantBlue = Color(0xFF4A90E2);
-  static const darkText = Color(0xFF1A1A1A);
-  static const lightText = Colors.white;
-  static const lightBg = Color(0xFFFDFDFD);
-  static const darkBg = Color(0xFF121212);
-  static const cardBgLight = Colors.white;
-  static const cardBgDark = Color(0xFF1E1E1E);
-}
-
-class MealPlannerPage extends StatelessWidget {
+class MealPlannerPage extends StatefulWidget {
   const MealPlannerPage({super.key});
 
   @override
+  State<MealPlannerPage> createState() => _MealPlannerPageState();
+}
+
+class _MealPlannerPageState extends State<MealPlannerPage> {
+  late DateTime today;
+  DateTime? selectedDate;
+
+  @override
+  void initState() {
+    super.initState();
+    today = DateTime.now();
+    selectedDate = today;
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final now = DateTime.now();
-    final today = DateTime(now.year, now.month, now.day); // Normalize to start of day
+    final normalizedToday = DateTime(today.year, today.month, today.day);
 
     return Scaffold(
       backgroundColor: AppColors.lightBg,
@@ -51,14 +54,15 @@ class MealPlannerPage extends StatelessWidget {
               ),
             ),
             SizedBox(
-              height: 110, // Adjust for card height + padding
+              height: 110,
               child: ListView.builder(
                 scrollDirection: Axis.horizontal,
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 itemCount: 7,
                 itemBuilder: (context, index) {
-                  final day = today.add(Duration(days: index));
-                  final isToday = day.isAtSameMomentAs(today);
+                  final day = normalizedToday.add(Duration(days: index));
+                  final isSelected =
+                      selectedDate != null && day.isAtSameMomentAs(selectedDate!);
                   final weekday = DateFormat('EEE').format(day); // Mon, Tue...
                   final dateNum = DateFormat('d').format(day);
 
@@ -66,14 +70,18 @@ class MealPlannerPage extends StatelessWidget {
                     padding: const EdgeInsets.only(right: 12),
                     child: GestureDetector(
                       onTap: () {
-                        // TODO: Navigate to detailed day view or select for planning
+                        setState(() {
+                          selectedDate = day;
+                        });
                       },
                       child: Card(
-                        elevation: isToday ? 6 : 2,
+                        elevation: isSelected ? 6 : 2,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(16),
                         ),
-                        color: isToday ? AppColors.vibrantOrange : AppColors.cardBgLight,
+                        color: isSelected
+                            ? AppColors.vibrantOrange
+                            : AppColors.cardBgLight,
                         child: SizedBox(
                           width: 80,
                           child: Column(
@@ -82,7 +90,9 @@ class MealPlannerPage extends StatelessWidget {
                               Text(
                                 weekday,
                                 style: TextStyle(
-                                  color: isToday ? AppColors.lightText : AppColors.darkText,
+                                  color: isSelected
+                                      ? AppColors.lightText
+                                      : AppColors.darkText,
                                   fontWeight: FontWeight.w600,
                                 ),
                               ),
@@ -91,11 +101,13 @@ class MealPlannerPage extends StatelessWidget {
                                 dateNum,
                                 style: TextStyle(
                                   fontSize: 28,
-                                  color: isToday ? AppColors.lightText : AppColors.darkText,
+                                  color: isSelected
+                                      ? AppColors.lightText
+                                      : AppColors.darkText,
                                   fontWeight: FontWeight.bold,
                                 ),
                               ),
-                              if (isToday)
+                              if (isSelected)
                                 const Padding(
                                   padding: EdgeInsets.only(top: 4),
                                   child: Icon(
@@ -104,7 +116,6 @@ class MealPlannerPage extends StatelessWidget {
                                     size: 20,
                                   ),
                                 ),
-                              // Later: Add small meal icons or "Planned" badge here
                             ],
                           ),
                         ),
@@ -128,10 +139,12 @@ class MealPlannerPage extends StatelessWidget {
                       onPressed: () {
                         // TODO: Navigate to Create Meal Plan screen/flow
                       },
-                      icon: const Icon(Icons.add_circle_outline, color: AppColors.lightText),
+                      icon: const Icon(Icons.add_circle_outline,
+                          color: AppColors.lightText),
                       label: const Text(
                         'Create Meal Plan',
-                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                        style: TextStyle(
+                            fontSize: 16, fontWeight: FontWeight.bold),
                       ),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: AppColors.vibrantOrange,
@@ -150,10 +163,12 @@ class MealPlannerPage extends StatelessWidget {
                       onPressed: () {
                         // TODO: Navigate to Track/Log Meal screen (quick add)
                       },
-                      icon: const Icon(Icons.track_changes, color: AppColors.lightText),
+                      icon: const Icon(Icons.track_changes,
+                          color: AppColors.lightText),
                       label: const Text(
                         'Track Meal',
-                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                        style: TextStyle(
+                            fontSize: 16, fontWeight: FontWeight.bold),
                       ),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: AppColors.vibrantGreen,
@@ -170,14 +185,31 @@ class MealPlannerPage extends StatelessWidget {
               ),
             ),
 
+            const SizedBox(height: 24),
+
+            // 3. Selected Date Display
+            if (selectedDate != null)
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 24),
+                child: Text(
+                  'Date: ${DateFormat('EEEE, MMM d, yyyy').format(selectedDate!)}',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.darkText,
+                  ),
+                ),
+              ),
+
             const SizedBox(height: 32),
 
-            // Placeholder for future content (e.g., current plan summary, meals list, etc.)
+            // Placeholder for future content
             Expanded(
               child: Center(
                 child: Text(
                   'Your meal plans will appear here',
-                  style: TextStyle(color: AppColors.darkText.withOpacity(0.6)),
+                  style:
+                  TextStyle(color: AppColors.darkText.withOpacity(0.6)),
                 ),
               ),
             ),
