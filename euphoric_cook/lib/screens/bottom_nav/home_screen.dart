@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-
 import '../../providers/mode_provider.dart';
 import '../horizontal_menu/pantry_selector.dart';
 import '../horizontal_menu/all_day_meals.dart';
@@ -32,119 +31,115 @@ class _HomeScreenState extends State<HomeScreen> {
           index: _currentIndex,
           children: [
             /// ───────── HOME TAB ─────────
-            CustomScrollView(
-              slivers: [
-                SliverToBoxAdapter(
-                  child: Padding(
-                    padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.end,
-                      children: [
-                        IconButton(
-                          icon: Icon(
-                            mode.isDark
-                                ? Icons.wb_sunny_rounded
-                                : Icons.nights_stay_rounded,
-                            color: accent,
+            KeyedSubtree(
+              key: const ValueKey('home'),
+              child: CustomScrollView(
+                slivers: [
+                  SliverToBoxAdapter(
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: [
+                          IconButton(
+                            icon: Icon(
+                              mode.isDark
+                                  ? Icons.wb_sunny_rounded
+                                  : Icons.nights_stay_rounded,
+                              color: accent,
+                            ),
+                            onPressed: mode.toggleTheme,
                           ),
-                          onPressed: mode.toggleTheme,
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
                   ),
-                ),
-
-                SliverToBoxAdapter(
-                  child: Padding(
-                    padding: const EdgeInsets.fromLTRB(16, 0, 16, 20),
-                    child: _buildFoodDrinkToggle(mode),
+                  SliverToBoxAdapter(
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(16, 0, 16, 20),
+                      child: _buildFoodDrinkToggle(mode),
+                    ),
                   ),
-                ),
-
-                SliverToBoxAdapter(
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    child: Material(
-                      elevation: 1.5,
-                      borderRadius: BorderRadius.circular(30),
-                      color: mode.cardColor,
-                      child: TextField(
-                        style: mode.searchTextStyle,
-                        decoration: InputDecoration(
-                          hintText: mode.searchHint,
-                          hintStyle: mode.searchHintStyle,
-                          prefixIcon: Icon(
-                            Icons.search_rounded,
-                            color: accent.withOpacity(0.7),
+                  SliverToBoxAdapter(
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      child: Material(
+                        elevation: 1.5,
+                        borderRadius: BorderRadius.circular(30),
+                        color: mode.cardColor,
+                        child: TextField(
+                          style: mode.searchTextStyle,
+                          decoration: InputDecoration(
+                            hintText: mode.searchHint,
+                            hintStyle: mode.searchHintStyle,
+                            prefixIcon: Icon(
+                              Icons.search_rounded,
+                              color: accent.withOpacity(0.7),
+                            ),
+                            border: InputBorder.none,
+                            contentPadding:
+                            const EdgeInsets.symmetric(vertical: 14),
                           ),
-                          border: InputBorder.none,
-                          contentPadding:
-                          const EdgeInsets.symmetric(vertical: 14),
                         ),
                       ),
                     ),
                   ),
-                ),
+                  const SliverToBoxAdapter(child: SizedBox(height: 24)),
 
-                const SliverToBoxAdapter(child: SizedBox(height: 24)),
-
-                /// ─── CHIPS ───
-                SliverToBoxAdapter(
-                  child: SizedBox(
-                    height: 44,
-                    child: ListView.builder(
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
-                      scrollDirection: Axis.horizontal,
-                      itemCount: mode.categoryChips.length,
-                      itemBuilder: (context, i) {
-                        final chip = mode.categoryChips[i];
-                        final isSelected = i == _selectedChipIndex;
-
-                        return Padding(
-                          padding: const EdgeInsets.only(right: 12),
-                          child: RawChip(
-                            label: Text(
-                              chip['label']!,
-                              style: TextStyle(
-                                color: isSelected
-                                    ? Colors.white
-                                    : mode.textColor,
+                  /// ─── CHIPS ───
+                  SliverToBoxAdapter(
+                    child: SizedBox(
+                      height: 44,
+                      child: ListView.builder(
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        scrollDirection: Axis.horizontal,
+                        itemCount: mode.categoryChips.length,
+                        itemBuilder: (context, i) {
+                          final chip = mode.categoryChips[i];
+                          final isSelected = i == _selectedChipIndex;
+                          return Padding(
+                            padding: const EdgeInsets.only(right: 12),
+                            child: RawChip(
+                              label: Text(
+                                chip['label']!,
+                                style: TextStyle(
+                                  color: isSelected
+                                      ? Colors.white
+                                      : mode.textColor,
+                                ),
                               ),
+                              onSelected: (_) {
+                                setState(() => _selectedChipIndex = i);
+                              },
+                              selected: isSelected,
+                              selectedColor: accent,
+                              backgroundColor: mode.cardColor,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(20),
+                              ),
+                              showCheckmark: false,
                             ),
-                            onSelected: (_) {
-                              setState(() => _selectedChipIndex = i);
-                            },
-                            selected: isSelected,
-                            selectedColor: accent,
-                            backgroundColor: mode.cardColor,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(20),
-                            ),
-                            showCheckmark: false,
-                          ),
-                        );
-                      },
+                          );
+                        },
+                      ),
                     ),
                   ),
-                ),
+                  const SliverToBoxAdapter(child: SizedBox(height: 20)),
 
-                const SliverToBoxAdapter(child: SizedBox(height: 20)),
+                  /// ─── CONTENT ───
+                  _buildSelectedChipContent(mode, accent),
 
-                /// ─── CONTENT ───
-                _buildSelectedChipContent(mode, accent),
-
-                const SliverToBoxAdapter(child: SizedBox(height: 80)),
-              ],
+                  const SliverToBoxAdapter(child: SizedBox(height: 80)),
+                ],
+              ),
             ),
-
-            const CookbookScreen(),
-            const MealPlannerPage(),
-            const ShopScreen(),
-            const ProfileScreen(),
+            const CookbookScreen(key: ValueKey('cookbook')),
+            const MealPlannerPage(key: ValueKey('plan')),
+            const ShopScreen(key: ValueKey('shop')),
+            const ProfileScreen(key: ValueKey('profile')),
           ],
         ),
       ),
-
       bottomNavigationBar: BottomNavigationBar(
         type: BottomNavigationBarType.fixed,
         selectedItemColor: accent,
@@ -156,15 +151,25 @@ class _HomeScreenState extends State<HomeScreen> {
         },
         items: const [
           BottomNavigationBarItem(
-              icon: Icon(Icons.home_rounded), label: 'Home'),
+            icon: Icon(Icons.home_rounded),
+            label: 'Home',
+          ),
           BottomNavigationBarItem(
-              icon: Icon(Icons.book_rounded), label: 'Cookbook'),
+            icon: Icon(Icons.book_rounded),
+            label: 'Cookbook',
+          ),
           BottomNavigationBarItem(
-              icon: Icon(Icons.list_alt_rounded), label: 'Plan'),
+            icon: Icon(Icons.list_alt_rounded),
+            label: 'Plan',
+          ),
           BottomNavigationBarItem(
-              icon: Icon(Icons.shopping_cart_rounded), label: 'Shop'),
+            icon: Icon(Icons.shopping_cart_rounded),
+            label: 'Shop',
+          ),
           BottomNavigationBarItem(
-              icon: Icon(Icons.person_rounded), label: 'You'),
+            icon: Icon(Icons.person_rounded),
+            label: 'You',
+          ),
         ],
       ),
     );
@@ -178,21 +183,38 @@ class _HomeScreenState extends State<HomeScreen> {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        _toggleItem('Food', isFood, () {
-          mode.setFoodMode();
-          setState(() => _selectedChipIndex = 0);
-        }, activeColor, inactiveColor),
+        _toggleItem(
+          'Food',
+          isFood,
+              () {
+            mode.setFoodMode();
+            setState(() => _selectedChipIndex = 0);
+          },
+          activeColor,
+          inactiveColor,
+        ),
         const SizedBox(width: 48),
-        _toggleItem('Drinks', !isFood, () {
-          mode.setDrinkMode();
-          setState(() => _selectedChipIndex = 0);
-        }, activeColor, inactiveColor),
+        _toggleItem(
+          'Drinks',
+          !isFood,
+              () {
+            mode.setDrinkMode();
+            setState(() => _selectedChipIndex = 0);
+          },
+          activeColor,
+          inactiveColor,
+        ),
       ],
     );
   }
 
-  Widget _toggleItem(String text, bool active, VoidCallback onTap,
-      Color activeColor, Color inactiveColor) {
+  Widget _toggleItem(
+      String text,
+      bool active,
+      VoidCallback onTap,
+      Color activeColor,
+      Color inactiveColor,
+      ) {
     return GestureDetector(
       onTap: onTap,
       child: Column(
@@ -222,7 +244,6 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Widget _buildSelectedChipContent(ModeProvider mode, Color accent) {
     final label = mode.categoryChips[_selectedChipIndex]['label']!;
-
     switch (label) {
       case 'Search By Pantry':
         return SliverToBoxAdapter(
@@ -231,12 +252,10 @@ class _HomeScreenState extends State<HomeScreen> {
             accentColor: accent,
           ),
         );
-
       case 'All Day Meals':
-        return SliverToBoxAdapter(
-          child: AllDayMealsMenu(), // ❌ NO CONST
+        return const SliverToBoxAdapter(
+          child: AllDayMealsMenu(),
         );
-
       default:
         return SliverToBoxAdapter(
           child: Center(
