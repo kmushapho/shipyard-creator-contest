@@ -17,8 +17,8 @@ def get_recipe():
     if not ingredients:
         return jsonify({"error": "No ingredients provided"}), 400
 
-    # Prepare request to Google Gemini
-    url = "https://gemini.googleapis.com/v1/recipes:generate"  # Example endpoint
+    # Example Google Gemini API request
+    url = "https://gemini.googleapis.com/v1/recipes:generate"  # Replace with actual endpoint if needed
     headers = {
         "Authorization": f"Bearer {GEMINI_API_KEY}",
         "Content-Type": "application/json"
@@ -36,6 +36,8 @@ def get_recipe():
     except requests.exceptions.RequestException as e:
         return jsonify({"error": str(e)}), 500
 
+
 if __name__ == "__main__":
-    # For local testing
-    app.run(debug=True)
+    # Use Render's PORT environment variable; default to 5000 for local testing
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host="0.0.0.0", port=port, debug=True)
