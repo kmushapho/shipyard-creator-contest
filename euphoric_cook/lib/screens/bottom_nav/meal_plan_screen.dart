@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart'; // For nice date formatting
-import '../../constants/colors.dart';
+import 'package:intl/intl.dart';
+import '../../constants/colors.dart'; // ← your AppColors file
 
 class MealPlannerPage extends StatefulWidget {
   const MealPlannerPage({super.key});
@@ -10,211 +10,355 @@ class MealPlannerPage extends StatefulWidget {
 }
 
 class _MealPlannerPageState extends State<MealPlannerPage> {
-  late DateTime today;
-  DateTime? selectedDate;
+  DateTime _selectedDate = DateTime.now();
 
-  @override
-  void initState() {
-    super.initState();
-    today = DateTime.now();
-    selectedDate = today;
+  List<DateTime> getWeekDates() {
+    final now = DateTime.now();
+    final weekStart = now.subtract(Duration(days: now.weekday - 1)); // Monday
+    return List.generate(7, (index) => weekStart.add(Duration(days: index)));
+  }
+
+  bool _isSelected(DateTime date) {
+    return date.year == _selectedDate.year &&
+        date.month == _selectedDate.month &&
+        date.day == _selectedDate.day;
+  }
+
+  bool _isToday(DateTime date) {
+    final now = DateTime.now();
+    return date.year == now.year && date.month == now.month && date.day == now.day;
   }
 
   @override
   Widget build(BuildContext context) {
-    final normalizedToday = DateTime(today.year, today.month, today.day);
+    final weekDates = getWeekDates();
 
     return Scaffold(
       backgroundColor: AppColors.lightBg,
       appBar: AppBar(
+        backgroundColor: AppColors.lightBg,
+        elevation: 0,
         title: const Text(
           'Meal Planner',
           style: TextStyle(
             color: AppColors.darkText,
-            fontWeight: FontWeight.bold,
+            fontWeight: FontWeight.w700,
+            fontSize: 22,
           ),
         ),
-        backgroundColor: AppColors.lightBg,
-        elevation: 0,
         centerTitle: true,
       ),
-      body: SafeArea(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // 1. 7-Day Calendar Section
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
-              child: Text(
-                'This Week',
-                style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                  color: AppColors.darkText,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
-            SizedBox(
-              height: 110,
-              child: ListView.builder(
-                scrollDirection: Axis.horizontal,
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                itemCount: 7,
-                itemBuilder: (context, index) {
-                  final day = normalizedToday.add(Duration(days: index));
-                  final isSelected =
-                      selectedDate != null && day.isAtSameMomentAs(selectedDate!);
-                  final weekday = DateFormat('EEE').format(day); // Mon, Tue...
-                  final dateNum = DateFormat('d').format(day);
+      body: SingleChildScrollView(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const SizedBox(height: 8),
 
-                  return Padding(
-                    padding: const EdgeInsets.only(right: 12),
-                    child: GestureDetector(
-                      onTap: () {
-                        setState(() {
-                          selectedDate = day;
-                        });
-                      },
-                      child: Card(
-                        elevation: isSelected ? 6 : 2,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                        color: isSelected
-                            ? AppColors.vibrantOrange
-                            : AppColors.cardBgLight,
-                        child: SizedBox(
-                          width: 80,
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Text(
-                                weekday,
-                                style: TextStyle(
-                                  color: isSelected
-                                      ? AppColors.lightText
-                                      : AppColors.darkText,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                              const SizedBox(height: 8),
-                              Text(
-                                dateNum,
-                                style: TextStyle(
-                                  fontSize: 28,
-                                  color: isSelected
-                                      ? AppColors.lightText
-                                      : AppColors.darkText,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                              if (isSelected)
-                                const Padding(
-                                  padding: EdgeInsets.only(top: 4),
-                                  child: Icon(
-                                    Icons.check_circle,
-                                    color: AppColors.lightText,
-                                    size: 20,
-                                  ),
-                                ),
-                            ],
+              // ── Weekly Progress Card (inspo style) ───────────────────────────────
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [
+                      AppColors.vibrantOrange.withOpacity(0.95),
+                      AppColors.vibrantOrange,
+                    ],
+                  ),
+                  borderRadius: BorderRadius.circular(24),
+                  boxShadow: [
+                    BoxShadow(
+                      color: AppColors.vibrantOrange.withOpacity(0.25),
+                      blurRadius: 12,
+                      offset: const Offset(0, 6),
+                    ),
+                  ],
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'Your Weekly Progress',
+                          style: TextStyle(
+                            color: AppColors.lightText,
+                            fontSize: 18,
+                            fontWeight: FontWeight.w600,
                           ),
                         ),
-                      ),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withOpacity(0.22),
+                            borderRadius: BorderRadius.circular(30),
+                          ),
+                          child: Text(
+                            DateFormat('MMM yyyy').format(DateTime.now()),
+                            style: const TextStyle(
+                              color: AppColors.lightText,
+                              fontSize: 13,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
-                  );
-                },
+                    const SizedBox(height: 20),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        _buildProgressItem(
+                          icon: Icons.directions_walk_rounded,
+                          label: 'Steps',
+                          value: '5,500',
+                        ),
+                        _buildProgressItem(
+                          icon: Icons.check_circle_outline_rounded,
+                          label: 'Done',
+                          value: '12',
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+
+              const SizedBox(height: 24),
+
+              // ── Horizontal Date Picker ───────────────────────────────────────────
+              SizedBox(
+                height: 96,
+                child: ListView.builder(
+                  scrollDirection: Axis.horizontal,
+                  itemCount: weekDates.length,
+                  itemBuilder: (context, index) {
+                    final day = weekDates[index];
+                    final isSelected = _isSelected(day);
+                    final today = _isToday(day);
+
+                    return GestureDetector(
+                      onTap: () {
+                        setState(() => _selectedDate = day);
+                      },
+                      child: Container(
+                        width: 68,
+                        margin: const EdgeInsets.symmetric(horizontal: 5),
+                        decoration: BoxDecoration(
+                          color: isSelected
+                              ? AppColors.vibrantOrange
+                              : (today ? AppColors.vibrantOrange.withOpacity(0.14) : AppColors.cardBgLight),
+                          borderRadius: BorderRadius.circular(16),
+                          boxShadow: isSelected || today
+                              ? [
+                            BoxShadow(
+                              color: AppColors.vibrantOrange.withOpacity(0.3),
+                              blurRadius: 8,
+                              offset: const Offset(0, 3),
+                            )
+                          ]
+                              : null,
+                        ),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text(
+                              DateFormat.E().format(day).toUpperCase(),
+                              style: TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w600,
+                                color: isSelected || today ? AppColors.lightText : AppColors.darkText.withOpacity(0.65),
+                              ),
+                            ),
+                            const SizedBox(height: 6),
+                            Text(
+                              day.day.toString(),
+                              style: TextStyle(
+                                fontSize: 22,
+                                fontWeight: FontWeight.bold,
+                                color: isSelected || today ? AppColors.lightText : AppColors.darkText,
+                              ),
+                            ),
+                            if (today)
+                              Container(
+                                margin: const EdgeInsets.only(top: 6),
+                                width: 6,
+                                height: 6,
+                                decoration: BoxDecoration(
+                                  color: AppColors.vibrantOrange,
+                                  shape: BoxShape.circle,
+                                ),
+                              ),
+                          ],
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              ),
+
+              const SizedBox(height: 28),
+
+              // Selected day title
+              Padding(
+                padding: const EdgeInsets.only(left: 4),
+                child: Text(
+                  DateFormat('EEEE, MMMM d').format(_selectedDate),
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.darkText,
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 16),
+
+              // ── Meal Cards ───────────────────────────────────────────────────────
+              _buildMealCard(
+                title: 'Breakfast',
+                color: AppColors.vibrantGreen,
+                items: const [
+                  'Oats + Banana + 🥜',
+                  'Greek Yogurt + Berries',
+                ],
+              ),
+
+              const SizedBox(height: 16),
+
+              _buildMealCard(
+                title: 'Lunch',
+                color: AppColors.vibrantBlue,
+                items: const [
+                  'Grilled Chicken Salad + Avocado',
+                  'Quinoa + Roasted Veggies',
+                ],
+              ),
+
+              const SizedBox(height: 16),
+
+              _buildMealCard(
+                title: 'Dinner',
+                color: AppColors.vibrantOrange,
+                items: const [
+                  'Baked Salmon + Broccoli + Sweet Potato',
+                  'Mixed Greens Salad',
+                ],
+              ),
+
+              const SizedBox(height: 40),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildProgressItem({
+    required IconData icon,
+    required String label,
+    required String value,
+  }) {
+    return Row(
+      children: [
+        Icon(icon, color: AppColors.lightText, size: 26),
+        const SizedBox(width: 10),
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              value,
+              style: const TextStyle(
+                color: AppColors.lightText,
+                fontSize: 22,
+                fontWeight: FontWeight.bold,
               ),
             ),
+            Text(
+              label,
+              style: TextStyle(
+                color: AppColors.lightText.withOpacity(0.9),
+                fontSize: 13,
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
 
-            const SizedBox(height: 24),
-
-            // 2. Action Buttons
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: [
-                  Expanded(
-                    child: ElevatedButton.icon(
-                      onPressed: () {
-                        // TODO: Navigate to Create Meal Plan screen/flow
-                      },
-                      icon: const Icon(Icons.add_circle_outline,
-                          color: AppColors.lightText),
-                      label: const Text(
-                        'Create Meal Plan',
-                        style: TextStyle(
-                            fontSize: 16, fontWeight: FontWeight.bold),
-                      ),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.vibrantOrange,
-                        foregroundColor: AppColors.lightText,
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                        elevation: 4,
-                      ),
-                    ),
+  Widget _buildMealCard({
+    required String title,
+    required Color color,
+    required List<String> items,
+  }) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppColors.cardBgLight,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                decoration: BoxDecoration(
+                  color: color.withOpacity(0.15),
+                  borderRadius: BorderRadius.circular(30),
+                ),
+                child: Text(
+                  title,
+                  style: TextStyle(
+                    color: color,
+                    fontWeight: FontWeight.w700,
+                    fontSize: 15,
                   ),
-                  const SizedBox(width: 16),
+                ),
+              ),
+              const Spacer(),
+              Icon(Icons.add_circle_outline_rounded, color: color, size: 28),
+            ],
+          ),
+          const SizedBox(height: 14),
+          ...items.map(
+                (item) => Padding(
+              padding: const EdgeInsets.only(bottom: 10),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Icon(Icons.circle, size: 10, color: color),
+                  const SizedBox(width: 12),
                   Expanded(
-                    child: ElevatedButton.icon(
-                      onPressed: () {
-                        // TODO: Navigate to Track/Log Meal screen (quick add)
-                      },
-                      icon: const Icon(Icons.track_changes,
-                          color: AppColors.lightText),
-                      label: const Text(
-                        'Track Meal',
-                        style: TextStyle(
-                            fontSize: 16, fontWeight: FontWeight.bold),
-                      ),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.vibrantGreen,
-                        foregroundColor: AppColors.lightText,
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                        elevation: 4,
+                    child: Text(
+                      item,
+                      style: const TextStyle(
+                        fontSize: 16,
+                        height: 1.35,
+                        color: AppColors.darkText,
                       ),
                     ),
                   ),
                 ],
               ),
             ),
-
-            const SizedBox(height: 24),
-
-            // 3. Selected Date Display
-            if (selectedDate != null)
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 24),
-                child: Text(
-                  'Date: ${DateFormat('EEEE, MMM d, yyyy').format(selectedDate!)}',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: AppColors.darkText,
-                  ),
-                ),
-              ),
-
-            const SizedBox(height: 32),
-
-            // Placeholder for future content
-            Expanded(
-              child: Center(
-                child: Text(
-                  'Your meal plans will appear here',
-                  style:
-                  TextStyle(color: AppColors.darkText.withOpacity(0.6)),
-                ),
-              ),
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
