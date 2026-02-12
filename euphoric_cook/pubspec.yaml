@@ -49,6 +49,7 @@ dependencies:
   material_symbols_icons: ^4.2906.0
   pocketbase: ^0.18.0
   url_launcher: ^6.3.0
+  fl_chart: ^0.69.0
 
 dev_dependencies:
   flutter_test:

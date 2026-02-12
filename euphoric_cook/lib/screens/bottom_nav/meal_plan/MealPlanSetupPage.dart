@@ -33,7 +33,7 @@ class _MealPlanSetupPageState extends State<MealPlanSetupPage> {
 
     return Scaffold(
       backgroundColor: bgColor,
-      resizeToAvoidBottomInset: true, // Prevents keyboard layout crashes
+      resizeToAvoidBottomInset: true,
       body: SafeArea(
         child: Column(
           children: [
@@ -80,30 +80,33 @@ class _MealPlanSetupPageState extends State<MealPlanSetupPage> {
     );
   }
 
-  // --- SCREEN 1: PROFILE ---
-  Widget _screen1Profile(UserProvider up, bool isDark, Color txt) {
+  // --- SCREEN 1: SMART PROFILE ---
+  Widget _screen1Profile(UserProvider user, bool isDark, Color txt) {
+    final dietaryItems = [
+      "Vegetarian", "Vegan", "Gluten-Free", "Dairy-Free", "Kosher", "Halal", "Paleo", "Pescatarian"
+    ];
+    final nutritionItems = [
+      "Healthy", "Low Calorie", "Low Carb", "Low Fat", "Low Sodium", "Low Sugar", "Low Cholesterol", "High Fiber", "Kidney Friendly"
+    ];
+    final allergyItems = [
+      "Peanut Free", "Soy Free", "Tree Nut Free", "Shellfish Free"
+    ];
+
     return _pageWrapper(
       title: "Smart Profile",
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _buildDropdown("Dietary Preference", ["Vegan", "Keto", "Paleo", "Anything"], txt, isDark),
-          const SizedBox(height: 24),
-          _buildTagInput("Foods to Avoid", up.foodsToAvoid, _avoidController, up.addFoodToAvoid, up.removeFoodToAvoid, isDark, txt),
+          _MultiSelectDropdown(title: "Dietary Restrictions", items: dietaryItems, user: user),
+          const SizedBox(height: 20),
+          _MultiSelectDropdown(title: "Nutritional & Health Tags", items: nutritionItems, user: user),
+          const SizedBox(height: 20),
+          _MultiSelectDropdown(title: "Allergy-Specific Tags", items: allergyItems, user: user),
+          const SizedBox(height: 20),
+          _buildTagInput("Foods to Avoid", user.foodsToAvoid, _avoidController, user.addFoodToAvoid, user.removeFoodToAvoid, isDark, txt),
         ],
       ),
-      footer: Column(
-        children: [
-          Text("Is everything correct?", style: TextStyle(color: txt.withOpacity(0.5))),
-          const SizedBox(height: 12),
-          Row(
-            children: [
-              Expanded(child: _outlineBtn("✏️ Edit", () {}, txt)),
-              const SizedBox(width: 12),
-              Expanded(child: _largeBtn("✅ Confirm", _nextPage, AppColors.vibrantGreen)),
-            ],
-          )
-        ],
-      ),
+      footer: _largeBtn("Continue", _nextPage, AppColors.vibrantOrange),
     );
   }
 
@@ -116,7 +119,7 @@ class _MealPlanSetupPageState extends State<MealPlanSetupPage> {
     return _pageWrapper(
       title: "Goals in Motion",
       child: GridView.count(
-        shrinkWrap: true, // FIXED: Required for layout inside SingleChildScrollView
+        shrinkWrap: true,
         physics: const NeverScrollableScrollPhysics(),
         crossAxisCount: 2, mainAxisSpacing: 16, crossAxisSpacing: 16,
         children: goals.map((g) => InkWell(
@@ -169,6 +172,7 @@ class _MealPlanSetupPageState extends State<MealPlanSetupPage> {
           _buildTargetField("Calories", "2400 kcal", txt, isDark),
           _buildTargetField("Protein (g)", "150g", txt, isDark),
           _buildTargetField("Fats (g)", "70g", txt, isDark),
+          _buildTargetField("Water (L)", "L", txt, isDark),
           const SizedBox(height: 20),
           ClipRRect(
             borderRadius: BorderRadius.circular(10),
@@ -193,27 +197,43 @@ class _MealPlanSetupPageState extends State<MealPlanSetupPage> {
     );
   }
 
-  // --- SCREEN 6: PANTRY & GEN ---
+  // --- SCREEN 6: PANTRY & GENERATE ---
   Widget _screen6PantryAndGenerate(UserProvider up, bool isDark, Color txt) {
     return _pageWrapper(
       title: "Ready to Generate",
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          _buildTagInput("Quick Pantry Add", up.pantryItems, _pantryController, up.addPantryItem, up.removePantryItem, isDark, txt),
-        ],
-      ),
-      footer: Column(
-        children: [
-          _largeBtn("Add My Pantry & Generate →", () {}, AppColors.vibrantOrange),
-          const SizedBox(height: 12),
-          _outlineBtn("Generate Suggested Meals →", () {}, AppColors.vibrantOrange),
+          Row(
+            children: [
+              Expanded(
+                child: _largeBtn("Add My Pantry", () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => PantryScreen()),
+                  );
+                }, AppColors.vibrantBlue),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: _largeBtn("Generate Meal", () {
+                  // Meal generation logic (pending)
+                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Generate Meal clicked!")));
+                }, AppColors.vibrantGreen),
+              ),
+            ],
+          ),
+          const SizedBox(height: 20),
+          _outlineBtn("Generate Suggested Meals", () {
+            // Placeholder CTA
+            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Generate Suggested Meals clicked!")));
+          }, AppColors.vibrantOrange),
         ],
       ),
     );
   }
 
   // --- REUSABLE WRAPPERS ---
-
   Widget _pageWrapper({required String title, required Widget child, Widget? footer}) {
     return Padding(
       padding: const EdgeInsets.fromLTRB(24, 20, 24, 20),
@@ -222,7 +242,7 @@ class _MealPlanSetupPageState extends State<MealPlanSetupPage> {
         children: [
           Text(title, style: const TextStyle(fontSize: 28, fontWeight: FontWeight.w900, color: AppColors.vibrantOrange)),
           const SizedBox(height: 24),
-          Expanded(child: SingleChildScrollView(child: child)), // Child is now scrollable independently
+          Expanded(child: SingleChildScrollView(child: child)),
           if (footer != null) ...[const SizedBox(height: 20), footer],
         ],
       ),
@@ -272,15 +292,6 @@ class _MealPlanSetupPageState extends State<MealPlanSetupPage> {
     );
   }
 
-  Widget _buildDropdown(String label, List<String> items, Color txt, bool isDark) {
-    return DropdownButtonFormField(
-      decoration: InputDecoration(labelText: label, labelStyle: TextStyle(color: txt.withOpacity(0.5))),
-      dropdownColor: isDark ? AppColors.cardBgDark : Colors.white,
-      items: items.map((i) => DropdownMenuItem(value: i, child: Text(i, style: TextStyle(color: txt)))).toList(),
-      onChanged: (v) {},
-    );
-  }
-
   Widget _buildTargetField(String label, String hint, Color txt, bool isDark) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 16),
@@ -312,4 +323,81 @@ class _MealPlanSetupPageState extends State<MealPlanSetupPage> {
       child: Text(text, style: TextStyle(color: col, fontWeight: FontWeight.w800)),
     ),
   );
+}
+
+/// --- MULTISELECT DROPDOWN ---
+class _MultiSelectDropdown extends StatelessWidget {
+  final String title;
+  final List<String> items;
+  final UserProvider user;
+
+  const _MultiSelectDropdown({required this.title, required this.items, required this.user});
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+        const SizedBox(height: 8),
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: items.map((item) {
+            final selected = user.isTagSelected(item);
+            return ChoiceChip(
+              label: Text(item),
+              selected: selected,
+              onSelected: (_) => user.toggleTag(item),
+              selectedColor: AppColors.vibrantOrange,
+              backgroundColor: Colors.grey.withOpacity(0.2),
+              labelStyle: TextStyle(color: selected ? Colors.white : Colors.black),
+            );
+          }).toList(),
+        ),
+      ],
+    );
+  }
+}
+
+/// --- PANTRY SCREEN ---
+class PantryScreen extends StatelessWidget {
+  PantryScreen({super.key});
+  final TextEditingController _controller = TextEditingController();
+
+  @override
+  Widget build(BuildContext context) {
+    final user = Provider.of<UserProvider>(context);
+
+    return Scaffold(
+      appBar: AppBar(title: const Text("My Pantry"), backgroundColor: AppColors.vibrantOrange),
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          children: [
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: user.pantryItems.map((t) => Chip(
+                label: Text(t),
+                onDeleted: () => user.removePantryItem(t),
+                backgroundColor: AppColors.vibrantOrange.withOpacity(0.15),
+              )).toList(),
+            ),
+            const SizedBox(height: 16),
+            TextField(
+              controller: _controller,
+              decoration: InputDecoration(
+                hintText: "Add item...",
+                suffixIcon: IconButton(icon: const Icon(Icons.add_circle, color: AppColors.vibrantOrange), onPressed: () {
+                  if(_controller.text.isNotEmpty) { user.addPantryItem(_controller.text); _controller.clear(); }
+                }),
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(15)),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 }

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../../constants/colors.dart';
 import 'meal_plan/MealPlanSetupPage.dart';
+import 'meal_plan/progress_screen.dart';
 
 class MealPlannerPage extends StatefulWidget {
   final bool isDarkMode; // pass this from your settings
@@ -84,138 +85,145 @@ class _MealPlannerPageState extends State<MealPlannerPage> {
             children: [
               const SizedBox(height: 12),
 
-              // ── Premium Progress Card ─────────────────────────────
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.fromLTRB(20, 20, 20, 24),
-                decoration: BoxDecoration(
-                  color: cardColor,
-                  borderRadius: BorderRadius.circular(24),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.06),
-                      blurRadius: 20,
-                      offset: const Offset(0, 8),
-                    ),
-                  ],
-                ),
-                child: Column(
-                  children: [
-                    Text(
-                      'Daily Progress',
-                      style: TextStyle(
-                        color: textColor,
-                        fontSize: 18,
-                        fontWeight: FontWeight.w600,
+              // ── Premium Progress Card (tapable) ───────────────
+              GestureDetector(
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const ProgressScreen()),
+                  );
+                },
+                child: Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.fromLTRB(20, 20, 20, 24),
+                  decoration: BoxDecoration(
+                    color: cardColor,
+                    borderRadius: BorderRadius.circular(24),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.06),
+                        blurRadius: 20,
+                        offset: const Offset(0, 8),
                       ),
-                    ),
-                    const SizedBox(height: 24),
-
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                      children: [
-                        // Water
-                        Column(
-                          children: [
-                            Stack(
-                              alignment: Alignment.center,
-                              children: [
-                                SizedBox(
-                                  width: 80,
-                                  height: 80,
-                                  child: CircularProgressIndicator(
-                                    value: _waterFraction,
-                                    backgroundColor: Colors.blue.withOpacity(0.15),
-                                    color: Colors.blue[400],
-                                    strokeWidth: 8,
-                                  ),
-                                ),
-                                Icon(
-                                  Icons.water_drop,
-                                  color: Colors.blue[400],
-                                  size: 36,
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 10),
-                            Text(
-                              'Water',
-                              style: TextStyle(
-                                color: Colors.blue[400],
-                                fontSize: 14,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                            const SizedBox(height: 6),
-                            GestureDetector(
-                              onTap: _add250ml,
-                              child: Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
-                                decoration: BoxDecoration(
-                                  color: Colors.blue[400],
-                                  borderRadius: BorderRadius.circular(20),
-                                ),
-                                child: const Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    Icon(Icons.add, color: Colors.white, size: 16),
-                                    SizedBox(width: 4),
-                                    Text(
-                                      '250 ml',
-                                      style: TextStyle(color: Colors.white, fontSize: 12.5),
+                    ],
+                  ),
+                  child: Column(
+                    children: [
+                      Text(
+                        'Daily Progress',
+                        style: TextStyle(
+                          color: textColor,
+                          fontSize: 18,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      const SizedBox(height: 24),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                        children: [
+                          // Water
+                          Column(
+                            children: [
+                              Stack(
+                                alignment: Alignment.center,
+                                children: [
+                                  SizedBox(
+                                    width: 80,
+                                    height: 80,
+                                    child: CircularProgressIndicator(
+                                      value: _waterFraction,
+                                      backgroundColor: Colors.blue.withOpacity(0.15),
+                                      color: Colors.blue[400],
+                                      strokeWidth: 8,
                                     ),
-                                  ],
+                                  ),
+                                  Icon(
+                                    Icons.water_drop,
+                                    color: Colors.blue[400],
+                                    size: 36,
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 10),
+                              Text(
+                                'Water',
+                                style: TextStyle(
+                                  color: Colors.blue[400],
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w600,
                                 ),
                               ),
-                            ),
-                          ],
-                        ),
-
-                        // Meals
-                        Column(
-                          children: [
-                            Stack(
-                              alignment: Alignment.center,
-                              children: [
-                                SizedBox(
-                                  width: 80,
-                                  height: 80,
-                                  child: CircularProgressIndicator(
-                                    value: _mealsFraction,
-                                    backgroundColor: const Color(0xFF00E676).withOpacity(0.15),
-                                    color: const Color(0xFF00E676),
-                                    strokeWidth: 8,
+                              const SizedBox(height: 6),
+                              GestureDetector(
+                                onTap: _add250ml,
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                                  decoration: BoxDecoration(
+                                    color: Colors.blue[400],
+                                    borderRadius: BorderRadius.circular(20),
+                                  ),
+                                  child: const Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Icon(Icons.add, color: Colors.white, size: 16),
+                                      SizedBox(width: 4),
+                                      Text(
+                                        '250 ml',
+                                        style: TextStyle(color: Colors.white, fontSize: 12.5),
+                                      ),
+                                    ],
                                   ),
                                 ),
-                                const Icon(
-                                  Icons.restaurant,
-                                  color: Color(0xFF00E676),
-                                  size: 36,
+                              ),
+                            ],
+                          ),
+
+                          // Meals
+                          Column(
+                            children: [
+                              Stack(
+                                alignment: Alignment.center,
+                                children: [
+                                  SizedBox(
+                                    width: 80,
+                                    height: 80,
+                                    child: CircularProgressIndicator(
+                                      value: _mealsFraction,
+                                      backgroundColor: const Color(0xFF00E676).withOpacity(0.15),
+                                      color: const Color(0xFF00E676),
+                                      strokeWidth: 8,
+                                    ),
+                                  ),
+                                  const Icon(
+                                    Icons.restaurant,
+                                    color: Color(0xFF00E676),
+                                    size: 36,
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 10),
+                              Text(
+                                'Meals',
+                                style: TextStyle(
+                                  color: const Color(0xFF00E676),
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w600,
                                 ),
-                              ],
-                            ),
-                            const SizedBox(height: 10),
-                            Text(
-                              'Meals',
-                              style: TextStyle(
-                                color: const Color(0xFF00E676),
-                                fontSize: 14,
-                                fontWeight: FontWeight.w600,
                               ),
-                            ),
-                            const SizedBox(height: 6),
-                            Text(
-                              '$_loggedCount / $_maxMealsExample',
-                              style: TextStyle(
-                                color: textColor.withOpacity(0.75),
-                                fontSize: 13,
+                              const SizedBox(height: 6),
+                              Text(
+                                '$_loggedCount / $_maxMealsExample',
+                                style: TextStyle(
+                                  color: textColor.withOpacity(0.75),
+                                  fontSize: 13,
+                                ),
                               ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ],
+                            ],
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
                 ),
               ),
 
@@ -256,9 +264,7 @@ class _MealPlannerPageState extends State<MealPlannerPage> {
                               style: TextStyle(
                                 fontSize: 12.5,
                                 fontWeight: FontWeight.w600,
-                                color: isSelected
-                                    ? Colors.white
-                                    : textColor.withOpacity(0.65),
+                                color: isSelected ? Colors.white : textColor.withOpacity(0.65),
                               ),
                             ),
                             const SizedBox(height: 6),
