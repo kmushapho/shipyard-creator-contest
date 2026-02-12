@@ -9,6 +9,7 @@ class ShoppingData {
   final SmartList foodList = SmartList(name: "Food Smart List");
   final SmartList drinkList = SmartList(name: "Drink Smart List");
   final SmartList foodDrinkList = SmartList(name: "Food & Drink");
+  final SmartList mealPlanner = SmartList(name: "Meal Planner");
 
   // BY RECIPE
   final Map<String, SmartList> recipeLists = {};

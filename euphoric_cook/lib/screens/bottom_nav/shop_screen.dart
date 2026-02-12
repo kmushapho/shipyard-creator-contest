@@ -89,6 +89,7 @@ class _ShopScreenState extends State<ShopScreen>
         _smartListTile(data.drinkList),
         _smartListTile(data.foodList),
         _smartListTile(data.foodDrinkList),
+        _smartListTile(data.mealPlanner),
 
         const SizedBox(height: 24),
 
