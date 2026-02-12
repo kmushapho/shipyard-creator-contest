@@ -11,6 +11,12 @@ class UserProvider extends ChangeNotifier {
   // Foods to avoid (user input)
   final List<String> _foodsToAvoid = [];
 
+  // Pantry items (user input)
+  final List<String> _pantryItems = [];
+
+  // Metric preference
+  bool _isMetric = true;
+
   UserProvider._(this._uid, this._name, this._isPremium);
 
   // ───────────── FACTORIES ─────────────
@@ -36,6 +42,8 @@ class UserProvider extends ChangeNotifier {
 
   List<String> get selectedTags => List.unmodifiable(_selectedTags);
   List<String> get foodsToAvoid => List.unmodifiable(_foodsToAvoid);
+  List<String> get pantryItems => List.unmodifiable(_pantryItems);
+  bool get isMetric => _isMetric;
 
   // ───────────── AUTH ACTIONS ─────────────
 
@@ -56,6 +64,8 @@ class UserProvider extends ChangeNotifier {
     _isPremium = false;
     _selectedTags.clear();
     _foodsToAvoid.clear();
+    _pantryItems.clear();
+    _isMetric = true;
     notifyListeners();
   }
 
@@ -100,10 +110,38 @@ class UserProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  // ───────────── PANTRY ITEMS ─────────────
+
+  void addPantryItem(String food) {
+    final trimmed = food.trim();
+    if (trimmed.isEmpty) return;
+    if (_pantryItems.contains(trimmed)) return;
+
+    _pantryItems.add(trimmed);
+    notifyListeners();
+  }
+
+  void removePantryItem(String food) {
+    _pantryItems.remove(food);
+    notifyListeners();
+  }
+
+  void clearPantry() {
+    _pantryItems.clear();
+    notifyListeners();
+  }
+
   // ───────────── PREMIUM ─────────────
 
   void setPremium(bool value) {
     _isPremium = value;
+    notifyListeners();
+  }
+
+  // ───────────── METRIC / IMPERIAL ─────────────
+
+  void setMetric(bool value) {
+    _isMetric = value;
     notifyListeners();
   }
 }
