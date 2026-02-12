@@ -15,6 +15,9 @@ class _AuthPageState extends State<AuthPage> {
   bool _obscurePassword = true;
   bool _obscureConfirmPassword = true;
 
+  // Loading state for guest button
+  bool _isLoadingGuest = false;
+
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
@@ -28,28 +31,43 @@ class _AuthPageState extends State<AuthPage> {
   }
 
   Future<void> _continueAsGuest() async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool('hasCompletedOnboarding', true);
+    if (_isLoadingGuest) return; // prevent double tap
 
-    if (!mounted) return;
+    setState(() => _isLoadingGuest = true);
 
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(builder: (context) => const HomeScreen()),
-    );
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setBool('hasCompletedOnboarding', true);
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Continuing as guest...'),
-        duration: Duration(seconds: 1),
-      ),
-    );
+      if (!mounted) return;
+
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => const HomeScreen()),
+      );
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Continuing as guest...'),
+          duration: Duration(seconds: 1),
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error: $e')),
+      );
+    } finally {
+      if (mounted) {
+        setState(() => _isLoadingGuest = false);
+      }
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      resizeToAvoidBottomInset: false, // prevent Scaffold from resizing
+      resizeToAvoidBottomInset: false,
       body: Stack(
         children: [
           // Gradient background
@@ -97,8 +115,7 @@ class _AuthPageState extends State<AuthPage> {
                           'Password',
                           isPassword: true,
                           isObscured: _obscurePassword,
-                          onToggle: () =>
-                              setState(() => _obscurePassword = !_obscurePassword),
+                          onToggle: () => setState(() => _obscurePassword = !_obscurePassword),
                         ),
                         if (!isLogin) ...[
                           const SizedBox(height: 15),
@@ -108,12 +125,13 @@ class _AuthPageState extends State<AuthPage> {
                             isPassword: true,
                             isObscured: _obscureConfirmPassword,
                             onToggle: () => setState(
-                                    () => _obscureConfirmPassword = !_obscureConfirmPassword),
+                                  () => _obscureConfirmPassword = !_obscureConfirmPassword,
+                            ),
                           ),
                         ],
                         const SizedBox(height: 30),
                         _buildSubmitButton(),
-                        const SizedBox(height: 30), // space to scroll above guest button
+                        const SizedBox(height: 30),
                       ],
                     ),
                   ),
@@ -122,7 +140,7 @@ class _AuthPageState extends State<AuthPage> {
             ),
           ),
 
-          // Fixed guest button
+          // Fixed guest button with loading state
           Align(
             alignment: Alignment.bottomCenter,
             child: Padding(
@@ -131,7 +149,7 @@ class _AuthPageState extends State<AuthPage> {
                 width: double.infinity,
                 height: 55,
                 child: ElevatedButton(
-                  onPressed: _continueAsGuest,
+                  onPressed: _isLoadingGuest ? null : _continueAsGuest,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.white,
                     shape: RoundedRectangleBorder(
@@ -139,7 +157,16 @@ class _AuthPageState extends State<AuthPage> {
                     ),
                     elevation: 4,
                   ),
-                  child: const Text(
+                  child: _isLoadingGuest
+                      ? SizedBox(
+                    height: 24,
+                    width: 24,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 3,
+                      valueColor: AlwaysStoppedAnimation<Color>(AppColors.vibrantOrange),
+                    ),
+                  )
+                      : const Text(
                     'Continue as Guest',
                     style: TextStyle(
                       color: AppColors.vibrantOrange,
@@ -246,7 +273,7 @@ class _AuthPageState extends State<AuthPage> {
       height: 55,
       child: ElevatedButton(
         onPressed: () {
-          // Add login/signup logic
+          // Add login/signup logic here later
         },
         style: ElevatedButton.styleFrom(
           backgroundColor: AppColors.vibrantOrange,
