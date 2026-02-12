@@ -3,7 +3,8 @@ import 'package:intl/intl.dart';
 import '../../constants/colors.dart';
 
 class MealPlannerPage extends StatefulWidget {
-  const MealPlannerPage({super.key});
+  final bool isDarkMode; // pass this from your settings
+  const MealPlannerPage({super.key, this.isDarkMode = false});
 
   @override
   State<MealPlannerPage> createState() => _MealPlannerPageState();
@@ -56,15 +57,19 @@ class _MealPlannerPageState extends State<MealPlannerPage> {
     final weekStart = _effectiveDate.subtract(Duration(days: _effectiveDate.weekday - 1));
     final weekDates = List.generate(7, (i) => weekStart.add(Duration(days: i)));
 
+    final bgColor = widget.isDarkMode ? AppColors.darkBg : AppColors.lightBg;
+    final cardColor = widget.isDarkMode ? AppColors.cardBgDark : AppColors.cardBgLight;
+    final textColor = widget.isDarkMode ? AppColors.lightText : AppColors.darkText;
+
     return Scaffold(
-      backgroundColor: AppColors.lightBg,
+      backgroundColor: bgColor,
       appBar: AppBar(
-        backgroundColor: AppColors.lightBg,
+        backgroundColor: bgColor,
         elevation: 0,
-        title: const Text(
+        title: Text(
           'Meal Planner',
           style: TextStyle(
-            color: AppColors.darkText,
+            color: textColor,
             fontWeight: FontWeight.w700,
             fontSize: 22,
           ),
@@ -78,12 +83,12 @@ class _MealPlannerPageState extends State<MealPlannerPage> {
             children: [
               const SizedBox(height: 12),
 
-              // ── Premium Progress Card (smaller & elegant) ─────────────────────
+              // ── Premium Progress Card ─────────────────────────────
               Container(
                 width: double.infinity,
                 padding: const EdgeInsets.fromLTRB(20, 20, 20, 24),
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: cardColor,
                   borderRadius: BorderRadius.circular(24),
                   boxShadow: [
                     BoxShadow(
@@ -98,7 +103,7 @@ class _MealPlannerPageState extends State<MealPlannerPage> {
                     Text(
                       'Daily Progress',
                       style: TextStyle(
-                        color: AppColors.darkText,
+                        color: textColor,
                         fontSize: 18,
                         fontWeight: FontWeight.w600,
                       ),
@@ -201,7 +206,7 @@ class _MealPlannerPageState extends State<MealPlannerPage> {
                             Text(
                               '$_loggedCount / $_maxMealsExample',
                               style: TextStyle(
-                                color: AppColors.darkText.withOpacity(0.75),
+                                color: textColor.withOpacity(0.75),
                                 fontSize: 13,
                               ),
                             ),
@@ -215,7 +220,7 @@ class _MealPlannerPageState extends State<MealPlannerPage> {
 
               const SizedBox(height: 28),
 
-              // ── Calendar ─────────────────────────────────────────────────────
+              // ── Calendar ─────────────────────────────
               SizedBox(
                 height: 96,
                 child: ListView.builder(
@@ -236,7 +241,7 @@ class _MealPlannerPageState extends State<MealPlannerPage> {
                         width: 68,
                         margin: const EdgeInsets.symmetric(horizontal: 5),
                         decoration: BoxDecoration(
-                          color: isSelected ? AppColors.vibrantOrange : AppColors.cardBgLight,
+                          color: isSelected ? AppColors.vibrantOrange : cardColor,
                           borderRadius: BorderRadius.circular(16),
                           boxShadow: isSelected
                               ? [BoxShadow(color: AppColors.vibrantOrange.withOpacity(0.3), blurRadius: 12)]
@@ -250,7 +255,9 @@ class _MealPlannerPageState extends State<MealPlannerPage> {
                               style: TextStyle(
                                 fontSize: 12.5,
                                 fontWeight: FontWeight.w600,
-                                color: isSelected ? Colors.white : AppColors.darkText.withOpacity(0.65),
+                                color: isSelected
+                                    ? Colors.white
+                                    : textColor.withOpacity(0.65),
                               ),
                             ),
                             const SizedBox(height: 6),
@@ -259,7 +266,7 @@ class _MealPlannerPageState extends State<MealPlannerPage> {
                               style: TextStyle(
                                 fontSize: 22,
                                 fontWeight: FontWeight.bold,
-                                color: isSelected ? Colors.white : AppColors.darkText,
+                                color: isSelected ? Colors.white : textColor,
                               ),
                             ),
                             if (isToday && !isSelected)
@@ -282,20 +289,16 @@ class _MealPlannerPageState extends State<MealPlannerPage> {
 
               const SizedBox(height: 24),
 
-              // ── Date + Action Buttons Row ─────────────────────────────────────
+              // Date display
               Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                crossAxisAlignment: CrossAxisAlignment.end,
+                mainAxisAlignment: MainAxisAlignment.start,
                 children: [
-                  Padding(
-                    padding: const EdgeInsets.only(left: 4),
-                    child: Text(
-                      DateFormat('EEEE, MMMM d').format(_effectiveDate),
-                      style: TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.w700,
-                        color: AppColors.darkText,
-                      ),
+                  Text(
+                    DateFormat('EEEE, MMMM d').format(_effectiveDate),
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.w700,
+                      color: textColor,
                     ),
                   ),
                 ],
@@ -303,14 +306,12 @@ class _MealPlannerPageState extends State<MealPlannerPage> {
 
               const SizedBox(height: 12),
 
-              // Create Meal Plan + Shopping List buttons
+              // Buttons row
               Row(
                 children: [
                   Expanded(
                     child: ElevatedButton.icon(
-                      onPressed: () {
-                        // TODO: Open meal plan creator
-                      },
+                      onPressed: () {},
                       icon: const Icon(Icons.add_rounded, size: 20),
                       label: const Text(
                         'Create Meal Plan',
@@ -330,9 +331,7 @@ class _MealPlannerPageState extends State<MealPlannerPage> {
                   const SizedBox(width: 12),
                   Expanded(
                     child: OutlinedButton.icon(
-                      onPressed: () {
-                        // TODO: Open shopping list
-                      },
+                      onPressed: () {},
                       icon: const Icon(Icons.shopping_cart_outlined, size: 20),
                       label: const Text(
                         'Shopping List',
@@ -353,16 +352,16 @@ class _MealPlannerPageState extends State<MealPlannerPage> {
 
               const SizedBox(height: 28),
 
-              // ── Meal Cards (refined) ─────────────────────────────────────────
-              _buildMealCard('Breakfast', AppColors.vibrantGreen),
+              // Meal cards
+              _buildMealCard('Breakfast', AppColors.vibrantGreen, cardColor, textColor),
               const SizedBox(height: 16),
-              _buildMealCard('Lunch', AppColors.vibrantBlue),
+              _buildMealCard('Lunch', AppColors.vibrantBlue, cardColor, textColor),
               const SizedBox(height: 16),
-              _buildMealCard('Dinner', AppColors.vibrantOrange),
+              _buildMealCard('Dinner', AppColors.vibrantOrange, cardColor, textColor),
               const SizedBox(height: 16),
-              _buildMealCard('Snack', AppColors.vibrantGreen.withOpacity(0.85)),
+              _buildMealCard('Snack', AppColors.vibrantGreen.withOpacity(0.85), cardColor, textColor),
               const SizedBox(height: 16),
-              _buildMealCard('Dessert', AppColors.vibrantOrange.withOpacity(0.8)),
+              _buildMealCard('Dessert', AppColors.vibrantOrange.withOpacity(0.8), cardColor, textColor),
 
               const SizedBox(height: 40),
             ],
@@ -372,11 +371,11 @@ class _MealPlannerPageState extends State<MealPlannerPage> {
     );
   }
 
-  Widget _buildMealCard(String title, Color color) {
+  Widget _buildMealCard(String title, Color color, Color cardColor, Color textColor) {
     return Container(
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        color: AppColors.cardBgLight,
+        color: cardColor,
         borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
@@ -410,12 +409,11 @@ class _MealPlannerPageState extends State<MealPlannerPage> {
               Icon(Icons.add_circle_outline_rounded, color: color, size: 28),
             ],
           ),
-          // Placeholder space for future meal items
           const SizedBox(height: 16),
           Text(
             'Tap + to add meals',
             style: TextStyle(
-              color: AppColors.darkText.withOpacity(0.45),
+              color: textColor.withOpacity(0.45),
               fontSize: 13,
             ),
           ),
