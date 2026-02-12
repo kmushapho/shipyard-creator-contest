@@ -17,6 +17,9 @@ class UserProvider extends ChangeNotifier {
   // Metric preference
   bool _isMetric = true;
 
+  // Dark mode preference
+  bool _isDarkMode = false;
+
   UserProvider._(this._uid, this._name, this._isPremium);
 
   // ───────────── FACTORIES ─────────────
@@ -29,8 +32,11 @@ class UserProvider extends ChangeNotifier {
     required String uid,
     required String name,
     bool isPremium = false,
+    bool isDarkMode = false,
   }) {
-    return UserProvider._(uid, name, isPremium);
+    final provider = UserProvider._(uid, name, isPremium);
+    provider._isDarkMode = isDarkMode;
+    return provider;
   }
 
   // ───────────── GETTERS ─────────────
@@ -44,6 +50,7 @@ class UserProvider extends ChangeNotifier {
   List<String> get foodsToAvoid => List.unmodifiable(_foodsToAvoid);
   List<String> get pantryItems => List.unmodifiable(_pantryItems);
   bool get isMetric => _isMetric;
+  bool get isDarkMode => _isDarkMode; // <- new getter
 
   // ───────────── AUTH ACTIONS ─────────────
 
@@ -51,10 +58,12 @@ class UserProvider extends ChangeNotifier {
     required String uid,
     required String name,
     bool isPremium = false,
+    bool isDarkMode = false,
   }) {
     _uid = uid;
     _name = name;
     _isPremium = isPremium;
+    _isDarkMode = isDarkMode;
     notifyListeners();
   }
 
@@ -66,14 +75,13 @@ class UserProvider extends ChangeNotifier {
     _foodsToAvoid.clear();
     _pantryItems.clear();
     _isMetric = true;
+    _isDarkMode = false;
     notifyListeners();
   }
 
   // ───────────── TAGS (Dietary / Nutrition / Allergy) ─────────────
 
-  bool isTagSelected(String tag) {
-    return _selectedTags.contains(tag);
-  }
+  bool isTagSelected(String tag) => _selectedTags.contains(tag);
 
   void toggleTag(String tag) {
     if (_selectedTags.contains(tag)) {
@@ -93,9 +101,7 @@ class UserProvider extends ChangeNotifier {
 
   void addFoodToAvoid(String food) {
     final trimmed = food.trim();
-    if (trimmed.isEmpty) return;
-    if (_foodsToAvoid.contains(trimmed)) return;
-
+    if (trimmed.isEmpty || _foodsToAvoid.contains(trimmed)) return;
     _foodsToAvoid.add(trimmed);
     notifyListeners();
   }
@@ -114,9 +120,7 @@ class UserProvider extends ChangeNotifier {
 
   void addPantryItem(String food) {
     final trimmed = food.trim();
-    if (trimmed.isEmpty) return;
-    if (_pantryItems.contains(trimmed)) return;
-
+    if (trimmed.isEmpty || _pantryItems.contains(trimmed)) return;
     _pantryItems.add(trimmed);
     notifyListeners();
   }
@@ -142,6 +146,13 @@ class UserProvider extends ChangeNotifier {
 
   void setMetric(bool value) {
     _isMetric = value;
+    notifyListeners();
+  }
+
+  // ───────────── DARK MODE ─────────────
+
+  void setDarkMode(bool value) {
+    _isDarkMode = value;
     notifyListeners();
   }
 }

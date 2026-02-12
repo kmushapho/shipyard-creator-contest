@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../../constants/colors.dart';
+import 'meal_plan/MealPlanSetupPage.dart';
 
 class MealPlannerPage extends StatefulWidget {
   final bool isDarkMode; // pass this from your settings
@@ -311,7 +312,14 @@ class _MealPlannerPageState extends State<MealPlannerPage> {
                 children: [
                   Expanded(
                     child: ElevatedButton.icon(
-                      onPressed: () {},
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => const MealPlanSetupPage(),
+                          ),
+                        );
+                      },
                       icon: const Icon(Icons.add_rounded, size: 20),
                       label: const Text(
                         'Create Meal Plan',
