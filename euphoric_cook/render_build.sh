@@ -6,28 +6,23 @@
 set -e  # Stop on errors
 
 # -----------------------------------------------
-# 1️⃣ Ensure Flutter is installed locally
-# (Do this locally once, not on Render)
+# 1️⃣ Build Flutter Web Locally
 # -----------------------------------------------
-# flutter --version
+# IMPORTANT: Do this locally BEFORE running the script on Render
 # flutter pub get
+# flutter build web --release
+echo "✅ Ensure you have run 'flutter build web --release' locally before pushing."
 
 # -----------------------------------------------
-# 2️⃣ Build the web release locally
-# -----------------------------------------------
-echo "Building Flutter web release..."
-flutter build web --release
-
-# -----------------------------------------------
-# 3️⃣ Copy build output to Render publish folder
+# 2️⃣ Copy build output to Render 'public' folder
 # Render static sites automatically serve the 'public' folder
 # -----------------------------------------------
-echo "Copying build/web to public folder..."
+echo "📂 Copying build/web to public folder..."
 rm -rf public
 mkdir -p public
 cp -r build/web/* public/
 
 # -----------------------------------------------
-# 4️⃣ Done — push repo to Render
+# 3️⃣ Done — Ready to deploy
 # -----------------------------------------------
-echo "Flutter web build ready for Render!"
+echo "🎉 Flutter web build ready for Render! Push your repo and Render will serve the 'public' folder."
