@@ -1,26 +1,33 @@
 #!/bin/bash
-set -e  # stop on errors
+# -----------------------------------------------
+# Render Static Site Deploy Script for Flutter Web
+# -----------------------------------------------
 
-# Set cache directories
-FLUTTER_DIR="/cache/flutter"
-PUB_CACHE_DIR="/cache/pub-cache"
+set -e  # Stop on errors
 
-# Clone Flutter if not cached
-if [ ! -d "$FLUTTER_DIR" ]; then
-    echo "Cloning Flutter SDK..."
-    git clone https://github.com/flutter/flutter.git -b stable --depth 1 "$FLUTTER_DIR"
-else
-    echo "Using cached Flutter SDK"
-fi
+# -----------------------------------------------
+# 1️⃣ Ensure Flutter is installed locally
+# (Do this locally once, not on Render)
+# -----------------------------------------------
+# flutter --version
+# flutter pub get
 
-# Add Flutter to PATH
-export PATH="$FLUTTER_DIR/bin:$PATH"
-
-# Use cached pub packages if available
-export PUB_CACHE="$PUB_CACHE_DIR"
-
-# Get dependencies
-flutter pub get
-
-# Build web release
+# -----------------------------------------------
+# 2️⃣ Build the web release locally
+# -----------------------------------------------
+echo "Building Flutter web release..."
 flutter build web --release
+
+# -----------------------------------------------
+# 3️⃣ Copy build output to Render publish folder
+# Render static sites automatically serve the 'public' folder
+# -----------------------------------------------
+echo "Copying build/web to public folder..."
+rm -rf public
+mkdir -p public
+cp -r build/web/* public/
+
+# -----------------------------------------------
+# 4️⃣ Done — push repo to Render
+# -----------------------------------------------
+echo "Flutter web build ready for Render!"
