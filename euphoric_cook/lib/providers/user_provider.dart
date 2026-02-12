@@ -1,29 +1,32 @@
 import 'package:flutter/material.dart';
 
 class UserProvider extends ChangeNotifier {
+  // ───────────── USER INFO ─────────────
   String? _uid; // null = guest
   String _name;
   bool _isPremium;
 
-  // Selected tags (dietary, nutrition, allergy combined)
+  // ───────────── MEAL PLANNER RULES ─────────────
+  // Selected tags (Dietary / Nutrition / Allergy)
   final List<String> _selectedTags = [];
 
-  // Foods to avoid (user input)
+  // Foods the user wants to avoid
   final List<String> _foodsToAvoid = [];
 
-  // Pantry items (user input)
+  // Pantry items
   final List<String> _pantryItems = [];
 
-  // Metric preference
-  bool _isMetric = true;
+  // Optional: Add other meal planner rules (Calories, Protein, etc.)
+  // Example structure: Map<String, dynamic> _nutritionTargets = {};
 
-  // Dark mode preference
+  // ───────────── PREFERENCES ─────────────
+  bool _isMetric = true;
   bool _isDarkMode = false;
 
+  // ───────────── PRIVATE CONSTRUCTOR ─────────────
   UserProvider._(this._uid, this._name, this._isPremium);
 
   // ───────────── FACTORIES ─────────────
-
   factory UserProvider.guest() {
     return UserProvider._(null, "Guest User", false);
   }
@@ -40,7 +43,6 @@ class UserProvider extends ChangeNotifier {
   }
 
   // ───────────── GETTERS ─────────────
-
   bool get isGuest => _uid == null;
   bool get isLoggedIn => _uid != null;
   String get name => _name;
@@ -49,11 +51,11 @@ class UserProvider extends ChangeNotifier {
   List<String> get selectedTags => List.unmodifiable(_selectedTags);
   List<String> get foodsToAvoid => List.unmodifiable(_foodsToAvoid);
   List<String> get pantryItems => List.unmodifiable(_pantryItems);
+
   bool get isMetric => _isMetric;
-  bool get isDarkMode => _isDarkMode; // <- new getter
+  bool get isDarkMode => _isDarkMode;
 
   // ───────────── AUTH ACTIONS ─────────────
-
   void login({
     required String uid,
     required String name,
@@ -80,7 +82,6 @@ class UserProvider extends ChangeNotifier {
   }
 
   // ───────────── TAGS (Dietary / Nutrition / Allergy) ─────────────
-
   bool isTagSelected(String tag) => _selectedTags.contains(tag);
 
   void toggleTag(String tag) {
@@ -98,7 +99,6 @@ class UserProvider extends ChangeNotifier {
   }
 
   // ───────────── FOODS TO AVOID ─────────────
-
   void addFoodToAvoid(String food) {
     final trimmed = food.trim();
     if (trimmed.isEmpty || _foodsToAvoid.contains(trimmed)) return;
@@ -117,7 +117,6 @@ class UserProvider extends ChangeNotifier {
   }
 
   // ───────────── PANTRY ITEMS ─────────────
-
   void addPantryItem(String food) {
     final trimmed = food.trim();
     if (trimmed.isEmpty || _pantryItems.contains(trimmed)) return;
@@ -135,24 +134,27 @@ class UserProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  // ───────────── PREMIUM ─────────────
-
+  // ───────────── PREFERENCES ─────────────
   void setPremium(bool value) {
     _isPremium = value;
     notifyListeners();
   }
-
-  // ───────────── METRIC / IMPERIAL ─────────────
 
   void setMetric(bool value) {
     _isMetric = value;
     notifyListeners();
   }
 
-  // ───────────── DARK MODE ─────────────
-
   void setDarkMode(bool value) {
     _isDarkMode = value;
+    notifyListeners();
+  }
+
+  // ───────────── OPTIONAL: CLEAR ALL MEAL PLANNER RULES ─────────────
+  void clearMealPlannerRules() {
+    _selectedTags.clear();
+    _foodsToAvoid.clear();
+    _pantryItems.clear();
     notifyListeners();
   }
 }

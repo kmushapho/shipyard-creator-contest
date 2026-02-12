@@ -13,7 +13,6 @@ class MealPlanSetupPage extends StatefulWidget {
 class _MealPlanSetupPageState extends State<MealPlanSetupPage> {
   final PageController _pageController = PageController();
   final TextEditingController _avoidController = TextEditingController();
-  final TextEditingController _pantryController = TextEditingController();
   int _currentPage = 0;
 
   String _selectedGoal = 'Weight loss';
@@ -69,9 +68,12 @@ class _MealPlanSetupPageState extends State<MealPlanSetupPage> {
           children: [
             const Icon(Icons.auto_awesome_rounded, size: 100, color: AppColors.vibrantOrange),
             const SizedBox(height: 40),
-            Text("Welcome, ${up.name}!", textAlign: TextAlign.center, style: TextStyle(color: txt, fontSize: 32, fontWeight: FontWeight.w900)),
+            Text("Welcome, ${up.name}!",
+                textAlign: TextAlign.center,
+                style: TextStyle(color: txt, fontSize: 32, fontWeight: FontWeight.w900)),
             const SizedBox(height: 12),
-            Text("Ready to craft your perfect meals?", style: TextStyle(color: txt.withOpacity(0.7), fontSize: 18)),
+            Text("Ready to craft your perfect meals?",
+                style: TextStyle(color: txt.withOpacity(0.7), fontSize: 18)),
             const SizedBox(height: 60),
             _largeBtn("Start Planning →", _nextPage, AppColors.vibrantOrange),
           ],
@@ -83,14 +85,27 @@ class _MealPlanSetupPageState extends State<MealPlanSetupPage> {
   // --- SCREEN 1: SMART PROFILE ---
   Widget _screen1Profile(UserProvider user, bool isDark, Color txt) {
     final dietaryItems = [
-      "Vegetarian", "Vegan", "Gluten-Free", "Dairy-Free", "Kosher", "Halal", "Paleo", "Pescatarian"
+      "Vegetarian",
+      "Vegan",
+      "Gluten-Free",
+      "Dairy-Free",
+      "Kosher",
+      "Halal",
+      "Paleo",
+      "Pescatarian"
     ];
     final nutritionItems = [
-      "Healthy", "Low Calorie", "Low Carb", "Low Fat", "Low Sodium", "Low Sugar", "Low Cholesterol", "High Fiber", "Kidney Friendly"
+      "Healthy",
+      "Low Calorie",
+      "Low Carb",
+      "Low Fat",
+      "Low Sodium",
+      "Low Sugar",
+      "Low Cholesterol",
+      "High Fiber",
+      "Kidney Friendly"
     ];
-    final allergyItems = [
-      "Peanut Free", "Soy Free", "Tree Nut Free", "Shellfish Free"
-    ];
+    final allergyItems = ["Peanut Free", "Soy Free", "Tree Nut Free", "Shellfish Free"];
 
     return _pageWrapper(
       title: "Smart Profile",
@@ -103,7 +118,8 @@ class _MealPlanSetupPageState extends State<MealPlanSetupPage> {
           const SizedBox(height: 20),
           _MultiSelectDropdown(title: "Allergy-Specific Tags", items: allergyItems, user: user),
           const SizedBox(height: 20),
-          _buildTagInput("Foods to Avoid", user.foodsToAvoid, _avoidController, user.addFoodToAvoid, user.removeFoodToAvoid, isDark, txt),
+          _buildTagInput("Foods to Avoid", user.foodsToAvoid, _avoidController,
+              user.addFoodToAvoid, user.removeFoodToAvoid, isDark, txt),
         ],
       ),
       footer: _largeBtn("Continue", _nextPage, AppColors.vibrantOrange),
@@ -113,30 +129,41 @@ class _MealPlanSetupPageState extends State<MealPlanSetupPage> {
   // --- SCREEN 2: GOALS ---
   Widget _screen2Goals(bool isDark, Color txt) {
     final goals = [
-      {'t': 'Weight loss', 'i': '🔥'}, {'t': 'Muscle gain', 'i': '💪'},
-      {'t': 'Energy & wellness', 'i': '⚡'}, {'t': 'Medical management', 'i': '🩺'},
+      {'t': 'Weight loss', 'i': '🔥'},
+      {'t': 'Muscle gain', 'i': '💪'},
+      {'t': 'Energy & wellness', 'i': '⚡'},
+      {'t': 'Medical management', 'i': '🩺'},
     ];
     return _pageWrapper(
       title: "Goals in Motion",
       child: GridView.count(
         shrinkWrap: true,
         physics: const NeverScrollableScrollPhysics(),
-        crossAxisCount: 2, mainAxisSpacing: 16, crossAxisSpacing: 16,
-        children: goals.map((g) => InkWell(
+        crossAxisCount: 2,
+        mainAxisSpacing: 16,
+        crossAxisSpacing: 16,
+        children: goals
+            .map((g) => InkWell(
           onTap: () => setState(() => _selectedGoal = g['t']!),
           child: Container(
             decoration: BoxDecoration(
-              color: _selectedGoal == g['t'] ? AppColors.vibrantOrange.withOpacity(0.1) : (isDark ? AppColors.cardBgDark : Colors.white),
+              color: _selectedGoal == g['t']
+                  ? AppColors.vibrantOrange.withOpacity(0.1)
+                  : (isDark ? AppColors.cardBgDark : Colors.white),
               borderRadius: BorderRadius.circular(24),
-              border: Border.all(color: _selectedGoal == g['t'] ? AppColors.vibrantOrange : Colors.transparent, width: 2),
+              border: Border.all(
+                  color: _selectedGoal == g['t'] ? AppColors.vibrantOrange : Colors.transparent,
+                  width: 2),
             ),
             child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
               Text(g['i']!, style: const TextStyle(fontSize: 44)),
               const SizedBox(height: 8),
-              Text(g['t']!, textAlign: TextAlign.center, style: TextStyle(color: txt, fontWeight: FontWeight.bold)),
+              Text(g['t']!,
+                  textAlign: TextAlign.center, style: TextStyle(color: txt, fontWeight: FontWeight.bold)),
             ]),
           ),
-        )).toList(),
+        ))
+            .toList(),
       ),
       footer: _largeBtn("Continue", _nextPage, AppColors.vibrantOrange),
     );
@@ -148,16 +175,19 @@ class _MealPlanSetupPageState extends State<MealPlanSetupPage> {
     return _pageWrapper(
       title: "Meal Frequency",
       child: Column(
-        children: meals.map((m) => Card(
+        children: meals
+            .map((m) => Card(
           color: isDark ? AppColors.cardBgDark : Colors.white,
           margin: const EdgeInsets.only(bottom: 12),
           child: CheckboxListTile(
             title: Text(m, style: TextStyle(color: txt, fontWeight: FontWeight.w600)),
             value: _includedMeals.contains(m),
             activeColor: AppColors.vibrantOrange,
-            onChanged: (val) => setState(() => val! ? _includedMeals.add(m) : _includedMeals.remove(m)),
+            onChanged: (val) =>
+                setState(() => val! ? _includedMeals.add(m) : _includedMeals.remove(m)),
           ),
-        )).toList(),
+        ))
+            .toList(),
       ),
       footer: _largeBtn("Set Schedule", _nextPage, AppColors.vibrantOrange),
     );
@@ -172,11 +202,16 @@ class _MealPlanSetupPageState extends State<MealPlanSetupPage> {
           _buildTargetField("Calories", "2400 kcal", txt, isDark),
           _buildTargetField("Protein (g)", "150g", txt, isDark),
           _buildTargetField("Fats (g)", "70g", txt, isDark),
-          _buildTargetField("Water (L)", "L", txt, isDark),
+          _buildTargetField("Water (L)", "2 L", txt, isDark),
           const SizedBox(height: 20),
           ClipRRect(
             borderRadius: BorderRadius.circular(10),
-            child: LinearProgressIndicator(value: 0.7, minHeight: 12, backgroundColor: Colors.grey.withOpacity(0.1), valueColor: const AlwaysStoppedAnimation(AppColors.vibrantBlue)),
+            child: LinearProgressIndicator(
+              value: 0.7,
+              minHeight: 12,
+              backgroundColor: Colors.grey.withOpacity(0.1),
+              valueColor: const AlwaysStoppedAnimation(AppColors.vibrantBlue),
+            ),
           ),
         ],
       ),
@@ -189,46 +224,38 @@ class _MealPlanSetupPageState extends State<MealPlanSetupPage> {
     return _pageWrapper(
       title: "Cooking Time",
       child: Column(
-        children: ['10–20 min', '20–40 min', '40+ min'].map((t) => Padding(
+        children: ['10–20 min', '20–40 min', '40+ min']
+            .map((t) => Padding(
           padding: const EdgeInsets.only(bottom: 16),
           child: _outlineBtn(t, _nextPage, AppColors.vibrantGreen),
-        )).toList(),
+        ))
+            .toList(),
       ),
     );
   }
 
-  // --- SCREEN 6: PANTRY & GENERATE ---
+  // --- SCREEN 6: PANTRY & GENERATE (Simplified) ---
   Widget _screen6PantryAndGenerate(UserProvider up, bool isDark, Color txt) {
-    return _pageWrapper(
-      title: "Ready to Generate",
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Row(
-            children: [
-              Expanded(
-                child: _largeBtn("Add My Pantry", () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (_) => PantryScreen()),
-                  );
-                }, AppColors.vibrantBlue),
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: _largeBtn("Generate Meal", () {
-                  // Meal generation logic (pending)
-                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Generate Meal clicked!")));
-                }, AppColors.vibrantGreen),
-              ),
-            ],
-          ),
-          const SizedBox(height: 20),
-          _outlineBtn("Generate Suggested Meals", () {
-            // Placeholder CTA
-            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Generate Suggested Meals clicked!")));
-          }, AppColors.vibrantOrange),
-        ],
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 24),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            _largeBtn("Add Pantry & Generate Meals", () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => PantryGenerateScreen()),
+              );
+            }, AppColors.vibrantBlue),
+            const SizedBox(height: 20),
+            _largeBtn("Generate Suggested Meals", () {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text("Generate Suggested Meals clicked!")),
+              );
+            }, AppColors.vibrantOrange),
+          ],
+        ),
       ),
     );
   }
@@ -240,7 +267,8 @@ class _MealPlanSetupPageState extends State<MealPlanSetupPage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(title, style: const TextStyle(fontSize: 28, fontWeight: FontWeight.w900, color: AppColors.vibrantOrange)),
+          Text(title,
+              style: const TextStyle(fontSize: 28, fontWeight: FontWeight.w900, color: AppColors.vibrantOrange)),
           const SizedBox(height: 24),
           Expanded(child: SingleChildScrollView(child: child)),
           if (footer != null) ...[const SizedBox(height: 20), footer],
@@ -255,34 +283,54 @@ class _MealPlanSetupPageState extends State<MealPlanSetupPage> {
       child: Row(
         children: [
           IconButton(onPressed: _prevPage, icon: Icon(Icons.arrow_back_ios_new_rounded, size: 20, color: txt)),
-          Expanded(child: LinearProgressIndicator(value: _currentPage / 6, backgroundColor: txt.withOpacity(0.05), valueColor: const AlwaysStoppedAnimation(AppColors.vibrantOrange), borderRadius: BorderRadius.circular(10))),
+          Expanded(
+              child: LinearProgressIndicator(
+                value: _currentPage / 6,
+                backgroundColor: txt.withOpacity(0.05),
+                valueColor: const AlwaysStoppedAnimation(AppColors.vibrantOrange),
+                borderRadius: BorderRadius.circular(10),
+              )),
           const SizedBox(width: 16),
-          Text("Step $_currentPage/6", style: TextStyle(color: txt.withOpacity(0.4), fontWeight: FontWeight.bold, fontSize: 12)),
+          Text("Step $_currentPage/6",
+              style: TextStyle(color: txt.withOpacity(0.4), fontWeight: FontWeight.bold, fontSize: 12)),
         ],
       ),
     );
   }
 
-  Widget _buildTagInput(String label, List<String> tags, TextEditingController ctrl, Function(String) onAdd, Function(String) onRem, bool isDark, Color txt) {
+  Widget _buildTagInput(String label, List<String> tags, TextEditingController ctrl, Function(String) onAdd,
+      Function(String) onRem, bool isDark, Color txt) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(label, style: TextStyle(color: txt, fontWeight: FontWeight.bold)),
         const SizedBox(height: 12),
-        Wrap(spacing: 8, runSpacing: 8, children: tags.map((t) => Chip(
-          label: Text(t), onDeleted: () => onRem(t),
-          backgroundColor: AppColors.vibrantOrange.withOpacity(0.15),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-        )).toList()),
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: tags
+              .map((t) => Chip(
+            label: Text(t),
+            onDeleted: () => onRem(t),
+            backgroundColor: AppColors.vibrantOrange.withOpacity(0.15),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+          ))
+              .toList(),
+        ),
         const SizedBox(height: 12),
         TextField(
           controller: ctrl,
           style: TextStyle(color: txt),
           decoration: InputDecoration(
             hintText: "Add item...",
-            suffixIcon: IconButton(icon: const Icon(Icons.add_circle, color: AppColors.vibrantOrange), onPressed: () {
-              if(ctrl.text.isNotEmpty) { onAdd(ctrl.text); ctrl.clear(); }
-            }),
+            suffixIcon: IconButton(
+                icon: const Icon(Icons.add_circle, color: AppColors.vibrantOrange),
+                onPressed: () {
+                  if (ctrl.text.isNotEmpty) {
+                    onAdd(ctrl.text);
+                    ctrl.clear();
+                  }
+                }),
             filled: true,
             fillColor: isDark ? Colors.white.withOpacity(0.05) : Colors.black.withOpacity(0.03),
             border: OutlineInputBorder(borderRadius: BorderRadius.circular(15), borderSide: BorderSide.none),
@@ -298,7 +346,9 @@ class _MealPlanSetupPageState extends State<MealPlanSetupPage> {
       child: TextField(
         style: TextStyle(color: txt),
         decoration: InputDecoration(
-          labelText: label, hintText: hint, filled: true,
+          labelText: label,
+          hintText: hint,
+          filled: true,
           fillColor: isDark ? Colors.white.withOpacity(0.05) : Colors.black.withOpacity(0.02),
           border: OutlineInputBorder(borderRadius: BorderRadius.circular(15), borderSide: BorderSide.none),
         ),
@@ -310,7 +360,11 @@ class _MealPlanSetupPageState extends State<MealPlanSetupPage> {
     width: double.infinity,
     child: ElevatedButton(
       onPressed: press,
-      style: ElevatedButton.styleFrom(backgroundColor: col, elevation: 0, padding: const EdgeInsets.all(20), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18))),
+      style: ElevatedButton.styleFrom(
+          backgroundColor: col,
+          elevation: 0,
+          padding: const EdgeInsets.all(20),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18))),
       child: Text(text, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w800)),
     ),
   );
@@ -319,7 +373,10 @@ class _MealPlanSetupPageState extends State<MealPlanSetupPage> {
     width: double.infinity,
     child: OutlinedButton(
       onPressed: press,
-      style: OutlinedButton.styleFrom(side: BorderSide(color: col, width: 2), padding: const EdgeInsets.all(20), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18))),
+      style: OutlinedButton.styleFrom(
+          side: BorderSide(color: col, width: 2),
+          padding: const EdgeInsets.all(20),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18))),
       child: Text(text, style: TextStyle(color: col, fontWeight: FontWeight.w800)),
     ),
   );
@@ -360,9 +417,9 @@ class _MultiSelectDropdown extends StatelessWidget {
   }
 }
 
-/// --- PANTRY SCREEN ---
-class PantryScreen extends StatelessWidget {
-  PantryScreen({super.key});
+/// --- PANTRY + GENERATE MEAL SCREEN ---
+class PantryGenerateScreen extends StatelessWidget {
+  PantryGenerateScreen({super.key});
   final TextEditingController _controller = TextEditingController();
 
   @override
@@ -370,29 +427,56 @@ class PantryScreen extends StatelessWidget {
     final user = Provider.of<UserProvider>(context);
 
     return Scaffold(
-      appBar: AppBar(title: const Text("My Pantry"), backgroundColor: AppColors.vibrantOrange),
+      appBar: AppBar(title: const Text("My Pantry"), backgroundColor: AppColors.vibrantBlue),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           children: [
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: user.pantryItems.map((t) => Chip(
-                label: Text(t),
-                onDeleted: () => user.removePantryItem(t),
-                backgroundColor: AppColors.vibrantOrange.withOpacity(0.15),
-              )).toList(),
+            Expanded(
+              child: Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: user.pantryItems
+                    .map((t) => Chip(
+                  label: Text(t),
+                  onDeleted: () => user.removePantryItem(t),
+                  backgroundColor: AppColors.vibrantBlue.withOpacity(0.15),
+                ))
+                    .toList(),
+              ),
             ),
-            const SizedBox(height: 16),
             TextField(
               controller: _controller,
               decoration: InputDecoration(
                 hintText: "Add item...",
-                suffixIcon: IconButton(icon: const Icon(Icons.add_circle, color: AppColors.vibrantOrange), onPressed: () {
-                  if(_controller.text.isNotEmpty) { user.addPantryItem(_controller.text); _controller.clear(); }
-                }),
+                suffixIcon: IconButton(
+                  icon: const Icon(Icons.add_circle, color: AppColors.vibrantBlue),
+                  onPressed: () {
+                    if (_controller.text.isNotEmpty) {
+                      user.addPantryItem(_controller.text);
+                      _controller.clear();
+                    }
+                  },
+                ),
                 border: OutlineInputBorder(borderRadius: BorderRadius.circular(15)),
+              ),
+            ),
+            const SizedBox(height: 16),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: () {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text("Generate Meal clicked!")),
+                  );
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.vibrantGreen,
+                  padding: const EdgeInsets.all(20),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+                ),
+                child: const Text("Generate Meal",
+                    style: TextStyle(color: Colors.white, fontWeight: FontWeight.w800)),
               ),
             ),
           ],
