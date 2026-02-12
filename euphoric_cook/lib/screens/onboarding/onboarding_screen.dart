@@ -22,14 +22,32 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
   final int _totalPages = 4;
 
+  bool _isLoadingSkip = false;
+
   Future<void> _completeOnboarding() async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool('hasCompletedOnboarding', true);
-    if (mounted) {
+    if (_isLoadingSkip) return; // Prevent multiple clicks
+
+    setState(() => _isLoadingSkip = true);
+
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setBool('hasCompletedOnboarding', true);
+
+      if (!mounted) return;
+
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (context) => const HomeScreen()),
       );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error: $e')),
+      );
+    } finally {
+      if (mounted) {
+        setState(() => _isLoadingSkip = false);
+      }
     }
   }
 
@@ -112,8 +130,17 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 top: 20,
                 right: 20,
                 child: TextButton(
-                  onPressed: _completeOnboarding,
-                  child: Text(
+                  onPressed: _isLoadingSkip ? null : _completeOnboarding,
+                  child: _isLoadingSkip
+                      ? const SizedBox(
+                    height: 20,
+                    width: 20,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      valueColor: AlwaysStoppedAnimation<Color>(AppColors.vibrantOrange),
+                    ),
+                  )
+                      : Text(
                     'Skip',
                     style: TextStyle(color: AppColors.lightText),
                   ),

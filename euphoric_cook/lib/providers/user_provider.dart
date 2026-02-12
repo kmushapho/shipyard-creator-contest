@@ -7,21 +7,18 @@ class UserProvider extends ChangeNotifier {
   bool _isPremium;
 
   // ───────────── MEAL PLANNER RULES ─────────────
-  // Selected tags (Dietary / Nutrition / Allergy)
   final List<String> _selectedTags = [];
-
-  // Foods the user wants to avoid
   final List<String> _foodsToAvoid = [];
-
-  // Pantry items
   final List<String> _pantryItems = [];
-
-  // Optional: Add other meal planner rules (Calories, Protein, etc.)
-  // Example structure: Map<String, dynamic> _nutritionTargets = {};
 
   // ───────────── PREFERENCES ─────────────
   bool _isMetric = true;
   bool _isDarkMode = false;
+
+  // ───────────── RECENTLY VIEWED ─────────────
+  final List<String> _recentlyViewedFoods = [];
+  final List<String> _recentlyViewedDrinks = [];
+  static const int _recentlyViewedMax = 10;
 
   // ───────────── PRIVATE CONSTRUCTOR ─────────────
   UserProvider._(this._uid, this._name, this._isPremium);
@@ -55,6 +52,16 @@ class UserProvider extends ChangeNotifier {
   bool get isMetric => _isMetric;
   bool get isDarkMode => _isDarkMode;
 
+  List<String> get recentlyViewedFoods => List.unmodifiable(_recentlyViewedFoods);
+  List<String> get recentlyViewedDrinks => List.unmodifiable(_recentlyViewedDrinks);
+
+  /// Get recently viewed depending on type
+  List<String> getRecentlyViewed({required bool isFood}) {
+    final list = isFood ? _recentlyViewedFoods : _recentlyViewedDrinks;
+    if (list.isEmpty) return ['No recently viewed items'];
+    return List.unmodifiable(list);
+  }
+
   // ───────────── AUTH ACTIONS ─────────────
   void login({
     required String uid,
@@ -76,12 +83,14 @@ class UserProvider extends ChangeNotifier {
     _selectedTags.clear();
     _foodsToAvoid.clear();
     _pantryItems.clear();
+    _recentlyViewedFoods.clear();
+    _recentlyViewedDrinks.clear();
     _isMetric = true;
     _isDarkMode = false;
     notifyListeners();
   }
 
-  // ───────────── TAGS (Dietary / Nutrition / Allergy) ─────────────
+  // ───────────── TAGS ─────────────
   bool isTagSelected(String tag) => _selectedTags.contains(tag);
 
   void toggleTag(String tag) {
@@ -131,6 +140,26 @@ class UserProvider extends ChangeNotifier {
 
   void clearPantry() {
     _pantryItems.clear();
+    notifyListeners();
+  }
+
+  // ───────────── RECENTLY VIEWED ─────────────
+  void addRecentlyViewed({required String item, required bool isFood}) {
+    final list = isFood ? _recentlyViewedFoods : _recentlyViewedDrinks;
+    list.remove(item); // remove if exists to move to front
+    list.insert(0, item); // add at start
+    if (list.length > _recentlyViewedMax) {
+      list.removeLast(); // cap at 10
+    }
+    notifyListeners();
+  }
+
+  void clearRecentlyViewed({required bool isFood}) {
+    if (isFood) {
+      _recentlyViewedFoods.clear();
+    } else {
+      _recentlyViewedDrinks.clear();
+    }
     notifyListeners();
   }
 
