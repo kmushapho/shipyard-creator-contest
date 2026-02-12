@@ -1,43 +1,51 @@
 from flask import Flask, request, jsonify
 import os
-import requests  # or google API client if using official SDK
+import requests
 
 app = Flask(__name__)
 
-# Read Gemini API key from Render environment
+# Ensure GEMINI_API_KEY is set in Render Environment Variables
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
 
 @app.route("/get_recipe", methods=["POST"])
 def get_recipe():
     """
     Expects JSON: { "ingredients": ["tomato", "egg"] }
-    Returns JSON: recipe suggestions from Google Gemini
     """
-    ingredients = request.json.get("ingredients", [])
+    data = request.get_json()
+    ingredients = data.get("ingredients", [])
+
     if not ingredients:
         return jsonify({"error": "No ingredients provided"}), 400
 
-    # Example Google Gemini API request
-    url = "https://gemini.googleapis.com/v1/recipes:generate"  # Replace with actual endpoint if needed
-    headers = {
-        "Authorization": f"Bearer {GEMINI_API_KEY}",
-        "Content-Type": "application/json"
-    }
+    # Correct Google Gemini API Endpoint (using v1beta for newest features)
+    url = f"https://generativelanguage.googleapis.com{GEMINI_API_KEY}"
+
+    headers = {"Content-Type": "application/json"}
+
+    # Correct payload structure for Gemini API
+    prompt_text = f"Give me 3 recipe ideas using these ingredients: {', '.join(ingredients)}"
     payload = {
-        "ingredients": ingredients,
-        "max_results": 5
+        "contents": [{
+            "parts": [{"text": prompt_text}]
+        }]
     }
 
     try:
         response = requests.post(url, headers=headers, json=payload)
         response.raise_for_status()
-        data = response.json()
-        return jsonify(data)
-    except requests.exceptions.RequestException as e:
-        return jsonify({"error": str(e)}), 500
+        result = response.json()
 
+        # Extract the text response from Gemini's nested structure
+        recipe_text = result['candidates'][0]['content']['parts'][0]['text']
+        return jsonify({"recipes": recipe_text})
+
+    except requests.exceptions.RequestException as e:
+        return jsonify({"error": "API Request Failed", "details": str(e)}), 500
+    except (KeyError, Index_Error):
+        return jsonify({"error": "Unexpected API response format"}), 500
 
 if __name__ == "__main__":
-    # Use Render's PORT environment variable; default to 5000 for local testing
+    # Render requires binding to 0.0.0.0 and using the dynamic $PORT
     port = int(os.environ.get("PORT", 5000))
-    app.run(host="0.0.0.0", port=port, debug=True)
+    app.run(host="0.0.0.0", port=port)
