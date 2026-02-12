@@ -14,13 +14,12 @@ class _MealPlannerPageState extends State<MealPlannerPage> {
 
   // Per-day data simulation
   final Map<String, int> _waterML = {};
-  final Map<String, Set<String>> _completedMealItems = {}; // e.g. "Breakfast-0", "Lunch-1" ...
+  final Map<String, Set<String>> _completedMealItems = {};
 
   final int _waterGoalML = 2000;
-  final int _maxMealsExample = 5; // for display only
+  final int _maxMealsExample = 5;
 
   String _dateKey(DateTime d) => DateFormat('yyyy-MM-dd').format(d);
-
   DateTime get _effectiveDate => _selectedDate ?? DateTime.now();
 
   int get _todayWater => _waterML[_dateKey(_effectiveDate)] ?? 0;
@@ -40,7 +39,6 @@ class _MealPlannerPageState extends State<MealPlannerPage> {
     });
   }
 
-  // Placeholder – would be called when user checks an item (once real items exist)
   void _toggleItem(String uniqueKey) {
     setState(() {
       final key = _dateKey(_effectiveDate);
@@ -65,7 +63,11 @@ class _MealPlannerPageState extends State<MealPlannerPage> {
         elevation: 0,
         title: const Text(
           'Meal Planner',
-          style: TextStyle(color: AppColors.darkText, fontWeight: FontWeight.w700, fontSize: 22),
+          style: TextStyle(
+            color: AppColors.darkText,
+            fontWeight: FontWeight.w700,
+            fontSize: 22,
+          ),
         ),
         centerTitle: true,
       ),
@@ -76,90 +78,85 @@ class _MealPlannerPageState extends State<MealPlannerPage> {
             children: [
               const SizedBox(height: 12),
 
-              // ── Progress Card ──────────────────────────────────────────────────────
+              // ── Premium Progress Card (smaller & elegant) ─────────────────────
               Container(
                 width: double.infinity,
                 padding: const EdgeInsets.fromLTRB(20, 20, 20, 24),
                 decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: [AppColors.vibrantOrange.withOpacity(0.95), AppColors.vibrantOrange],
-                  ),
+                  color: Colors.white,
                   borderRadius: BorderRadius.circular(24),
                   boxShadow: [
                     BoxShadow(
-                      color: AppColors.vibrantOrange.withOpacity(0.25),
-                      blurRadius: 12,
-                      offset: const Offset(0, 6),
+                      color: Colors.black.withOpacity(0.06),
+                      blurRadius: 20,
+                      offset: const Offset(0, 8),
                     ),
                   ],
                 ),
                 child: Column(
                   children: [
-                    const Text(
-                      'Your Current Progress',
+                    Text(
+                      'Daily Progress',
                       style: TextStyle(
-                        color: AppColors.lightText,
-                        fontSize: 19,
+                        color: AppColors.darkText,
+                        fontSize: 18,
                         fontWeight: FontWeight.w600,
                       ),
                     ),
-                    const SizedBox(height: 28),
+                    const SizedBox(height: 24),
 
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        // Water – blue theme
+                        // Water
                         Column(
                           children: [
                             Stack(
                               alignment: Alignment.center,
                               children: [
                                 SizedBox(
-                                  width: 100,
-                                  height: 100,
+                                  width: 80,
+                                  height: 80,
                                   child: CircularProgressIndicator(
                                     value: _waterFraction,
-                                    backgroundColor: Colors.white.withOpacity(0.25),
-                                    color: Colors.blueAccent[400],
-                                    strokeWidth: 10,
+                                    backgroundColor: Colors.blue.withOpacity(0.15),
+                                    color: Colors.blue[400],
+                                    strokeWidth: 8,
                                   ),
                                 ),
                                 Icon(
                                   Icons.water_drop,
-                                  color: Colors.blueAccent[400],
-                                  size: 48,
+                                  color: Colors.blue[400],
+                                  size: 36,
                                 ),
                               ],
                             ),
-                            const SizedBox(height: 8),
+                            const SizedBox(height: 10),
                             Text(
                               'Water',
                               style: TextStyle(
-                                color: Colors.blueAccent[400],
-                                fontSize: 15,
+                                color: Colors.blue[400],
+                                fontSize: 14,
                                 fontWeight: FontWeight.w600,
                               ),
                             ),
-                            const SizedBox(height: 4),
+                            const SizedBox(height: 6),
                             GestureDetector(
                               onTap: _add250ml,
                               child: Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
                                 decoration: BoxDecoration(
-                                  color: Colors.blueAccent[400],
+                                  color: Colors.blue[400],
                                   borderRadius: BorderRadius.circular(20),
                                 ),
-                                child: Row(
+                                child: const Row(
                                   mainAxisSize: MainAxisSize.min,
-                                  children: const [
-                                    Icon(Icons.add, color: Colors.white, size: 18),
+                                  children: [
+                                    Icon(Icons.add, color: Colors.white, size: 16),
                                     SizedBox(width: 4),
                                     Text(
-                                      '250ml',
-                                      style: TextStyle(color: Colors.white, fontSize: 13),
+                                      '250 ml',
+                                      style: TextStyle(color: Colors.white, fontSize: 12.5),
                                     ),
                                   ],
                                 ),
@@ -168,50 +165,43 @@ class _MealPlannerPageState extends State<MealPlannerPage> {
                           ],
                         ),
 
-                        // Meals – green theme
+                        // Meals
                         Column(
                           children: [
                             Stack(
                               alignment: Alignment.center,
                               children: [
                                 SizedBox(
-                                  width: 100,
-                                  height: 100,
+                                  width: 80,
+                                  height: 80,
                                   child: CircularProgressIndicator(
                                     value: _mealsFraction,
-                                    backgroundColor: Colors.white.withOpacity(0.25),
-                                    color : Color(0xFF00E676),
-                                    strokeWidth: 10,
+                                    backgroundColor: const Color(0xFF00E676).withOpacity(0.15),
+                                    color: const Color(0xFF00E676),
+                                    strokeWidth: 8,
                                   ),
                                 ),
-                                Icon(
+                                const Icon(
                                   Icons.restaurant,
                                   color: Color(0xFF00E676),
-                                  size: 44,
+                                  size: 36,
                                 ),
                               ],
                             ),
-                            const SizedBox(height: 8),
-                            Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Text(
-                                  'Meals',
-                                  style: TextStyle(
-                                    color: Color(0xFF00E676),
-                                    fontSize: 15,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-                                const SizedBox(width: 6
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 4),
+                            const SizedBox(height: 10),
                             Text(
-                              '$_loggedCount / $_maxMealsExample logged',
+                              'Meals',
                               style: TextStyle(
-                                color: AppColors.lightText.withOpacity(0.9),
+                                color: const Color(0xFF00E676),
+                                fontSize: 14,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                            const SizedBox(height: 6),
+                            Text(
+                              '$_loggedCount / $_maxMealsExample',
+                              style: TextStyle(
+                                color: AppColors.darkText.withOpacity(0.75),
                                 fontSize: 13,
                               ),
                             ),
@@ -219,23 +209,13 @@ class _MealPlannerPageState extends State<MealPlannerPage> {
                         ),
                       ],
                     ),
-
-                    const SizedBox(height: 20),
-                    Text(
-                      'Check your progress so far',
-                      style: TextStyle(
-                        color: AppColors.lightText.withOpacity(0.85),
-                        fontSize: 13,
-                        fontStyle: FontStyle.italic,
-                      ),
-                    ),
                   ],
                 ),
               ),
 
-              const SizedBox(height: 24),
+              const SizedBox(height: 28),
 
-              // Calendar (unchanged from previous version)
+              // ── Calendar ─────────────────────────────────────────────────────
               SizedBox(
                 height: 96,
                 child: ListView.builder(
@@ -243,7 +223,7 @@ class _MealPlannerPageState extends State<MealPlannerPage> {
                   itemCount: weekDates.length,
                   itemBuilder: (context, index) {
                     final day = weekDates[index];
-                    final isSel = day.year == _effectiveDate.year &&
+                    final isSelected = day.year == _effectiveDate.year &&
                         day.month == _effectiveDate.month &&
                         day.day == _effectiveDate.day;
                     final isToday = day.year == DateTime.now().year &&
@@ -256,10 +236,10 @@ class _MealPlannerPageState extends State<MealPlannerPage> {
                         width: 68,
                         margin: const EdgeInsets.symmetric(horizontal: 5),
                         decoration: BoxDecoration(
-                          color: isSel ? AppColors.vibrantOrange : AppColors.cardBgLight,
+                          color: isSelected ? AppColors.vibrantOrange : AppColors.cardBgLight,
                           borderRadius: BorderRadius.circular(16),
-                          boxShadow: isSel
-                              ? [BoxShadow(color: AppColors.vibrantOrange.withOpacity(0.35), blurRadius: 10)]
+                          boxShadow: isSelected
+                              ? [BoxShadow(color: AppColors.vibrantOrange.withOpacity(0.3), blurRadius: 12)]
                               : null,
                         ),
                         child: Column(
@@ -268,9 +248,9 @@ class _MealPlannerPageState extends State<MealPlannerPage> {
                             Text(
                               DateFormat.E().format(day).toUpperCase(),
                               style: TextStyle(
-                                fontSize: 13,
+                                fontSize: 12.5,
                                 fontWeight: FontWeight.w600,
-                                color: isSel ? AppColors.lightText : AppColors.darkText.withOpacity(0.65),
+                                color: isSelected ? Colors.white : AppColors.darkText.withOpacity(0.65),
                               ),
                             ),
                             const SizedBox(height: 6),
@@ -279,15 +259,18 @@ class _MealPlannerPageState extends State<MealPlannerPage> {
                               style: TextStyle(
                                 fontSize: 22,
                                 fontWeight: FontWeight.bold,
-                                color: isSel ? AppColors.lightText : AppColors.darkText,
+                                color: isSelected ? Colors.white : AppColors.darkText,
                               ),
                             ),
-                            if (isToday && !isSel)
+                            if (isToday && !isSelected)
                               Container(
                                 margin: const EdgeInsets.only(top: 6),
                                 width: 6,
                                 height: 6,
-                                decoration: BoxDecoration(color: AppColors.vibrantOrange.withOpacity(0.7), shape: BoxShape.circle),
+                                decoration: BoxDecoration(
+                                  color: AppColors.vibrantOrange,
+                                  shape: BoxShape.circle,
+                                ),
                               ),
                           ],
                         ),
@@ -297,28 +280,89 @@ class _MealPlannerPageState extends State<MealPlannerPage> {
                 ),
               ),
 
-              const SizedBox(height: 28),
+              const SizedBox(height: 24),
 
-              Padding(
-                padding: const EdgeInsets.only(left: 4),
-                child: Text(
-                  DateFormat('EEEE, MMMM d').format(_effectiveDate),
-                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: AppColors.darkText),
-                ),
+              // ── Date + Action Buttons Row ─────────────────────────────────────
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.only(left: 4),
+                    child: Text(
+                      DateFormat('EEEE, MMMM d').format(_effectiveDate),
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.darkText,
+                      ),
+                    ),
+                  ),
+                ],
               ),
 
-              const SizedBox(height: 16),
+              const SizedBox(height: 12),
 
-              // Meal cards – completely empty except title + add
+              // Create Meal Plan + Shopping List buttons
+              Row(
+                children: [
+                  Expanded(
+                    child: ElevatedButton.icon(
+                      onPressed: () {
+                        // TODO: Open meal plan creator
+                      },
+                      icon: const Icon(Icons.add_rounded, size: 20),
+                      label: const Text(
+                        'Create Meal Plan',
+                        style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
+                      ),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.vibrantOrange,
+                        foregroundColor: Colors.white,
+                        elevation: 2,
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: OutlinedButton.icon(
+                      onPressed: () {
+                        // TODO: Open shopping list
+                      },
+                      icon: const Icon(Icons.shopping_cart_outlined, size: 20),
+                      label: const Text(
+                        'Shopping List',
+                        style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
+                      ),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: AppColors.vibrantOrange,
+                        side: BorderSide(color: AppColors.vibrantOrange),
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+
+              const SizedBox(height: 28),
+
+              // ── Meal Cards (refined) ─────────────────────────────────────────
               _buildMealCard('Breakfast', AppColors.vibrantGreen),
               const SizedBox(height: 16),
               _buildMealCard('Lunch', AppColors.vibrantBlue),
               const SizedBox(height: 16),
               _buildMealCard('Dinner', AppColors.vibrantOrange),
               const SizedBox(height: 16),
-              _buildMealCard('Snack', AppColors.vibrantGreen.withOpacity(0.8)),
+              _buildMealCard('Snack', AppColors.vibrantGreen.withOpacity(0.85)),
               const SizedBox(height: 16),
-              _buildMealCard('Dessert', AppColors.vibrantOrange.withOpacity(0.75)),
+              _buildMealCard('Dessert', AppColors.vibrantOrange.withOpacity(0.8)),
 
               const SizedBox(height: 40),
             ],
@@ -330,11 +374,17 @@ class _MealPlannerPageState extends State<MealPlannerPage> {
 
   Widget _buildMealCard(String title, Color color) {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
         color: AppColors.cardBgLight,
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 4))],
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.04),
+            blurRadius: 16,
+            offset: const Offset(0, 6),
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -342,18 +392,33 @@ class _MealPlannerPageState extends State<MealPlannerPage> {
           Row(
             children: [
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
-                decoration: BoxDecoration(color: color.withOpacity(0.15), borderRadius: BorderRadius.circular(30)),
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 7),
+                decoration: BoxDecoration(
+                  color: color.withOpacity(0.12),
+                  borderRadius: BorderRadius.circular(30),
+                ),
                 child: Text(
                   title,
-                  style: TextStyle(color: color, fontWeight: FontWeight.w700, fontSize: 15),
+                  style: TextStyle(
+                    color: color,
+                    fontWeight: FontWeight.w700,
+                    fontSize: 15.5,
+                  ),
                 ),
               ),
               const Spacer(),
               Icon(Icons.add_circle_outline_rounded, color: color, size: 28),
             ],
           ),
-          // Intentionally empty – no sample items, no checkboxes until real meals are added
+          // Placeholder space for future meal items
+          const SizedBox(height: 16),
+          Text(
+            'Tap + to add meals',
+            style: TextStyle(
+              color: AppColors.darkText.withOpacity(0.45),
+              fontSize: 13,
+            ),
+          ),
         ],
       ),
     );
