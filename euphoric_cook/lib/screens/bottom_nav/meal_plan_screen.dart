@@ -123,13 +123,13 @@ class _MealPlannerPageState extends State<MealPlannerPage> {
                                   child: CircularProgressIndicator(
                                     value: _waterFraction,
                                     backgroundColor: Colors.white.withOpacity(0.25),
-                                    color: Colors.blue[300],
+                                    color: Colors.blueAccent[400],
                                     strokeWidth: 10,
                                   ),
                                 ),
                                 Icon(
                                   Icons.water_drop,
-                                  color: Colors.blue[100],
+                                  color: Colors.blueAccent[400],
                                   size: 48,
                                 ),
                               ],
@@ -138,7 +138,7 @@ class _MealPlannerPageState extends State<MealPlannerPage> {
                             Text(
                               'Water',
                               style: TextStyle(
-                                color: AppColors.lightText,
+                                color: Colors.blueAccent[400],
                                 fontSize: 15,
                                 fontWeight: FontWeight.w600,
                               ),
@@ -149,7 +149,7 @@ class _MealPlannerPageState extends State<MealPlannerPage> {
                               child: Container(
                                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                                 decoration: BoxDecoration(
-                                  color: Colors.white.withOpacity(0.22),
+                                  color: Colors.blueAccent[400],
                                   borderRadius: BorderRadius.circular(20),
                                 ),
                                 child: Row(
@@ -180,13 +180,13 @@ class _MealPlannerPageState extends State<MealPlannerPage> {
                                   child: CircularProgressIndicator(
                                     value: _mealsFraction,
                                     backgroundColor: Colors.white.withOpacity(0.25),
-                                    color: Colors.green[400],
+                                    color : Color(0xFF00E676),
                                     strokeWidth: 10,
                                   ),
                                 ),
                                 Icon(
                                   Icons.restaurant,
-                                  color: Colors.green[100],
+                                  color: Color(0xFF00E676),
                                   size: 44,
                                 ),
                               ],
@@ -198,19 +198,12 @@ class _MealPlannerPageState extends State<MealPlannerPage> {
                                 Text(
                                   'Meals',
                                   style: TextStyle(
-                                    color: AppColors.lightText,
+                                    color: Color(0xFF00E676),
                                     fontSize: 15,
                                     fontWeight: FontWeight.w600,
                                   ),
                                 ),
-                                const SizedBox(width: 6),
-                                Container(
-                                  padding: const EdgeInsets.all(4),
-                                  decoration: BoxDecoration(
-                                    color: Colors.white.withOpacity(0.22),
-                                    shape: BoxShape.circle,
-                                  ),
-                                  child: const Icon(Icons.add, color: Colors.white, size: 16),
+                                const SizedBox(width: 6
                                 ),
                               ],
                             ),
