@@ -10,28 +10,35 @@ class MealPlannerPage extends StatefulWidget {
 }
 
 class _MealPlannerPageState extends State<MealPlannerPage> {
-  DateTime? _selectedDate;
+  DateTime? _selectedDate; // null = today
 
-  // ── Progress state (per selected day) ────────────────────────────────
-  double waterMl = 0.0;           // current water in ml
-  final double waterTargetMl = 2000.0;
-  int mealsLogged = 0;            // number of meals logged for selected day
-  final int mealsTarget = 3;      // example target (breakfast + lunch + dinner)
+  // Per-day simulation (in real app → use database / provider)
+  final Map<String, int> _waterIntakeML = {}; // key: "yyyy-MM-dd" → ml
+  final Map<String, Set<String>> _loggedMeals = {}; // key: date → set of meal types logged
 
-  // Steps – just a number for now (you can make it dynamic later)
-  int steps = 5500;
+  final int _dailyWaterGoalML = 2000;
 
-  List<DateTime> getWeekDates() {
-    final now = DateTime.now();
-    final weekStart = now.subtract(Duration(days: now.weekday - 1));
-    return List.generate(7, (index) => weekStart.add(Duration(days: index)));
+  String _dateKey(DateTime date) => DateFormat('yyyy-MM-dd').format(date);
+
+  int get _currentWaterML {
+    final key = _dateKey(effectiveDate);
+    return _waterIntakeML[key] ?? 0;
   }
 
+  int get _currentMealsLogged {
+    final key = _dateKey(effectiveDate);
+    return _loggedMeals[key]?.length ?? 0;
+  }
+
+  double get _waterProgress => _currentWaterML / _dailyWaterGoalML;
+  double get _mealsProgress => _currentMealsLogged / 5.0; // assuming 5 possible: B,L,D,S,Des
+
+  DateTime get effectiveDate => _selectedDate ?? DateTime.now();
+
   bool _isSelected(DateTime date) {
-    if (_selectedDate == null) return _isToday(date);
-    return date.year == _selectedDate!.year &&
-        date.month == _selectedDate!.month &&
-        date.day == _selectedDate!.day;
+    return date.year == effectiveDate.year &&
+        date.month == effectiveDate.month &&
+        date.day == effectiveDate.day;
   }
 
   bool _isToday(DateTime date) {
@@ -41,27 +48,32 @@ class _MealPlannerPageState extends State<MealPlannerPage> {
 
   void _addWater() {
     setState(() {
-      waterMl += 250;
-      if (waterMl > waterTargetMl) waterMl = waterTargetMl;
+      final key = _dateKey(effectiveDate);
+      _waterIntakeML[key] = (_waterIntakeML[key] ?? 0) + 250;
+      if (_waterIntakeML[key]! > _dailyWaterGoalML * 2) {
+        _waterIntakeML[key] = _dailyWaterGoalML * 2; // cap example
+      }
     });
   }
 
-  // You would call this when user actually logs a meal (for now – manual trigger example)
-  void _logMeal() {
+  void _toggleMealLogged(String mealType) {
     setState(() {
-      if (mealsLogged < mealsTarget) {
-        mealsLogged++;
+      final key = _dateKey(effectiveDate);
+      _loggedMeals.putIfAbsent(key, () => {});
+      if (_loggedMeals[key]!.contains(mealType)) {
+        _loggedMeals[key]!.remove(mealType);
+      } else {
+        _loggedMeals[key]!.add(mealType);
       }
     });
   }
 
   @override
   Widget build(BuildContext context) {
-    final weekDates = getWeekDates();
-    final effectiveSelectedDate = _selectedDate ?? DateTime.now();
-
-    final waterProgress = waterMl / waterTargetMl;
-    final mealsProgress = mealsLogged / mealsTarget;
+    final weekDates = List.generate(
+      7,
+          (index) => DateTime.now().subtract(Duration(days: DateTime.now().weekday - 1)).add(Duration(days: index)),
+    );
 
     return Scaffold(
       backgroundColor: AppColors.lightBg,
@@ -70,11 +82,7 @@ class _MealPlannerPageState extends State<MealPlannerPage> {
         elevation: 0,
         title: const Text(
           'Meal Planner',
-          style: TextStyle(
-            color: AppColors.darkText,
-            fontWeight: FontWeight.w700,
-            fontSize: 22,
-          ),
+          style: TextStyle(color: AppColors.darkText, fontWeight: FontWeight.w700, fontSize: 22),
         ),
         centerTitle: true,
       ),
@@ -82,9 +90,8 @@ class _MealPlannerPageState extends State<MealPlannerPage> {
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16),
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const SizedBox(height: 8),
+              const SizedBox(height: 12),
 
               // ── Progress Card ───────────────────────────────────────────────
               Container(
@@ -94,77 +101,68 @@ class _MealPlannerPageState extends State<MealPlannerPage> {
                   gradient: LinearGradient(
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
-                    colors: [
-                      AppColors.vibrantOrange.withOpacity(0.95),
-                      AppColors.vibrantOrange,
-                    ],
+                    colors: [AppColors.vibrantOrange.withOpacity(0.95), AppColors.vibrantOrange],
                   ),
                   borderRadius: BorderRadius.circular(24),
                   boxShadow: [
-                    BoxShadow(
-                      color: AppColors.vibrantOrange.withOpacity(0.25),
-                      blurRadius: 12,
-                      offset: const Offset(0, 6),
-                    ),
+                    BoxShadow(color: AppColors.vibrantOrange.withOpacity(0.25), blurRadius: 12, offset: const Offset(0, 6)),
                   ],
                 ),
                 child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     const Text(
                       'Your Current Progress',
                       style: TextStyle(
-                        color: Colors.white,
+                        color: AppColors.lightText,
                         fontSize: 19,
                         fontWeight: FontWeight.w600,
                       ),
                     ),
                     const SizedBox(height: 20),
 
-                    // Main progress row: Water • Steps • Meals
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                       crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
-                        // Water circle + add button
+                        // Water column
                         Column(
                           children: [
-                            SizedBox(
-                              width: 80,
-                              height: 80,
-                              child: Stack(
-                                alignment: Alignment.center,
-                                children: [
-                                  CircularProgressIndicator(
-                                    value: waterProgress.clamp(0.0, 1.0),
+                            Stack(
+                              alignment: Alignment.center,
+                              children: [
+                                SizedBox(
+                                  width: 80,
+                                  height: 80,
+                                  child: CircularProgressIndicator(
+                                    value: _waterProgress.clamp(0.0, 1.0),
                                     backgroundColor: Colors.white.withOpacity(0.25),
                                     color: Colors.white,
                                     strokeWidth: 10,
                                   ),
-                                  Column(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      Text(
-                                        '${(waterMl / 1000).toStringAsFixed(1)}',
-                                        style: const TextStyle(
-                                          color: Colors.white,
-                                          fontSize: 20,
-                                          fontWeight: FontWeight.bold,
-                                        ),
+                                ),
+                                Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Text(
+                                      '${(_currentWaterML / 1000).toStringAsFixed(1)}L',
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 18,
+                                        fontWeight: FontWeight.bold,
                                       ),
-                                      Text(
-                                        '/ 2L',
-                                        style: TextStyle(
-                                          color: Colors.white.withOpacity(0.85),
-                                          fontSize: 13,
-                                        ),
+                                    ),
+                                    Text(
+                                      '/2L',
+                                      style: TextStyle(
+                                        color: Colors.white.withOpacity(0.85),
+                                        fontSize: 13,
                                       ),
-                                    ],
-                                  ),
-                                ],
-                              ),
+                                    ),
+                                  ],
+                                ),
+                              ],
                             ),
-                            const SizedBox(height: 6),
+                            const SizedBox(height: 8),
                             GestureDetector(
                               onTap: _addWater,
                               child: Container(
@@ -173,104 +171,58 @@ class _MealPlannerPageState extends State<MealPlannerPage> {
                                   color: Colors.white.withOpacity(0.25),
                                   shape: BoxShape.circle,
                                 ),
-                                child: const Icon(
-                                  Icons.add,
-                                  color: Colors.white,
-                                  size: 20,
-                                ),
-                              ),
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              'Water',
-                              style: TextStyle(
-                                color: Colors.white.withOpacity(0.9),
-                                fontSize: 13,
+                                child: const Icon(Icons.add, color: Colors.white, size: 24),
                               ),
                             ),
                           ],
                         ),
 
-                        // Steps (text only)
-                        Column(
-                          children: [
-                            Icon(
-                              Icons.directions_walk_rounded,
-                              color: Colors.white,
-                              size: 36,
-                            ),
-                            const SizedBox(height: 8),
-                            Text(
-                              steps.toString().replaceAllMapped(
-                                RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
-                                    (Match m) => '${m[1]},',
-                              ),
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 22,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            Text(
-                              'Steps',
-                              style: TextStyle(
-                                color: Colors.white.withOpacity(0.9),
-                                fontSize: 13,
-                              ),
-                            ),
-                          ],
-                        ),
-
-                        // Meals circle
-                        Column(
+                        // Meals logged circle
+                        Stack(
+                          alignment: Alignment.center,
                           children: [
                             SizedBox(
-                              width: 70,
-                              height: 70,
-                              child: Stack(
-                                alignment: Alignment.center,
-                                children: [
-                                  CircularProgressIndicator(
-                                    value: mealsProgress.clamp(0.0, 1.0),
-                                    backgroundColor: Colors.white.withOpacity(0.25),
-                                    color: Colors.white,
-                                    strokeWidth: 9,
-                                  ),
-                                  Text(
-                                    '$mealsLogged',
-                                    style: const TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 22,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                ],
+                              width: 100,
+                              height: 100,
+                              child: CircularProgressIndicator(
+                                value: _mealsProgress.clamp(0.0, 1.0),
+                                backgroundColor: Colors.white.withOpacity(0.25),
+                                color: Colors.white,
+                                strokeWidth: 12,
                               ),
                             ),
-                            const SizedBox(height: 6),
-                            Text(
-                              'Meals',
-                              style: TextStyle(
-                                color: Colors.white.withOpacity(0.9),
-                                fontSize: 13,
-                              ),
+                            Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Text(
+                                  '$_currentMealsLogged',
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 26,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                Text(
+                                  'meals',
+                                  style: TextStyle(
+                                    color: Colors.white.withOpacity(0.9),
+                                    fontSize: 13,
+                                  ),
+                                ),
+                              ],
                             ),
                           ],
                         ),
                       ],
                     ),
 
-                    const SizedBox(height: 20),
-
-                    // Bottom centered text
-                    Center(
-                      child: Text(
-                        'Check your progress so far',
-                        style: TextStyle(
-                          color: Colors.white.withOpacity(0.85),
-                          fontSize: 14,
-                          fontStyle: FontStyle.italic,
-                        ),
+                    const SizedBox(height: 16),
+                    Text(
+                      'Check your progress so far',
+                      style: TextStyle(
+                        color: AppColors.lightText.withOpacity(0.85),
+                        fontSize: 13,
+                        fontStyle: FontStyle.italic,
                       ),
                     ),
                   ],
@@ -279,7 +231,7 @@ class _MealPlannerPageState extends State<MealPlannerPage> {
 
               const SizedBox(height: 24),
 
-              // Calendar (unchanged from previous version)
+              // ── Calendar ────────────────────────────────────────────────────
               SizedBox(
                 height: 96,
                 child: ListView.builder(
@@ -294,27 +246,16 @@ class _MealPlannerPageState extends State<MealPlannerPage> {
                       onTap: () {
                         setState(() {
                           _selectedDate = day;
-                          // Reset progress when changing day (in real app you'd load saved data)
-                          waterMl = 0.0;
-                          mealsLogged = 0;
                         });
                       },
                       child: Container(
                         width: 68,
                         margin: const EdgeInsets.symmetric(horizontal: 5),
                         decoration: BoxDecoration(
-                          color: selected
-                              ? AppColors.vibrantOrange
-                              : AppColors.cardBgLight,
+                          color: selected ? AppColors.vibrantOrange : AppColors.cardBgLight,
                           borderRadius: BorderRadius.circular(16),
                           boxShadow: selected
-                              ? [
-                            BoxShadow(
-                              color: AppColors.vibrantOrange.withOpacity(0.35),
-                              blurRadius: 10,
-                              offset: const Offset(0, 4),
-                            )
-                          ]
+                              ? [BoxShadow(color: AppColors.vibrantOrange.withOpacity(0.35), blurRadius: 10, offset: const Offset(0, 4))]
                               : null,
                         ),
                         child: Column(
@@ -325,7 +266,7 @@ class _MealPlannerPageState extends State<MealPlannerPage> {
                               style: TextStyle(
                                 fontSize: 13,
                                 fontWeight: FontWeight.w600,
-                                color: selected ? Colors.white : AppColors.darkText.withOpacity(0.65),
+                                color: selected ? AppColors.lightText : AppColors.darkText.withOpacity(0.65),
                               ),
                             ),
                             const SizedBox(height: 6),
@@ -334,7 +275,7 @@ class _MealPlannerPageState extends State<MealPlannerPage> {
                               style: TextStyle(
                                 fontSize: 22,
                                 fontWeight: FontWeight.bold,
-                                color: selected ? Colors.white : AppColors.darkText,
+                                color: selected ? AppColors.lightText : AppColors.darkText,
                               ),
                             ),
                             if (today && !selected)
@@ -342,10 +283,7 @@ class _MealPlannerPageState extends State<MealPlannerPage> {
                                 margin: const EdgeInsets.only(top: 6),
                                 width: 6,
                                 height: 6,
-                                decoration: BoxDecoration(
-                                  color: AppColors.vibrantOrange.withOpacity(0.7),
-                                  shape: BoxShape.circle,
-                                ),
+                                decoration: BoxDecoration(color: AppColors.vibrantOrange.withOpacity(0.7), shape: BoxShape.circle),
                               ),
                           ],
                         ),
@@ -360,18 +298,14 @@ class _MealPlannerPageState extends State<MealPlannerPage> {
               Padding(
                 padding: const EdgeInsets.only(left: 4),
                 child: Text(
-                  DateFormat('EEEE, MMMM d').format(effectiveSelectedDate),
-                  style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.w700,
-                    color: AppColors.darkText,
-                  ),
+                  DateFormat('EEEE, MMMM d').format(effectiveDate),
+                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: AppColors.darkText),
                 ),
               ),
 
               const SizedBox(height: 16),
 
-              // Meal cards (unchanged)
+              // ── Meal Cards ──────────────────────────────────────────────────
               _buildMealCard('Breakfast', AppColors.vibrantGreen),
               const SizedBox(height: 16),
               _buildMealCard('Lunch', AppColors.vibrantBlue),
@@ -379,35 +313,28 @@ class _MealPlannerPageState extends State<MealPlannerPage> {
               _buildMealCard('Dinner', AppColors.vibrantOrange),
               const SizedBox(height: 16),
               _buildMealCard('Snack', AppColors.vibrantGreen.withOpacity(0.8)),
+              const SizedBox(height: 16),
+              _buildMealCard('Dessert', AppColors.vibrantOrange.withOpacity(0.75)),
 
               const SizedBox(height: 40),
             ],
           ),
         ),
       ),
-      // Optional: floating debug button to simulate logging a meal
-      floatingActionButton: FloatingActionButton(
-        onPressed: _logMeal,
-        backgroundColor: AppColors.vibrantBlue,
-        child: const Icon(Icons.restaurant_menu),
-        tooltip: 'Simulate log meal (debug)',
-      ),
     );
   }
 
   Widget _buildMealCard(String title, Color color) {
+    // For demo: let's pretend some days have items
+    final bool hasItems = title == 'Breakfast' || title == 'Dinner'; // simulate
+    final List<String> demoItems = hasItems ? ['Sample item 1', 'Sample item 2'] : [];
+
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: AppColors.cardBgLight,
         borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
+        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 4))],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -416,27 +343,51 @@ class _MealPlannerPageState extends State<MealPlannerPage> {
             children: [
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
-                decoration: BoxDecoration(
-                  color: color.withOpacity(0.15),
-                  borderRadius: BorderRadius.circular(30),
-                ),
+                decoration: BoxDecoration(color: color.withOpacity(0.15), borderRadius: BorderRadius.circular(30)),
                 child: Text(
                   title,
-                  style: TextStyle(
-                    color: color,
-                    fontWeight: FontWeight.w700,
-                    fontSize: 15,
-                  ),
+                  style: TextStyle(color: color, fontWeight: FontWeight.w700, fontSize: 15),
                 ),
               ),
               const Spacer(),
-              Icon(
-                Icons.add_circle_outline_rounded,
-                color: color,
-                size: 28,
-              ),
+              Icon(Icons.add_circle_outline_rounded, color: color, size: 28),
             ],
           ),
+          if (demoItems.isNotEmpty) ...[
+            const SizedBox(height: 12),
+            ...demoItems.asMap().entries.map((entry) {
+              final index = entry.key;
+              final item = entry.value;
+              final isLogged = _loggedMeals[_dateKey(effectiveDate)]?.contains('$title-$index') ?? false;
+
+              return GestureDetector(
+                onTap: () => _toggleMealLogged('$title-$index'),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 6),
+                  child: Row(
+                    children: [
+                      Checkbox(
+                        value: isLogged,
+                        activeColor: color,
+                        onChanged: (_) => _toggleMealLogged('$title-$index'),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          item,
+                          style: TextStyle(
+                            fontSize: 15,
+                            decoration: isLogged ? TextDecoration.lineThrough : null,
+                            color: isLogged ? Colors.grey : AppColors.darkText,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            }),
+          ],
         ],
       ),
     );
