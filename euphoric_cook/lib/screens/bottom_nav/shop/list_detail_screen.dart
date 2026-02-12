@@ -55,7 +55,6 @@ class _ListDetailScreenState extends State<ListDetailScreen> {
     });
     widget.onItemsChanged?.call();
 
-    // Keep keyboard open & focused for quick multi-add
     Future.delayed(const Duration(milliseconds: 80), () {
       if (mounted) _focusNode.requestFocus();
     });
@@ -137,38 +136,57 @@ class _ListDetailScreenState extends State<ListDetailScreen> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Material(
-      elevation: 8,
+      elevation: 6,
       borderRadius: BorderRadius.circular(28),
       color: isDark ? Colors.grey[850] : Colors.white,
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
             SizedBox(
-              width: 220, // or MediaQuery.of(context).size.width * 0.6
+              width: 200,
               child: TextField(
                 controller: _addController,
                 focusNode: _focusNode,
                 autofocus: true,
                 textInputAction: TextInputAction.done,
                 decoration: const InputDecoration(
-                  hintText: 'Add item (e.g. milk, eggs)',
+                  hintText: 'Add item (eggs)',
                   border: InputBorder.none,
-                  contentPadding: EdgeInsets.symmetric(horizontal: 8),
+                  contentPadding: EdgeInsets.symmetric(horizontal: 8, vertical: 0),
                 ),
                 onSubmitted: (_) => _addItem(),
               ),
             ),
+            const SizedBox(width: 2),
             IconButton(
               icon: const Icon(Icons.add_circle, color: AppColors.vibrantOrange, size: 32),
               tooltip: 'Add',
               onPressed: _addItem,
+              padding: EdgeInsets.zero,
+              constraints: const BoxConstraints(),
             ),
-            IconButton(
-              icon: const Icon(Icons.check_circle, color: Colors.green, size: 32),
-              tooltip: 'Done',
+            const SizedBox(width: 8),
+            FilledButton(
               onPressed: _closeAddInput,
+              style: FilledButton.styleFrom(
+                backgroundColor: AppColors.vibrantOrange,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                minimumSize: const Size(0, 0),
+                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(20),
+                ),
+              ),
+              child: const Text(
+                "Done",
+                style: TextStyle(
+                  fontWeight: FontWeight.w600,
+                  fontSize: 15,
+                ),
+              ),
             ),
           ],
         ),
@@ -344,36 +362,24 @@ class _ListDetailScreenState extends State<ListDetailScreen> {
               ),
             ),
 
-            // Fixed bottom-right add area
+            // Bottom-right: either FAB or input row
             Align(
               alignment: Alignment.bottomRight,
               child: Padding(
                 padding: EdgeInsets.fromLTRB(16, 16, 16, 24 + bottomInset),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    if (_isAdding) ...[
-                      _buildAddInputRow(),
-                      const SizedBox(height: 16),
-                    ],
-                    FloatingActionButton(
-                      backgroundColor: AppColors.vibrantOrange,
-                      foregroundColor: Colors.white,
-                      elevation: 6,
-                      onPressed: () {
-                        setState(() => _isAdding = !_isAdding);
-                        if (_isAdding) {
-                          Future.delayed(const Duration(milliseconds: 100), () {
-                            if (mounted) _focusNode.requestFocus();
-                          });
-                        } else {
-                          _closeAddInput();
-                        }
-                      },
-                      child: Icon(_isAdding ? Icons.close : Icons.add),
-                    ),
-                  ],
+                child: _isAdding
+                    ? _buildAddInputRow()
+                    : FloatingActionButton(
+                  backgroundColor: AppColors.vibrantOrange,
+                  foregroundColor: Colors.white,
+                  elevation: 6,
+                  onPressed: () {
+                    setState(() => _isAdding = true);
+                    Future.delayed(const Duration(milliseconds: 100), () {
+                      if (mounted) _focusNode.requestFocus();
+                    });
+                  },
+                  child: const Icon(Icons.add),
                 ),
               ),
             ),

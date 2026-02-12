@@ -15,8 +15,26 @@ class ShopScreen extends StatefulWidget {
 class _ShopScreenState extends State<ShopScreen> with SingleTickerProviderStateMixin {
   late TabController _tabController;
 
-  List<ShoppingItem> _smartItems = [];
+  // ── Smart Lists ──────────────────────────────────────────────────────────────
+  final List<SmartList> _smartLists = [
+    SmartList(name: "Drink Smart List"),
+    SmartList(name: "Food Smart List"),
+    SmartList(
+      name: "By Recipe",
+      isRecipeBased: true,
+      items: [], // we'll show sub-lists instead
+    ),
+  ];
 
+  // Example sub-recipe lists (you can make this dynamic later)
+  final List<SmartList> _recipeSmartLists = [
+    SmartList(name: "Bread Recipe"),
+    SmartList(name: "Pasta Carbonara"),
+    SmartList(name: "Morning Smoothie Bowl"),
+    SmartList(name: "Chocolate Cake"),
+  ];
+
+  // ── Manual Lists ─────────────────────────────────────────────────────────────
   final List<ManualList> _manualLists = [
     ManualList(
       name: "Weekly Groceries",
@@ -90,10 +108,7 @@ class _ShopScreenState extends State<ShopScreen> with SingleTickerProviderStateM
         title: const Text("Delete List"),
         content: Text("Delete '$listName' permanently?"),
         actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text("Cancel"),
-          ),
+          TextButton(onPressed: () => Navigator.pop(context), child: const Text("Cancel")),
           TextButton(
             onPressed: () {
               setState(() => _manualLists.removeAt(index));
@@ -113,10 +128,7 @@ class _ShopScreenState extends State<ShopScreen> with SingleTickerProviderStateM
         title: const Text("Delete Selected"),
         content: Text("Delete ${_selectedManualLists.length} lists? This cannot be undone."),
         actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text("Cancel"),
-          ),
+          TextButton(onPressed: () => Navigator.pop(context), child: const Text("Cancel")),
           TextButton(
             onPressed: () {
               setState(() {
@@ -159,7 +171,7 @@ class _ShopScreenState extends State<ShopScreen> with SingleTickerProviderStateM
               unselectedLabelColor: isDark ? Colors.white70 : Colors.black54,
               indicatorColor: AppColors.vibrantOrange,
               tabs: const [
-                Tab(text: "Smart List"),
+                Tab(text: "Smart Lists"),
                 Tab(text: "Manual Lists"),
               ],
             ),
@@ -167,15 +179,10 @@ class _ShopScreenState extends State<ShopScreen> with SingleTickerProviderStateM
               child: TabBarView(
                 controller: _tabController,
                 children: [
-                  // Smart List
-                  ListDetailScreen(
-                    title: "Smart List",
-                    items: _smartItems,
-                    isSmartList: true,
-                    onItemsChanged: _refresh,
-                  ),
+                  // ── Smart Lists Tab ───────────────────────────────────────────────
+                  _buildSmartListsView(),
 
-                  // Manual Lists
+                  // ── Manual Lists Tab (mostly unchanged) ───────────────────────────
                   Stack(
                     children: [
                       if (_manualLists.isEmpty)
@@ -189,7 +196,7 @@ class _ShopScreenState extends State<ShopScreen> with SingleTickerProviderStateM
                                 "No manual lists yet",
                                 style: TextStyle(
                                   fontSize: 20,
-                                  fontWeight: FontWeight.w500,
+                                  fontWeight: FontWeight.w600,
                                   color: isDark ? Colors.white70 : Colors.black87,
                                 ),
                               ),
@@ -218,11 +225,8 @@ class _ShopScreenState extends State<ShopScreen> with SingleTickerProviderStateM
                                   value: selected,
                                   onChanged: (v) {
                                     setState(() {
-                                      if (v == true) {
-                                        _selectedManualLists.add(index);
-                                      } else {
-                                        _selectedManualLists.remove(index);
-                                      }
+                                      if (v == true) _selectedManualLists.add(index);
+                                      else _selectedManualLists.remove(index);
                                     });
                                   },
                                   activeColor: AppColors.vibrantOrange,
@@ -278,7 +282,7 @@ class _ShopScreenState extends State<ShopScreen> with SingleTickerProviderStateM
                           },
                         ),
 
-                      // Floating bottom bar
+                      // Floating bottom bar for manual lists
                       Positioned(
                         left: 16,
                         right: 16,
@@ -329,6 +333,76 @@ class _ShopScreenState extends State<ShopScreen> with SingleTickerProviderStateM
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildSmartListsView() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    return ListView(
+      padding: const EdgeInsets.all(12),
+      children: [
+        // Regular smart categories
+        ..._smartLists.where((l) => !l.isRecipeBased).map((list) => _smartListTile(list)),
+
+        // "By Recipe" section with sub-lists
+        const SizedBox(height: 16),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 8),
+          child: Text(
+            "By Recipe",
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: isDark ? Colors.white70 : Colors.black87,
+            ),
+          ),
+        ),
+        const SizedBox(height: 8),
+        ..._recipeSmartLists.map((list) => _smartListTile(list, indent: true)),
+
+        const SizedBox(height: 80), // space for potential future FAB
+      ],
+    );
+  }
+
+  Widget _smartListTile(SmartList list, {bool indent = false}) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    return Card(
+      margin: EdgeInsets.only(left: indent ? 16 : 0, bottom: 12),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      elevation: 1,
+      child: ListTile(
+        contentPadding: const EdgeInsets.fromLTRB(16, 12, 12, 12),
+        leading: Icon(
+          list.isRecipeBased ? Icons.cookie_rounded : Icons.lightbulb_outline,
+          color: AppColors.vibrantOrange,
+          size: 32,
+        ),
+        title: Text(
+          list.name,
+          style: const TextStyle(fontWeight: FontWeight.w600),
+        ),
+        subtitle: Text(
+          list.subtitle,
+          style: TextStyle(color: Colors.grey[600]),
+        ),
+        trailing: const Icon(Icons.chevron_right_rounded),
+        onTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => ListDetailScreen(
+                title: list.name,
+                items: list.items,
+                isSmartList: true,
+                onItemsChanged: _refresh,
+              ),
+            ),
+          );
+        },
       ),
     );
   }

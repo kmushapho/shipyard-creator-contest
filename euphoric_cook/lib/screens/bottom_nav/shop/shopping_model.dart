@@ -27,3 +27,19 @@ class ManualList {
     return "$dateStr • $checkedCount/${items.length}";
   }
 }
+
+class SmartList {
+  final String name;
+  final List<ShoppingItem> items;
+  final DateTime createdAt;
+  final bool isRecipeBased;
+
+  SmartList({
+    required this.name,
+    this.items = const [],
+    DateTime? createdAt,
+    this.isRecipeBased = false,
+  }) : createdAt = createdAt ?? DateTime.now();
+
+  String get subtitle => "${items.where((i) => i.checked).length}/${items.length} items • ${DateFormat('MMM d').format(createdAt)}";
+}
