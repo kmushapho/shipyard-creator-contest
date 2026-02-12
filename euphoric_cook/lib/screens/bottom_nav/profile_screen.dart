@@ -68,7 +68,6 @@ class ProfileScreen extends StatelessWidget {
                         ),
                       ),
                     )
-
                   ],
                 ),
               ],
@@ -136,48 +135,63 @@ class ProfileScreen extends StatelessWidget {
                 activeColor: accent,
               ),
             ),
-
             _tile(icon: Icons.notifications, title: "Notifications"),
             _tile(icon: Icons.straighten, title: "Units: Metric"),
 
             const SizedBox(height: 20),
 
+            // ─── DIETARY RESTRICTIONS ─────────────────────
             _section("Dietary Restrictions"),
-            _multiSelectDropdown(context, "Dietary Restrictions", [
-              "Vegetarian",
-              "Vegan",
-              "Gluten-Free",
-              "Dairy-Free",
-              "Kosher",
-              "Halal",
-              "Paleo",
-              "Pescatarian",
-            ]),
+            _multiSelectDropdown(
+              context,
+              "Dietary Restrictions",
+              [
+                "Vegetarian",
+                "Vegan",
+                "Gluten-Free",
+                "Dairy-Free",
+                "Kosher",
+                "Halal",
+                "Paleo",
+                "Pescatarian",
+              ],
+              user,
+            ),
 
             const SizedBox(height: 20),
 
             _section("Nutritional & Health Tags"),
-            _multiSelectDropdown(context, "Nutritional & Health Tags", [
-              "Healthy",
-              "Low Calorie",
-              "Low Carb",
-              "Low Fat",
-              "Low Sodium",
-              "Low Sugar",
-              "Low Cholesterol",
-              "High Fiber",
-              "Kidney Friendly",
-            ]),
+            _multiSelectDropdown(
+              context,
+              "Nutritional & Health Tags",
+              [
+                "Healthy",
+                "Low Calorie",
+                "Low Carb",
+                "Low Fat",
+                "Low Sodium",
+                "Low Sugar",
+                "Low Cholesterol",
+                "High Fiber",
+                "Kidney Friendly",
+              ],
+              user,
+            ),
 
             const SizedBox(height: 20),
 
             _section("Allergy-Specific Tags"),
-            _multiSelectDropdown(context, "Allergy-Specific Tags", [
-              "Peanut Free",
-              "Soy Free",
-              "Tree Nut Free",
-              "Shellfish Free",
-            ]),
+            _multiSelectDropdown(
+              context,
+              "Allergy-Specific Tags",
+              [
+                "Peanut Free",
+                "Soy Free",
+                "Tree Nut Free",
+                "Shellfish Free",
+              ],
+              user,
+            ),
 
             const SizedBox(height: 24),
 
@@ -250,15 +264,17 @@ class ProfileScreen extends StatelessWidget {
   }
 
   Widget _multiSelectDropdown(
-      BuildContext context, String title, List<String> items) {
+      BuildContext context, String title, List<String> items, UserProvider user) {
     return ExpansionTile(
       title: Text(title),
       children: items.map((item) {
+        final isSelected = user.isTagSelected(item);
         return CheckboxListTile(
           title: Text(item),
-          value: context.read<UserProvider>().isTagSelected(item),
-          onChanged: (_) =>
-              context.read<UserProvider>().toggleTag(item),
+          value: isSelected,
+          onChanged: (_) {
+            user.toggleTag(item); // automatically updates provider
+          },
         );
       }).toList(),
     );
@@ -272,8 +288,7 @@ class ProfileScreen extends StatelessWidget {
         title: const Text("Add Food to Avoid"),
         content: TextField(
           controller: controller,
-          decoration:
-          const InputDecoration(hintText: "e.g. peanuts"),
+          decoration: const InputDecoration(hintText: "e.g. peanuts"),
         ),
         actions: [
           TextButton(
@@ -282,7 +297,7 @@ class ProfileScreen extends StatelessWidget {
           ),
           TextButton(
             onPressed: () {
-              user.addFoodToAvoid(controller.text);
+              user.addFoodToAvoid(controller.text.trim());
               Navigator.pop(context);
             },
             child: const Text("Add"),
