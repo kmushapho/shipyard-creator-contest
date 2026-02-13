@@ -4,8 +4,8 @@ import 'package:google_sign_in/google_sign_in.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 
-import '../../constants/colors.dart';
-import '../bottom_nav/home_screen.dart';
+import '../../constants/colors.dart'; // ← adjust path if needed
+import '../bottom_nav/home_screen.dart'; // ← adjust path if needed
 
 class AuthPage extends StatefulWidget {
   const AuthPage({super.key});
@@ -28,7 +28,9 @@ class _AuthPageState extends State<AuthPage> {
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
 
+  // IMPORTANT: Add your WEB client ID here
   final GoogleSignIn _googleSignIn = GoogleSignIn(
+    serverClientId: '464646472646-ju1qsrh7t3a83afnkmoioj6o8vsqegth.apps.googleusercontent.com',
     scopes: ['email', 'profile'],
   );
 
@@ -59,20 +61,32 @@ class _AuthPageState extends State<AuthPage> {
     }
   }
 
-  // Google login
+  // Google login – with debug prints
   Future<void> _loginWithGoogle() async {
     if (_isLoadingGoogle) return;
-    setState(() => _isLoadingGoogle = true);
+    setState(() {
+      _isLoadingGoogle = true;
+      _errorMessage = null;
+    });
 
     try {
       final account = await _googleSignIn.signIn();
-      if (account == null) return; // cancelled
+      if (account == null) {
+        print('Google sign-in cancelled by user');
+        return;
+      }
+
+      print('Signed in user: ${account.email} - ${account.displayName}');
 
       final auth = await account.authentication;
       final idToken = auth.idToken;
+      final accessToken = auth.accessToken;
 
-      if (idToken == null) {
-        throw Exception("No ID token received");
+      print('ID Token: $idToken');
+      print('Access Token: $accessToken');
+
+      if (idToken == null || idToken.isEmpty) {
+        throw Exception('No ID token received from Google – check serverClientId');
       }
 
       final response = await http.post(
@@ -80,6 +94,9 @@ class _AuthPageState extends State<AuthPage> {
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({'idToken': idToken}),
       );
+
+      print('Backend response status: ${response.statusCode}');
+      print('Backend response body: ${response.body}');
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
@@ -95,13 +112,14 @@ class _AuthPageState extends State<AuthPage> {
         setState(() => _errorMessage = err);
       }
     } catch (e) {
-      setState(() => _errorMessage = "Google login error: $e");
+      print('Google login error: $e');
+      setState(() => _errorMessage = 'Google sign-in failed: $e');
     } finally {
       if (mounted) setState(() => _isLoadingGoogle = false);
     }
   }
 
-  // Email/Password Login or Register
+  // Email/Password auth (login or register)
   Future<void> _handleEmailAuth() async {
     setState(() {
       _errorMessage = null;
@@ -139,10 +157,7 @@ class _AuthPageState extends State<AuthPage> {
 
     try {
       final endpoint = isLogin ? '/login' : '/register';
-      final body = {
-        'email': email,
-        'password': password,
-      };
+      final body = {'email': email, 'password': password};
 
       final response = await http.post(
         Uri.parse('https://euphoric-backend.onrender.com$endpoint'),
@@ -164,13 +179,9 @@ class _AuthPageState extends State<AuthPage> {
         });
       }
     } catch (e) {
-      setState(() {
-        _errorMessage = "Network error: $e";
-      });
+      setState(() => _errorMessage = "Network error: $e");
     } finally {
-      if (mounted) {
-        setState(() => _isLoadingEmail = false);
-      }
+      if (mounted) setState(() => _isLoadingEmail = false);
     }
   }
 
@@ -180,7 +191,6 @@ class _AuthPageState extends State<AuthPage> {
       resizeToAvoidBottomInset: false,
       body: Stack(
         children: [
-          // Background gradient
           Container(
             width: double.infinity,
             height: double.infinity,
@@ -192,8 +202,6 @@ class _AuthPageState extends State<AuthPage> {
               ),
             ),
           ),
-
-          // Main content
           SafeArea(
             child: SingleChildScrollView(
               padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 60),
@@ -201,7 +209,6 @@ class _AuthPageState extends State<AuthPage> {
                 children: [
                   _buildToggleSwitch(),
                   const SizedBox(height: 40),
-
                   Container(
                     padding: const EdgeInsets.all(30),
                     decoration: BoxDecoration(
@@ -219,10 +226,8 @@ class _AuthPageState extends State<AuthPage> {
                           ),
                         ),
                         const SizedBox(height: 25),
-
                         _buildTextField(Icons.email_outlined, 'Email'),
                         const SizedBox(height: 15),
-
                         _buildTextField(
                           Icons.lock_outline,
                           'Password',
@@ -230,7 +235,6 @@ class _AuthPageState extends State<AuthPage> {
                           isObscured: _obscurePassword,
                           onToggle: () => setState(() => _obscurePassword = !_obscurePassword),
                         ),
-
                         if (!isLogin) ...[
                           const SizedBox(height: 15),
                           _buildTextField(
@@ -241,20 +245,15 @@ class _AuthPageState extends State<AuthPage> {
                             onToggle: () => setState(() => _obscureConfirmPassword = !_obscureConfirmPassword),
                           ),
                         ],
-
                         if (_errorMessage != null) ...[
                           const SizedBox(height: 16),
                           Text(
                             _errorMessage!,
-                            style: const TextStyle(
-                              color: Colors.red,
-                              fontWeight: FontWeight.w600,
-                            ),
+                            style: const TextStyle(color: Colors.red, fontWeight: FontWeight.w600),
                             textAlign: TextAlign.center,
                           ),
                           const SizedBox(height: 8),
                         ],
-
                         const SizedBox(height: 30),
                         _buildEmailButton(),
                         const SizedBox(height: 16),
@@ -266,8 +265,6 @@ class _AuthPageState extends State<AuthPage> {
               ),
             ),
           ),
-
-          // Guest button at bottom
           Align(
             alignment: Alignment.bottomCenter,
             child: Padding(
@@ -279,9 +276,7 @@ class _AuthPageState extends State<AuthPage> {
                   onPressed: _isLoadingGuest ? null : _continueAsGuest,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(15),
-                    ),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
                     elevation: 4,
                   ),
                   child: _isLoadingGuest
@@ -326,10 +321,7 @@ class _AuthPageState extends State<AuthPage> {
         prefixIcon: Icon(icon, color: Colors.grey),
         suffixIcon: isPassword
             ? IconButton(
-          icon: Icon(
-            isObscured ? Icons.visibility_off : Icons.visibility,
-            color: Colors.grey,
-          ),
+          icon: Icon(isObscured ? Icons.visibility_off : Icons.visibility, color: Colors.grey),
           onPressed: onToggle,
         )
             : null,
