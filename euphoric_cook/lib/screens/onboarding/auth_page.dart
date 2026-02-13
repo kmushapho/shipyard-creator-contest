@@ -3,6 +3,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+
 import '../../constants/colors.dart';
 import '../bottom_nav/home_screen.dart';
 
@@ -17,9 +18,11 @@ class _AuthPageState extends State<AuthPage> {
   bool isLogin = true;
   bool _obscurePassword = true;
   bool _obscureConfirmPassword = true;
-
   bool _isLoadingGuest = false;
   bool _isLoadingGoogle = false;
+  bool _isLoadingEmail = false;
+
+  String? _errorMessage;
 
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
@@ -41,9 +44,11 @@ class _AuthPageState extends State<AuthPage> {
   Future<void> _continueAsGuest() async {
     if (_isLoadingGuest) return;
     setState(() => _isLoadingGuest = true);
+
     try {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setBool('hasCompletedOnboarding', true);
+
       if (!mounted) return;
       Navigator.pushReplacement(
         context,
@@ -66,6 +71,10 @@ class _AuthPageState extends State<AuthPage> {
       final auth = await account.authentication;
       final idToken = auth.idToken;
 
+      if (idToken == null) {
+        throw Exception("No ID token received");
+      }
+
       final response = await http.post(
         Uri.parse('https://euphoric-backend.onrender.com/login'),
         headers: {'Content-Type': 'application/json'},
@@ -74,22 +83,94 @@ class _AuthPageState extends State<AuthPage> {
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        print('User verified: ${data['email']}');
+        print('Google login success: ${data['email']}');
+
+        if (!mounted) return;
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(builder: (context) => const HomeScreen()),
         );
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Google login failed')),
-        );
+        final err = jsonDecode(response.body)['error'] ?? 'Google login failed';
+        setState(() => _errorMessage = err);
       }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Google login error: $e')),
-      );
+      setState(() => _errorMessage = "Google login error: $e");
     } finally {
       if (mounted) setState(() => _isLoadingGoogle = false);
+    }
+  }
+
+  // Email/Password Login or Register
+  Future<void> _handleEmailAuth() async {
+    setState(() {
+      _errorMessage = null;
+      _isLoadingEmail = true;
+    });
+
+    final email = _emailController.text.trim();
+    final password = _passwordController.text.trim();
+
+    if (email.isEmpty || password.isEmpty) {
+      setState(() {
+        _errorMessage = "Please enter email and password";
+        _isLoadingEmail = false;
+      });
+      return;
+    }
+
+    if (!isLogin) {
+      final confirm = _confirmPasswordController.text.trim();
+      if (password != confirm) {
+        setState(() {
+          _errorMessage = "Passwords do not match";
+          _isLoadingEmail = false;
+        });
+        return;
+      }
+      if (password.length < 6) {
+        setState(() {
+          _errorMessage = "Password must be at least 6 characters";
+          _isLoadingEmail = false;
+        });
+        return;
+      }
+    }
+
+    try {
+      final endpoint = isLogin ? '/login' : '/register';
+      final body = {
+        'email': email,
+        'password': password,
+      };
+
+      final response = await http.post(
+        Uri.parse('https://euphoric-backend.onrender.com$endpoint'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode(body),
+      );
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        print('${isLogin ? "Login" : "Register"} success');
+        if (!mounted) return;
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => const HomeScreen()),
+        );
+      } else {
+        final errData = jsonDecode(response.body);
+        setState(() {
+          _errorMessage = errData['error'] ?? 'Authentication failed';
+        });
+      }
+    } catch (e) {
+      setState(() {
+        _errorMessage = "Network error: $e";
+      });
+    } finally {
+      if (mounted) {
+        setState(() => _isLoadingEmail = false);
+      }
     }
   }
 
@@ -99,7 +180,7 @@ class _AuthPageState extends State<AuthPage> {
       resizeToAvoidBottomInset: false,
       body: Stack(
         children: [
-          // Background
+          // Background gradient
           Container(
             width: double.infinity,
             height: double.infinity,
@@ -112,7 +193,7 @@ class _AuthPageState extends State<AuthPage> {
             ),
           ),
 
-          // Form
+          // Main content
           SafeArea(
             child: SingleChildScrollView(
               padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 60),
@@ -120,6 +201,7 @@ class _AuthPageState extends State<AuthPage> {
                 children: [
                   _buildToggleSwitch(),
                   const SizedBox(height: 40),
+
                   Container(
                     padding: const EdgeInsets.all(30),
                     decoration: BoxDecoration(
@@ -137,8 +219,10 @@ class _AuthPageState extends State<AuthPage> {
                           ),
                         ),
                         const SizedBox(height: 25),
+
                         _buildTextField(Icons.email_outlined, 'Email'),
                         const SizedBox(height: 15),
+
                         _buildTextField(
                           Icons.lock_outline,
                           'Password',
@@ -146,6 +230,7 @@ class _AuthPageState extends State<AuthPage> {
                           isObscured: _obscurePassword,
                           onToggle: () => setState(() => _obscurePassword = !_obscurePassword),
                         ),
+
                         if (!isLogin) ...[
                           const SizedBox(height: 15),
                           _buildTextField(
@@ -156,9 +241,23 @@ class _AuthPageState extends State<AuthPage> {
                             onToggle: () => setState(() => _obscureConfirmPassword = !_obscureConfirmPassword),
                           ),
                         ],
+
+                        if (_errorMessage != null) ...[
+                          const SizedBox(height: 16),
+                          Text(
+                            _errorMessage!,
+                            style: const TextStyle(
+                              color: Colors.red,
+                              fontWeight: FontWeight.w600,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                          const SizedBox(height: 8),
+                        ],
+
                         const SizedBox(height: 30),
                         _buildEmailButton(),
-                        const SizedBox(height: 15),
+                        const SizedBox(height: 16),
                         _buildGoogleButton(),
                       ],
                     ),
@@ -168,7 +267,7 @@ class _AuthPageState extends State<AuthPage> {
             ),
           ),
 
-          // Guest button
+          // Guest button at bottom
           Align(
             alignment: Alignment.bottomCenter,
             child: Padding(
@@ -186,7 +285,7 @@ class _AuthPageState extends State<AuthPage> {
                     elevation: 4,
                   ),
                   child: _isLoadingGuest
-                      ? SizedBox(
+                      ? const SizedBox(
                     height: 24,
                     width: 24,
                     child: CircularProgressIndicator(
@@ -227,7 +326,10 @@ class _AuthPageState extends State<AuthPage> {
         prefixIcon: Icon(icon, color: Colors.grey),
         suffixIcon: isPassword
             ? IconButton(
-          icon: Icon(isObscured ? Icons.visibility_off : Icons.visibility, color: Colors.grey),
+          icon: Icon(
+            isObscured ? Icons.visibility_off : Icons.visibility,
+            color: Colors.grey,
+          ),
           onPressed: onToggle,
         )
             : null,
@@ -297,18 +399,22 @@ class _AuthPageState extends State<AuthPage> {
       width: double.infinity,
       height: 55,
       child: ElevatedButton(
-        onPressed: () {
-          // TODO: Add email/password login/signup logic
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Email login/signup not implemented')),
-          );
-        },
+        onPressed: _isLoadingEmail ? null : _handleEmailAuth,
         style: ElevatedButton.styleFrom(
           backgroundColor: AppColors.vibrantOrange,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
           elevation: 0,
         ),
-        child: Text(
+        child: _isLoadingEmail
+            ? const SizedBox(
+          height: 24,
+          width: 24,
+          child: CircularProgressIndicator(
+            strokeWidth: 3,
+            valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+          ),
+        )
+            : Text(
           isLogin ? 'Log In' : 'Sign Up',
           style: const TextStyle(
             color: Colors.white,
@@ -325,9 +431,9 @@ class _AuthPageState extends State<AuthPage> {
       width: double.infinity,
       height: 55,
       child: ElevatedButton.icon(
-        icon: Icon(Icons.g_mobiledata_sharp, color: Colors.blue, size: 26),
+        icon: const Icon(Icons.g_mobiledata_sharp, color: Colors.blue, size: 26),
         label: const Text('Sign in with Google'),
-        onPressed: _loginWithGoogle,
+        onPressed: _isLoadingGoogle ? null : _loginWithGoogle,
         style: ElevatedButton.styleFrom(
           backgroundColor: AppColors.vibrantOrange,
           foregroundColor: Colors.white,
