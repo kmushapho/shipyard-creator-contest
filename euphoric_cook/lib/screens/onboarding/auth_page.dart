@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:google_sign_in/google_sign_in.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 import '../../constants/colors.dart';
 import '../bottom_nav/home_screen.dart';
 
@@ -15,12 +18,16 @@ class _AuthPageState extends State<AuthPage> {
   bool _obscurePassword = true;
   bool _obscureConfirmPassword = true;
 
-  // Loading state for guest button
   bool _isLoadingGuest = false;
+  bool _isLoadingGoogle = false;
 
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
+
+  final GoogleSignIn _googleSignIn = GoogleSignIn(
+    scopes: ['email', 'profile'],
+  );
 
   @override
   void dispose() {
@@ -30,37 +37,59 @@ class _AuthPageState extends State<AuthPage> {
     super.dispose();
   }
 
+  // Guest login
   Future<void> _continueAsGuest() async {
-    if (_isLoadingGuest) return; // prevent double tap
-
+    if (_isLoadingGuest) return;
     setState(() => _isLoadingGuest = true);
-
     try {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setBool('hasCompletedOnboarding', true);
-
       if (!mounted) return;
-
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (context) => const HomeScreen()),
       );
+    } finally {
+      if (mounted) setState(() => _isLoadingGuest = false);
+    }
+  }
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Continuing as guest...'),
-          duration: Duration(seconds: 1),
-        ),
+  // Google login
+  Future<void> _loginWithGoogle() async {
+    if (_isLoadingGoogle) return;
+    setState(() => _isLoadingGoogle = true);
+
+    try {
+      final account = await _googleSignIn.signIn();
+      if (account == null) return; // cancelled
+
+      final auth = await account.authentication;
+      final idToken = auth.idToken;
+
+      final response = await http.post(
+        Uri.parse('https://euphoric-backend.onrender.com/login'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({'idToken': idToken}),
       );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        print('User verified: ${data['email']}');
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => const HomeScreen()),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Google login failed')),
+        );
+      }
     } catch (e) {
-      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error: $e')),
+        SnackBar(content: Text('Google login error: $e')),
       );
     } finally {
-      if (mounted) {
-        setState(() => _isLoadingGuest = false);
-      }
+      if (mounted) setState(() => _isLoadingGoogle = false);
     }
   }
 
@@ -70,7 +99,7 @@ class _AuthPageState extends State<AuthPage> {
       resizeToAvoidBottomInset: false,
       body: Stack(
         children: [
-          // Gradient background
+          // Background
           Container(
             width: double.infinity,
             height: double.infinity,
@@ -83,7 +112,7 @@ class _AuthPageState extends State<AuthPage> {
             ),
           ),
 
-          // Scrollable form
+          // Form
           SafeArea(
             child: SingleChildScrollView(
               padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 60),
@@ -124,14 +153,13 @@ class _AuthPageState extends State<AuthPage> {
                             'Confirm Password',
                             isPassword: true,
                             isObscured: _obscureConfirmPassword,
-                            onToggle: () => setState(
-                                  () => _obscureConfirmPassword = !_obscureConfirmPassword,
-                            ),
+                            onToggle: () => setState(() => _obscureConfirmPassword = !_obscureConfirmPassword),
                           ),
                         ],
                         const SizedBox(height: 30),
-                        _buildSubmitButton(),
-                        const SizedBox(height: 30),
+                        _buildEmailButton(),
+                        const SizedBox(height: 15),
+                        _buildGoogleButton(),
                       ],
                     ),
                   ),
@@ -140,7 +168,7 @@ class _AuthPageState extends State<AuthPage> {
             ),
           ),
 
-          // Fixed guest button with loading state
+          // Guest button
           Align(
             alignment: Alignment.bottomCenter,
             child: Padding(
@@ -199,10 +227,7 @@ class _AuthPageState extends State<AuthPage> {
         prefixIcon: Icon(icon, color: Colors.grey),
         suffixIcon: isPassword
             ? IconButton(
-          icon: Icon(
-            isObscured ? Icons.visibility_off : Icons.visibility,
-            color: Colors.grey,
-          ),
+          icon: Icon(isObscured ? Icons.visibility_off : Icons.visibility, color: Colors.grey),
           onPressed: onToggle,
         )
             : null,
@@ -267,13 +292,16 @@ class _AuthPageState extends State<AuthPage> {
     );
   }
 
-  Widget _buildSubmitButton() {
+  Widget _buildEmailButton() {
     return SizedBox(
       width: double.infinity,
       height: 55,
       child: ElevatedButton(
         onPressed: () {
-          // Add login/signup logic here later
+          // TODO: Add email/password login/signup logic
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Email login/signup not implemented')),
+          );
         },
         style: ElevatedButton.styleFrom(
           backgroundColor: AppColors.vibrantOrange,
@@ -287,6 +315,24 @@ class _AuthPageState extends State<AuthPage> {
             fontSize: 16,
             fontWeight: FontWeight.bold,
           ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildGoogleButton() {
+    return SizedBox(
+      width: double.infinity,
+      height: 55,
+      child: ElevatedButton.icon(
+        icon: Icon(Icons.g_mobiledata_sharp, color: Colors.blue, size: 26),
+        label: const Text('Sign in with Google'),
+        onPressed: _loginWithGoogle,
+        style: ElevatedButton.styleFrom(
+          backgroundColor: Colors.white,
+          foregroundColor: Colors.black,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+          elevation: 4,
         ),
       ),
     );
