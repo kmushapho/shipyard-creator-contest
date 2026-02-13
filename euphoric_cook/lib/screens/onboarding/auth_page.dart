@@ -329,8 +329,8 @@ class _AuthPageState extends State<AuthPage> {
         label: const Text('Sign in with Google'),
         onPressed: _loginWithGoogle,
         style: ElevatedButton.styleFrom(
-          backgroundColor: Colors.white,
-          foregroundColor: Colors.black,
+          backgroundColor: AppColors.vibrantOrange,
+          foregroundColor: Colors.white,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
           elevation: 4,
         ),
